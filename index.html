@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>智能行事曆｜採購系統</title>
+<style>
+  :root{
+    --bg:#F6F7FB; --surface:#FFFFFF; --line:#E8EAF1;
+    --ink:#1E2230; --muted:#6B7280; --faint:#9AA1AE;
+    --primary:#4F46E5; --primary-d:#4338CA; --primary-soft:#EEF0FE;
+    --work:#3B82F6; --life:#22C55E; --health:#F59E0B; --important:#EF4444;
+    --hi:#EF4444; --mid:#F59E0B; --low:#94A3B8;
+    --done:#16A34A;
+    --shadow:0 1px 2px rgba(20,24,40,.06),0 6px 18px rgba(20,24,40,.06);
+    --r:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",Roboto,sans-serif;
+    background:var(--bg); color:var(--ink);
+    font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  input,select,textarea{font-family:inherit;font-size:15px}
+  .hidden{display:none!important}
+
+  /* ---------- Login ---------- */
+  #login{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    padding:24px;background:linear-gradient(160deg,#EEF0FE 0%,#F6F7FB 60%);
+  }
+  .login-card{
+    width:100%;max-width:360px;background:var(--surface);border-radius:20px;
+    padding:32px 26px;box-shadow:var(--shadow);text-align:center;
+  }
+  .login-card .logo{font-size:40px;line-height:1;margin-bottom:14px}
+  .login-card h1{margin:0 0 4px;font-size:21px;letter-spacing:.5px}
+  .login-card p{margin:0 0 24px;color:var(--muted);font-size:13.5px}
+  .code-input{
+    width:100%;padding:15px 16px;border:1.5px solid var(--line);border-radius:12px;
+    text-align:center;font-size:19px;letter-spacing:3px;outline:none;
+    transition:border-color .15s;
+  }
+  .code-input:focus{border-color:var(--primary)}
+  .btn-primary{
+    width:100%;margin-top:14px;padding:15px;border-radius:12px;
+    background:var(--primary);color:#fff;font-size:16px;font-weight:600;
+    transition:background .15s,transform .05s;
+  }
+  .btn-primary:active{transform:scale(.99);background:var(--primary-d)}
+  .btn-primary:disabled{opacity:.55;cursor:default}
+  .login-msg{margin-top:14px;min-height:18px;font-size:13px;color:var(--important)}
+  .link-btn{margin-top:18px;background:transparent;color:var(--muted);font-size:13px;text-decoration:underline;padding:6px}
+  .code-hint{margin-top:8px;font-size:12px;color:var(--faint);letter-spacing:.3px}
+
+  /* ---------- App shell ---------- */
+  #app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+  header.bar{
+    position:sticky;top:0;z-index:20;background:rgba(246,247,251,.9);
+    backdrop-filter:blur(8px);padding:14px 18px 10px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);
+  }
+  header.bar .title{font-size:17px;font-weight:700;letter-spacing:.3px}
+  header.bar .who{font-size:12px;color:var(--faint);margin-top:2px}
+  .logout{font-size:12.5px;color:var(--muted);padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+
+  main{flex:1;padding:14px 14px 96px}
+
+  /* ---------- Tabs ---------- */
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    max-width:560px;margin:0 auto;background:var(--surface);
+    border-top:1px solid var(--line);display:flex;
+    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .tabbar button{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:6px 0;color:var(--faint);font-size:11.5px;border-radius:12px;
+  }
+  .tabbar button .ic{font-size:21px;line-height:1}
+  .tabbar button.active{color:var(--primary);background:var(--primary-soft)}
+
+  /* ---------- Calendar ---------- */
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 12px}
+  .cal-head .month-title{font-size:19px;font-weight:700;padding:6px 10px;border-radius:10px}
+  .cal-head .month-title:active{background:var(--primary-soft)}
+  .nav-btn{width:38px;height:38px;border-radius:10px;font-size:20px;color:var(--muted);background:var(--surface);box-shadow:var(--shadow)}
+  .cal-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 10px 14px;touch-action:pan-y}
+  .weekrow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
+  .weekrow span{text-align:center;font-size:12px;color:var(--faint);font-weight:600}
+  .weekrow span.sun{color:#EF4444}.weekrow span.sat{color:#3B82F6}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .cell{
+    aspect-ratio:1/1;border-radius:10px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:3px;position:relative;
+    font-size:14px;color:var(--ink);
+  }
+  .cell.empty{visibility:hidden}
+  .cell.other{color:var(--faint)}
+  .cell:active{background:var(--bg)}
+  .cell.today{font-weight:800;color:var(--primary)}
+  .cell.today::before{content:"";position:absolute;inset:5px;border:1.5px solid var(--primary);border-radius:9px}
+  .cell.sel{background:var(--primary);color:#fff}
+  .cell.sel.today::before{border-color:rgba(255,255,255,.7)}
+  .dots{display:flex;gap:3px;height:6px;align-items:center}
+  .dot{width:6px;height:6px;border-radius:999px}
+  .dot.work{background:var(--work)}.dot.life{background:var(--life)}
+  .dot.health{background:var(--health)}.dot.important{background:var(--important)}
+  .cell.sel .dot{box-shadow:0 0 0 1px rgba(255,255,255,.6)}
+
+  .legend{display:flex;gap:14px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+  .legend span{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
+
+  /* ---------- Lists / cards ---------- */
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin:18px 4px 10px}
+  .section-head h2{font-size:15px;margin:0;font-weight:700}
+  .add-btn{display:flex;align-items:center;gap:6px;background:var(--primary);color:#fff;font-weight:600;font-size:13.5px;padding:9px 14px;border-radius:999px;box-shadow:var(--shadow)}
+  .add-btn:active{background:var(--primary-d)}
+
+  .card{
+    background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);
+    padding:13px 14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;
+  }
+  .card .stripe{width:4px;align-self:stretch;border-radius:999px;flex:none}
+  .card .body{flex:1;min-width:0}
+  .card .row1{display:flex;align-items:center;gap:8px}
+  .card .name{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .card .time{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .card .note{font-size:12.5px;color:var(--faint);margin-top:4px;white-space:pre-wrap;word-break:break-word}
+  .pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;flex:none}
+  .pill.work{background:#E7F0FE;color:#2563EB}
+  .pill.life{background:#E6F8EE;color:#16A34A}
+  .pill.health{background:#FEF3E2;color:#D97706}
+  .pill.important{background:#FDE8E8;color:#DC2626}
+  .pill.hi{background:#FDE8E8;color:#DC2626}
+  .pill.mid{background:#FEF3E2;color:#D97706}
+  .pill.low{background:#EEF1F5;color:#64748B}
+  .card .acts{display:flex;gap:6px;flex:none}
+  .icon-btn{width:32px;height:32px;border-radius:9px;font-size:15px;color:var(--muted);background:var(--bg)}
+  .icon-btn:active{background:var(--line)}
+
+  /* shopping item check */
+  .check{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;margin-top:1px}
+  .check.on{background:var(--done);border-color:var(--done)}
+  .item.done .name{text-decoration:line-through;color:var(--faint)}
+
+  .qty{font-size:12.5px;color:var(--muted)}
+  .filters{display:flex;gap:8px;overflow-x:auto;padding:2px 4px 10px;-webkit-overflow-scrolling:touch}
+  .filters select{
+    flex:none;padding:8px 10px;border:1px solid var(--line);border-radius:10px;
+    background:var(--surface);color:var(--ink);outline:none;
+  }
+  .empty-state{text-align:center;color:var(--faint);padding:40px 20px;font-size:14px}
+
+  /* ---------- Modal ---------- */
+  .overlay{position:fixed;inset:0;z-index:50;background:rgba(20,24,40,.4);display:flex;align-items:flex-end;justify-content:center}
+  .sheet{
+    width:100%;max-width:560px;background:var(--surface);
+    border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+    max-height:90vh;overflow-y:auto;animation:slideUp .2s ease;
+  }
+  @keyframes slideUp{from{transform:translateY(40px);opacity:.6}to{transform:translateY(0);opacity:1}}
+  .sheet h3{margin:2px 0 16px;font-size:17px}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-weight:600}
+  .field input,.field select,.field textarea{
+    width:100%;padding:12px;border:1.5px solid var(--line);border-radius:11px;outline:none;
+    background:var(--surface);color:var(--ink);
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary)}
+  .field textarea{resize:vertical;min-height:64px}
+  .two{display:flex;gap:10px}.two>*{flex:1}
+  .sheet-acts{display:flex;gap:10px;margin-top:8px}
+  .sheet-acts .btn-primary{margin-top:0}
+  .btn-ghost{flex:none;padding:15px 18px;border-radius:12px;background:var(--bg);color:var(--muted);font-weight:600}
+  .btn-danger{width:100%;margin-top:10px;padding:13px;border-radius:12px;background:#FDE8E8;color:#DC2626;font-weight:600}
+
+  .day-events{margin-top:6px}
+  .toast{
+    position:fixed;left:50%;bottom:108px;transform:translateX(-50%);
+    background:#1E2230;color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;
+    z-index:99;box-shadow:var(--shadow);opacity:0;transition:opacity .2s;pointer-events:none;
+  }
+  .toast.show{opacity:1}
+
+  /* ---- 第一批：假日 / 急迫 / 倒數 / 開關 ---- */
+  .cell.holiday .num{color:#EF4444;font-weight:700}
+  .cell.sel.holiday .num{color:#fff}
+  .dots .urg{font-size:9px;line-height:1}
+  .hol-banner{background:#FDECEC;color:#DC2626;font-size:13px;font-weight:600;
+    padding:8px 12px;border-radius:10px;margin-bottom:10px;text-align:center}
+  .urg-badge{font-size:13px;flex:none;line-height:1}
+  .card.urgent-card{box-shadow:0 0 0 1.5px rgba(239,68,68,.45),var(--shadow)}
+  .countdown{display:inline-block;margin-top:5px;font-size:12px;font-weight:600;
+    color:#B45309;background:#FEF3E2;padding:2px 9px;border-radius:999px}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;
+    padding:11px 2px;border-top:1px solid var(--line);font-size:14px;color:var(--ink)}
+  .toggle-row:first-of-type{border-top:none}
+  .switch{position:relative;display:inline-block;width:46px;height:27px;flex:none}
+  .switch input{opacity:0;width:0;height:0}
+  .switch .slider{position:absolute;inset:0;background:#D7DBE3;border-radius:999px;transition:.2s}
+  .switch .slider::before{content:"";position:absolute;height:21px;width:21px;left:3px;top:3px;
+    background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .switch input:checked + .slider{background:var(--primary)}
+  .switch input:checked + .slider::before{transform:translateX(19px)}
+
+  /* ---- 第二批 2a：記事/分類/執行人/待購分組 ---- */
+  .legend{display:flex;gap:10px 14px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+  .legend span{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted)}
+  .type-badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;flex:none}
+  .type-task{background:#EAF1FE;color:#2563EB}
+  .type-record{background:#F1ECFB;color:#7C3AED}
+  .meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 10px}
+  .meta .who{color:#0D9488}
+  .shop-hint{font-size:12px;color:var(--faint);margin:2px 4px 12px}
+  .group-head{display:flex;align-items:center;gap:7px;margin:16px 4px 8px;font-size:13px;font-weight:700;color:var(--ink)}
+  .group-head .gcount{font-size:11px;font-weight:600;color:var(--faint);background:var(--bg);padding:1px 8px;border-radius:999px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+  .chip{padding:7px 13px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);
+    color:var(--muted);font-size:13px;font-weight:600}
+  .chip.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-d)}
+  .chip-add{display:flex;gap:8px;margin-top:9px}
+  .chip-add input{flex:1;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;outline:none}
+  .chip-add button{flex:none;padding:0 15px;border-radius:10px;background:var(--bg);color:var(--muted);font-weight:600}
+  .label-row{display:flex;align-items:center;justify-content:space-between}
+  .manage-link{font-size:12px;color:var(--primary);font-weight:600}
+  .person-row{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-top:1px solid var(--line)}
+  .person-row:first-of-type{border-top:none}
+  .person-row .del{color:#DC2626;font-size:13px;padding:5px 10px;border-radius:8px;background:#FDE8E8}
+
+  /* 🎒 百寶袋 快速記 */
+  .pocket-add{display:flex;align-items:center;gap:8px;background:var(--surface);
+    border-radius:12px;box-shadow:var(--shadow);padding:8px 10px;margin:2px 4px 12px}
+  .pocket-add .pocket-ico{font-size:18px;flex:none}
+  .pocket-add input{flex:1;border:none;outline:none;font-size:15px;background:transparent;color:var(--ink)}
+  .pocket-add button{flex:none;width:32px;height:32px;border-radius:9px;background:var(--primary);
+    color:#fff;font-size:18px;font-weight:700;line-height:1}
+  .pocket-add button:active{background:var(--primary-d)}
+
+  /* 分類圖示點選器 */
+  .iconpick{display:flex;flex-wrap:wrap;gap:7px}
+  .iconchip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    width:62px;padding:8px 4px;border-radius:12px;background:var(--bg);border:1.5px solid transparent;
+    color:var(--muted);font-size:11px;line-height:1.2;transition:all .12s}
+  .iconchip .ic{font-size:20px;line-height:1}
+  .iconchip .lb{white-space:nowrap}
+  .iconchip.on{background:#EAF2FF;border-color:var(--primary);color:var(--primary);font-weight:600}
+
+  /* 年度目標 */
+  .goal-card .goal-prog{display:flex;align-items:center;gap:8px;margin-top:8px}
+  .goal-bar{flex:1;height:9px;border-radius:6px;background:var(--bg);overflow:hidden}
+  .goal-fill{height:100%;border-radius:6px;transition:width .3s}
+  .goal-pct{font-size:12px;font-weight:700;color:var(--muted);min-width:34px;text-align:right}
+  .goal-sub{font-size:12px;color:var(--muted);margin-top:4px}
+  .goal-ms{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+  .ms-row{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
+  .ms-row input{width:18px;height:18px;flex:none}
+  .ms-done{text-decoration:line-through;color:var(--faint)}
+  .ms-edit{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .ms-edit input{flex:1}
+  .ms-del{flex:none;width:30px;height:30px;border-radius:8px;background:#FDE8E8;color:#DC2626;font-size:14px}
+
+  /* 多行事曆 */
+  .cal-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 12px;border-radius:12px;background:var(--bg);margin-bottom:8px}
+  .cal-row.on{background:#EAF2FF;border:1.5px solid var(--primary)}
+  .cal-name{flex:1;font-size:15px;color:var(--ink);font-weight:600;cursor:pointer}
+  .cal-del{flex:none;width:34px;height:34px;border-radius:9px;background:#FDE8E8;color:#DC2626;font-size:15px}
+  .iconchip:active{transform:scale(.94)}
+
+  /* ---- 第二批 2b：三態 / 總覽 ---- */
+  .seg{display:flex;gap:6px}
+  .seg button{flex:1;padding:11px 6px;border-radius:11px;border:1.5px solid var(--line);
+    background:var(--surface);color:var(--muted);font-size:14px;font-weight:600}
+  .seg button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-d)}
+  .ov-section-head{display:flex;align-items:center;gap:8px;margin:18px 4px 9px;font-size:13.5px;font-weight:700;color:var(--ink)}
+  .ov-section-head .gcount{font-size:11px;font-weight:600;color:var(--faint);background:var(--bg);padding:1px 8px;border-radius:999px}
+  .kind-ico{font-size:13px;flex:none}
+  .card.is-done{opacity:.62}
+  .card.is-done .name{text-decoration:line-through}
+  .check.on{background:var(--done);border-color:var(--done)}
+  .filters input[type=date]{flex:none;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="login">
+  <div class="login-card">
+    <div class="logo" id="logo">🔐</div>
+    <h1>智能行事曆</h1>
+    <p>請輸入授權碼登入</p>
+    <input id="codeInput" class="code-input" type="text" inputmode="text" autocomplete="off" placeholder="請輸入密碼" maxlength="40">
+    <div class="code-hint">輸入登入密碼（英文會自動轉大寫）</div>
+    <button id="loginBtn" class="btn-primary">登入</button>
+    <div id="loginMsg" class="login-msg"></div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app" class="hidden">
+  <header class="bar">
+    <div>
+      <div class="title" id="barTitle">📅 行事曆</div>
+      <div class="who" id="barWho"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="logout" id="calBtn">📂 行事曆</button>
+      <button class="logout" id="logoutBtn">登出</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Calendar tab -->
+    <section id="tabCal">
+      <div class="cal-head">
+        <button class="nav-btn" id="prevMonth">‹</button>
+        <button class="month-title" id="monthTitle">—</button>
+        <button class="nav-btn" id="nextMonth">›</button>
+      </div>
+      <div class="cal-card" id="calCard">
+        <div class="weekrow">
+          <span class="sun">日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span class="sat">六</span>
+        </div>
+        <div class="grid" id="calGrid"></div>
+        <div class="legend" id="calLegend"></div>
+      </div>
+
+      <div class="section-head">
+        <h2 id="dayHeading">今日記事</h2>
+        <button class="add-btn" id="addEventBtn">＋ 新增記事</button>
+      </div>
+      <div id="dayEvents" class="day-events"></div>
+
+      <div class="section-head" style="margin-top:18px">
+        <h2>🎒 百寶袋 <span style="font-size:12px;color:var(--faint);font-weight:400">無日期暫存</span></h2>
+      </div>
+      <div class="pocket-add">
+        <span class="pocket-ico">🎒</span>
+        <input type="text" id="pocketInput" autocomplete="off" placeholder="隨手記一筆…（無日期，填日期可升級成行程）">
+        <button id="pocketAddBtn" type="button">＋</button>
+      </div>
+      <div id="pocketList" class="day-events"></div>
+    </section>
+
+    <!-- Overview tab -->
+    <section id="tabOverview" class="hidden">
+      <div class="section-head" style="margin-top:4px">
+        <h2>總覽 <span style="font-size:12px;color:var(--faint);font-weight:400">查詢／回顧</span></h2>
+      </div>
+      <div class="filters">
+        <select id="ovDate">
+          <option value="today">今天</option>
+          <option value="all">全部</option>
+          <option value="pick">選某天…</option>
+        </select>
+        <input type="date" id="ovPickDate" class="hidden">
+        <select id="ovStatus">
+          <option value="pending">未完成</option>
+          <option value="done">已完成</option>
+          <option value="all">全部</option>
+        </select>
+        <select id="ovCategory"><option value="all">全部分類</option></select>
+        <select id="ovAssignee"><option value="all">全部負責人</option></select>
+      </div>
+      <div id="ovList"></div>
+    </section>
+
+    <!-- Shopping tab -->
+    <section id="tabShop" class="hidden">
+      <div class="section-head" style="margin-top:4px">
+        <h2>待購清單</h2>
+        <button class="add-btn" id="addItemBtn">＋ 新增待購</button>
+      </div>
+      <p class="shop-hint">勾選後自動完成並從清單消失，依購物子分類分組。</p>
+      <div id="shopList"></div>
+    </section>
+
+    <section id="tabGoals" class="hidden">
+      <div class="section-head" style="margin-top:4px">
+        <h2>🎯 年度目標</h2>
+        <button class="add-btn" id="addGoalBtn">＋ 新增目標</button>
+      </div>
+      <p class="shop-hint" id="goalYearEnd"></p>
+      <div id="goalList"></div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button id="navCal" class="active"><span class="ic">📅</span>行事曆</button>
+    <button id="navOverview"><span class="ic">📋</span>總覽</button>
+    <button id="navShop"><span class="ic">🛒</span>待購</button>
+    <button id="navGoals"><span class="ic">🎯</span>目標</button>
+  </nav>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toast" class="toast"></div>
+
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+/* ============================================================
+   智能行事曆　個人記事系統（記事 records + 人員 people）
+   Firebase Realtime Database / update() / 授權碼登入
+   v2a：任務/紀錄、10 分類、購物子分類、執行人、日期區間、待購分組
+   ============================================================ */
+
+/* ---------- 0. Firebase 設定（已填，my-project-c89db） ---------- */
+const firebaseConfig = {
+  apiKey:            "AIzaSyBGfQ1oKOrt723tJ3w7LIwDLSh0nGwRF30",
+  authDomain:        "my-project-c89db.firebaseapp.com",
+  databaseURL:       "https://my-project-c89db-default-rtdb.firebaseio.com",
+  projectId:         "my-project-c89db",
+  storageBucket:     "my-project-c89db.firebasestorage.app",
+  messagingSenderId: "301172719437",
+  appId:             "1:301172719437:web:83c981eea84caf77c38104"
+};
+
+let _firebaseReady = false;
+let db = null;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  _firebaseReady = true;
+} catch (e) {
+  console.error("Firebase 初始化失敗", e);
+  _firebaseReady = false;
+}
+
+/* ---------- 1. 全域狀態 ---------- */
+const state = {
+  user: null,
+  view: new Date(),
+  selected: ymd(new Date()),
+  records: {},
+  people: {},
+  goals: {},
+  calendars: {},
+  isAdmin: false,
+  currentCal: (function(){ try{ return localStorage.getItem("cal_current")||"main"; }catch(e){ return "main"; } })(),
+  recordsBound: false,
+  peopleBound: false,
+  goalsBound: false,
+  calendarsBound: false
+};
+let formAssignees = new Set();   // 編輯記事時暫存已選執行人
+
+/* ---------- 1.5 分類定義 ---------- */
+const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
+const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
+const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
+const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
+const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C/電器", other:"其他" };
+const CAT_ICON = { life:"🏠", work:"💼", health:"🩺", travel:"✈️", study:"📚", shopping:"🛒", finance:"💰", activity:"🎉", side:"💡", other:"📦" };
+const SUBCAT_ICON = { food:"🥦", daily:"🧴", clothing:"👕", travelgear:"🧳", electronics:"🔌", other:"📦" };
+function catIcon(c){ return CAT_ICON[c] || "📦"; }
+function subcatIcon(s){ return SUBCAT_ICON[s] || "📦"; }
+const TYPE_LABEL = { task:"任務", record:"紀錄" };
+
+/* 三態：排程 / 待辦 / 完成 */
+const KIND_ORDER = ["scheduled","todo","done"];
+const KIND_LABEL = { scheduled:"行程", todo:"百寶袋", done:"完成" };
+const KIND_ICO   = { scheduled:"🗓️", todo:"🎒", done:"✅" };
+// 從記事推得狀態（相容舊資料）
+function recKind(r){
+  if(!r) return "todo";
+  if(r.kind) return r.kind;
+  if((r.status||"pending")==="done") return "done";
+  if(r.dateStart) return "scheduled";
+  return "todo";
+}
+function isDone(r){ return recKind(r)==="done"; }
+
+/* 台灣國定假日（行政院人事行政總處核定，2026/6 起 + 2027 全年；含補假） */
+const HOLIDAYS = {
+  "2026-06-19":"端午節","2026-09-25":"中秋節","2026-09-28":"教師節",
+  "2026-10-09":"國慶日(補假)","2026-10-10":"國慶日","2026-10-25":"光復節","2026-10-26":"光復節(補假)",
+  "2026-12-25":"行憲紀念日","2027-01-01":"元旦","2027-02-04":"小年夜","2027-02-05":"除夕",
+  "2027-02-06":"春節","2027-02-07":"春節","2027-02-08":"春節","2027-02-09":"春節(補假)","2027-02-10":"春節(補假)",
+  "2027-02-28":"和平紀念日","2027-03-01":"和平紀念日(補假)","2027-04-04":"兒童節","2027-04-05":"清明節",
+  "2027-04-06":"兒童節(補假)","2027-04-30":"勞動節(補假)","2027-05-01":"勞動節","2027-06-09":"端午節",
+  "2027-09-15":"中秋節","2027-09-28":"教師節","2027-10-10":"國慶日","2027-10-11":"國慶日(補假)",
+  "2027-10-25":"光復節","2027-12-24":"行憲紀念日(補假)","2027-12-25":"行憲紀念日","2027-12-31":"開國紀念日(補假)"
+};
+function holidayName(s){ return HOLIDAYS[s] || null; }
+function countdownText(dateStr){
+  const today=new Date(ymd(new Date())+"T00:00:00");
+  const d=new Date(dateStr+"T00:00:00");
+  const diff=Math.round((d-today)/86400000);
+  if(diff===0) return "今天";
+  if(diff>0) return "倒數 "+diff+" 天";
+  return "已過 "+(-diff)+" 天";
+}
+
+/* ---------- 2. 小工具 ---------- */
+function $(id){ return document.getElementById(id); }
+function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
+function requireAuth(){ if(!state.user){ toast("尚未登入"); return false; } return true; }
+function genId(){ return "id_"+Date.now()+"_"+Math.floor(Math.random()*100000); }
+function catColor(c){ return CAT_COLOR[c] || "#64748B"; }
+function catLabel(c){ return CAT_LABEL[c] || "其他"; }
+function pillHtml(c){ const col=catColor(c); return '<span class="pill" style="background:'+col+'22;color:'+col+'">'+catIcon(c)+' '+catLabel(c)+'</span>'; }
+/* 圖示點選器：產生 HTML（含隱藏 input 保存值），搭配 wireIconPicker 綁定 */
+function iconPicker(inputId, order, labels, icons, selected){
+  return '<div class="iconpick" id="'+inputId+'_pick">'+
+    order.map(c=>'<button type="button" class="iconchip'+(selected===c?" on":"")+'" data-v="'+c+'" title="'+labels[c]+'">'+
+      '<span class="ic">'+icons[c]+'</span><span class="lb">'+labels[c]+'</span></button>').join("")+
+    '</div><input type="hidden" id="'+inputId+'" value="'+selected+'">';
+}
+function wireIconPicker(inputId, onChange){
+  const pick=$(inputId+"_pick"), inp=$(inputId);
+  if(!pick||!inp) return;
+  pick.querySelectorAll(".iconchip").forEach(b=>b.addEventListener("click", function(){
+    inp.value=this.getAttribute("data-v");
+    pick.querySelectorAll(".iconchip").forEach(x=>x.classList.toggle("on", x===this));
+    if(onChange) onChange(inp.value);
+  }));
+}
+function assigneeNames(ids){ return (ids||[]).map(id=>state.people[id]&&state.people[id].name).filter(Boolean); }
+// 記事的「有效日期區間」：有排定日用排定日；無排定日但已完成則用完成日
+function recRange(r){
+  if(!r) return null;
+  if(r.dateStart) return [r.dateStart, r.dateEnd || r.dateStart];
+  if(isDone(r) && r.doneDate) return [r.doneDate, r.doneDate];
+  return null;
+}
+// 記事是否落在某日（支援日期區間 + 完成日）
+function dayInRange(r, dateStr){
+  const rg = recRange(r);
+  if(!rg) return false;
+  return dateStr >= rg[0] && dateStr <= rg[1];
+}
+
+/* ---------- 多行事曆（3d）：只取目前這本 ---------- */
+function inCal(r){ return r && (r.cal||"main")===state.currentCal; }
+function curEntries(){ return Object.entries(state.records).filter(([id,r])=>inCal(r)); }
+function curValues(){ return Object.values(state.records).filter(inCal); }
+
+/* ---------- 重複（3b） ---------- */
+const REPEAT_UNIT_LABEL = { day:"天", week:"週", month:"個月", year:"年" };
+function hasRepeat(r){ return r && r.repeat && r.repeat.unit && r.repeat.unit!=="none"; }
+function repeatText(rep){
+  if(!rep || !rep.unit || rep.unit==="none") return "";
+  const n=Math.max(1, rep.every||1);
+  return "🔁 每"+(n>1?n:"")+REPEAT_UNIT_LABEL[rep.unit];
+}
+// 在某日期(YYYY-MM-DD)往後加一個間隔
+function addInterval(ymdStr, rep){
+  const p=ymdStr.split("-").map(Number);
+  const dt=new Date(p[0], p[1]-1, p[2]);
+  const n=Math.max(1, rep.every||1);
+  if(rep.unit==="day")        dt.setDate(dt.getDate()+n);
+  else if(rep.unit==="week")  dt.setDate(dt.getDate()+7*n);
+  else if(rep.unit==="month") dt.setMonth(dt.getMonth()+n);
+  else if(rep.unit==="year")  dt.setFullYear(dt.getFullYear()+n);
+  return ymd(dt);
+}
+// 從 base 日往後推，找到第一個 >= today 的日期（跳過已過的，避免堆積）
+function nextFutureDate(base, rep, today){
+  let d=addInterval(base, rep), guard=0;
+  while(d < today && guard<2000){ d=addInterval(d, rep); guard++; }
+  return d;
+}
+// 產生「下一筆」記事物件（不含 id），用於 onDone（採購/任務完成後）
+function buildNextRecord(r, baseDate){
+  const today=ymd(new Date());
+  let nd=addInterval(baseDate, r.repeat);
+  if(nd < today) nd=nextFutureDate(baseDate, r.repeat, today);
+  const copy=Object.assign({}, r);
+  delete copy.id;
+  copy.dateStart=nd;
+  copy.doneDate=null; copy.status="pending"; copy.kind="scheduled";
+  copy.spawned=false;
+  copy.createdAt=Date.now();
+  return copy;
+}
+function writeRecord(rec){
+  if(LOCAL_MODE){ const key=genId(); state.records[key]=rec; lsSaveRecords(); }
+  else { const key=db.ref("records").push().key; db.ref("records/"+key).set(rec); }
+}
+// 紀念日類（mode=onDate）：載入時把已過日期的，原地推進到下一個未來日（永遠一筆未來）
+function processRecurrences(){
+  const today=ymd(new Date());
+  let changed=false;
+  curEntries().forEach(([id,r])=>{
+    if(!hasRepeat(r)) return;
+    if((r.repeat.mode||"onDone")!=="onDate") return;   // onDone 在完成時處理
+    if(!r.dateStart || r.dateStart>=today) return;     // 還沒過，留著
+    const nd=nextFutureDate(r.dateStart, r.repeat, today);
+    if(nd!==r.dateStart){
+      if(LOCAL_MODE){ state.records[id].dateStart=nd; changed=true; }
+      else { db.ref("records/"+id+"/dateStart").set(nd); }
+    }
+  });
+  if(changed && LOCAL_MODE){ lsSaveRecords(); }
+}
+
+/* ---------- 2.5 儲存模式 ---------- */
+const LOCAL_MODE = !_firebaseReady;
+function lsLoad(){
+  try{ state.records = JSON.parse(localStorage.getItem("cal_records")||"{}") || {}; }catch(e){ state.records={}; }
+  try{ state.people  = JSON.parse(localStorage.getItem("cal_people") ||"{}") || {}; }catch(e){ state.people={}; }
+  try{ state.goals   = JSON.parse(localStorage.getItem("cal_goals")  ||"{}") || {}; }catch(e){ state.goals={}; }
+  try{ state.calendars = JSON.parse(localStorage.getItem("cal_calendars")||"{}") || {}; }catch(e){ state.calendars={}; }
+}
+function lsSaveCalendars(){ try{ localStorage.setItem("cal_calendars", JSON.stringify(state.calendars)); }catch(e){ toast("本機儲存失敗"); } }
+function lsSaveRecords(){ try{ localStorage.setItem("cal_records", JSON.stringify(state.records)); }catch(e){ toast("本機儲存失敗"); } }
+function lsSavePeople(){ try{ localStorage.setItem("cal_people", JSON.stringify(state.people)); }catch(e){ toast("本機儲存失敗"); } }
+function lsSaveGoals(){ try{ localStorage.setItem("cal_goals", JSON.stringify(state.goals)); }catch(e){ toast("本機儲存失敗"); } }
+
+/* ---------- 2.6 舊資料自動轉換（events/items → records） ---------- */
+const MAP_TYPE = { work:"work", life:"life", health:"health", important:"other" };
+const MAP_ITEMCAT = { food:"food", household:"daily", clothing:"clothing", travel:"travelgear", "3C":"electronics", other:"other" };
+function convertOld(oldE, oldI){
+  const out={};
+  Object.entries(oldE||{}).forEach(([id,e])=>{
+    if(!e) return;
+    out["mig_e_"+id]={
+      type:"task", title:e.title||"(未命名)", category:MAP_TYPE[e.type]||"life",
+      dateStart:e.date||"", dateEnd:"", start:e.start||"", end:e.end||"",
+      assignees:[], urgent:!!e.urgent||e.type==="important", countdown:!!e.countdown,
+      status:"pending", note:e.note||"", createdAt:Date.now()
+    };
+  });
+  Object.entries(oldI||{}).forEach(([id,it])=>{
+    if(!it) return;
+    out["mig_i_"+id]={
+      type:"task", title:it.name||"(未命名)", category:"shopping",
+      subcategory:MAP_ITEMCAT[it.category]||"other", qty:it.qty||1,
+      dateStart:"", dateEnd:"", start:"", end:"", assignees:[],
+      urgent:false, countdown:false, status:it.status||"pending",
+      note:it.note||"", createdAt:it.createdAt||Date.now()
+    };
+  });
+  return out;
+}
+function localMigrateIfNeeded(){
+  if(localStorage.getItem("cal_v2_migrated")) return;
+  let oldE={}, oldI={};
+  try{ oldE=JSON.parse(localStorage.getItem("cal_events")||"{}")||{}; }catch(e){}
+  try{ oldI=JSON.parse(localStorage.getItem("cal_items") ||"{}")||{}; }catch(e){}
+  const conv=convertOld(oldE,oldI);
+  if(Object.keys(conv).length){
+    let cur={}; try{ cur=JSON.parse(localStorage.getItem("cal_records")||"{}")||{}; }catch(e){}
+    Object.assign(cur,conv);
+    localStorage.setItem("cal_records", JSON.stringify(cur));
+  }
+  localStorage.setItem("cal_v2_migrated","1");
+}
+async function fbMigrateIfNeeded(){
+  if(localStorage.getItem("cal_v2_migrated_fb")) return;
+  try{
+    const es=await db.ref("events").once("value");
+    const is=await db.ref("items").once("value");
+    const conv=convertOld(es.val()||{}, is.val()||{});
+    if(Object.keys(conv).length){
+      const updates={};
+      Object.keys(conv).forEach(k=>updates["records/"+k]=conv[k]);
+      await db.ref().update(updates);
+    }
+    localStorage.setItem("cal_v2_migrated_fb","1");
+  }catch(e){ console.warn("FB 舊資料轉換略過", e); }
+}
+
+/* ============================================================
+   3. 授權碼登入（共用碼模式，保留離線測試）
+   ============================================================ */
+const AUTH_KEY    = "cal_auth";
+const AUTH_FB_KEY = "cal_v1_auth";
+const DEFAULT_CODE = "0430";
+const ADMIN_FB_KEY = "cal_v1_admin";
+const DEFAULT_ADMIN = "admin";
+async function resolveAdmin(){
+  if(!_firebaseReady) return localStorage.getItem("cal_admin_local") || DEFAULT_ADMIN;
+  try{
+    const snap=await db.ref(ADMIN_FB_KEY).once("value");
+    if(!snap.exists()){ await db.ref(ADMIN_FB_KEY).set({ code:DEFAULT_ADMIN }); return DEFAULT_ADMIN; }
+    return snap.val().code;
+  }catch(e){ return localStorage.getItem("cal_admin_local") || DEFAULT_ADMIN; }
+}
+async function changeAdmin(newCode){
+  if(!_firebaseReady){ localStorage.setItem("cal_admin_local", newCode); return true; }
+  try{ await db.ref(ADMIN_FB_KEY).set({ code:newCode }); return true; }
+  catch(e){ console.error(e); return false; }
+}
+const CODE_RE = /^[A-Z]{4}-[0-9]{4}$/;
+function generateAuthCode(){
+  const L="ABCDEFGHJKLMNPQRSTUVWXYZ", D="23456789";  // 去掉易混 I/O/0/1
+  let s=""; for(let i=0;i<4;i++) s+=L[Math.floor(Math.random()*L.length)];
+  s+="-"; for(let i=0;i<4;i++) s+=D[Math.floor(Math.random()*D.length)];
+  return s;
+}
+
+const codeInput=$("codeInput"), loginBtn=$("loginBtn"), loginMsg=$("loginMsg");
+loginBtn.addEventListener("click", doLogin);
+codeInput.addEventListener("input", ()=>{ const p=codeInput.selectionStart; codeInput.value=codeInput.value.toUpperCase(); try{ codeInput.setSelectionRange(p,p); }catch(e){} });
+codeInput.addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+
+async function getCorrectCode(){
+  const snap=await db.ref(AUTH_FB_KEY).once("value");
+  if(!snap.exists()){ await db.ref(AUTH_FB_KEY).set({ code:DEFAULT_CODE }); return DEFAULT_CODE; }
+  return snap.val().code;
+}
+async function resolveCode(){
+  return DEFAULT_CODE;   /* 固定密碼，不可在 App 內變更 */
+}
+async function checkAuth(){
+  const saved=localStorage.getItem(AUTH_KEY);
+  if(!saved) return false;
+  return saved === await resolveCode();
+}
+async function verifyAuthCode(input){
+  const correct=await resolveCode();
+  if(input===correct){ localStorage.setItem(AUTH_KEY, input); return true; }
+  return false;
+}
+async function changeAuthCode(newCode){
+  if(!_firebaseReady){ localStorage.setItem("cal_code_local", newCode); localStorage.setItem(AUTH_KEY, newCode); return true; }
+  try{ await db.ref(AUTH_FB_KEY).set({ code:newCode }); localStorage.setItem(AUTH_KEY, newCode); return true; }
+  catch(err){ console.error(err); return false; }
+}
+window.changeAuthCode = changeAuthCode;
+
+async function doLogin(){
+  loginMsg.textContent="";
+  const code=codeInput.value.trim();
+  if(!code){ loginMsg.textContent="請輸入密碼"; return; }
+  loginBtn.disabled=true; loginBtn.textContent="驗證中…";
+  const ok=await verifyAuthCode(code);
+  loginBtn.disabled=false; loginBtn.textContent="登入";
+  if(ok){ state.isAdmin=true; enterApp(); }
+  else { loginMsg.textContent="密碼錯誤，請重試"; codeInput.value=""; }
+}
+function enterApp(){
+  state.user = localStorage.getItem(AUTH_KEY) || DEFAULT_CODE;
+  $("login").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  const ab=$("adminPanelBtn"); if(ab) ab.style.display = state.isAdmin ? "" : "none";
+  renderLegend();
+  bindData();
+  renderAll();
+}
+$("logoutBtn").addEventListener("click", ()=>{
+  if(state.recordsBound){ db.ref("records").off(); state.recordsBound=false; }
+  if(state.peopleBound){ db.ref("people").off(); state.peopleBound=false; }
+  state.user=null; state.records={}; state.people={}; state.goals={}; state.isAdmin=false;
+  localStorage.removeItem(AUTH_KEY);
+  localStorage.removeItem("cal_admin_on");
+  $("app").classList.add("hidden");
+  $("login").classList.remove("hidden");
+  codeInput.value=""; loginMsg.textContent="";
+});
+
+/* 🔧 管理（入口）：只有管理員密碼可進入 */
+function openAdminGate(){
+  openSheet("🔧 管理員登入",
+    '<div class="field"><label>管理員密碼</label><input id="adm_pw" type="password" autocomplete="off" placeholder="輸入管理員密碼"></div>'+
+    '<p style="font-size:12px;color:var(--muted);margin:-4px 2px 4px;line-height:1.5">僅限管理員。預設管理員密碼為 <b>admin</b>，進入後請立即變更。</p>',
+    verifyAdminGate, null, "進入");
+}
+async function verifyAdminGate(){
+  const pw=$("adm_pw").value.trim();
+  if(!pw){ toast("請輸入管理員密碼"); return; }
+  const correct=await resolveAdmin();
+  if(pw!==correct){ toast("管理員密碼不正確"); return; }
+  openAdminPanel();
+}
+function openAdminPanel(){
+  openSheet("🔧 管理",
+    '<div class="field"><label>變更登入密碼（留空＝不改）</label>'+
+      '<div class="chip-add"><input id="adm_newcode" autocomplete="off" placeholder="自訂密碼" maxlength="40" style="text-transform:uppercase"><button id="adm_gen" type="button">🎲 產生</button></div>'+
+      '<p style="font-size:12px;color:var(--faint);margin:4px 2px 0">可自行輸入；英文會自動轉大寫。改完你自己會保持登入，家人需用新密碼。</p>'+
+    '</div>',
+    saveAdminPanel, null, "儲存");
+  const gb=$("adm_gen"); if(gb) gb.addEventListener("click", ()=>{ $("adm_newcode").value=generateAuthCode(); });
+  const nc=$("adm_newcode"); if(nc) nc.addEventListener("input", ()=>{ const p=nc.selectionStart; nc.value=nc.value.toUpperCase(); try{ nc.setSelectionRange(p,p); }catch(e){} });
+}
+async function saveAdminPanel(){
+  const newCode=$("adm_newcode").value.trim().toUpperCase();
+  if(!newCode){ closeSheet(); toast("未變更"); return; }
+  if(await changeAuthCode(newCode)){ closeSheet(); toast("登入密碼已更新為 "+newCode); }
+  else toast("更新失敗");
+}
+window.changeAdmin = changeAdmin;
+
+/* ============================================================
+   4. 資料綁定
+   ============================================================ */
+function bindData(){
+  if(LOCAL_MODE){ localMigrateIfNeeded(); lsLoad(); ensureDefaultCalendar(); renderCalBar(); renderAll(); return; }
+  fbMigrateIfNeeded().then(()=>{
+    if(!state.calendarsBound){ db.ref("calendars").on("value", s=>{ state.calendars=s.val()||{}; ensureDefaultCalendar(); renderCalBar(); renderAll(); }); state.calendarsBound=true; }
+    if(!state.recordsBound){ db.ref("records").on("value", s=>{ state.records=s.val()||{}; renderAll(); }); state.recordsBound=true; }
+    if(!state.peopleBound){ db.ref("people").on("value", s=>{ state.people=s.val()||{}; renderAll(); }); state.peopleBound=true; }
+    if(!state.goalsBound){ db.ref("goals").on("value", s=>{ state.goals=s.val()||{}; renderGoals(); }); state.goalsBound=true; }
+  });
+}
+function renderAll(){ processRecurrences(); refreshOverviewFilterOptions(); renderCalendar(); renderDayEvents(); renderPocket(); renderOverview(); renderShop(); renderGoals(); }
+
+/* 🎒 行事曆頁的百寶袋清單：無日期、未完成、非採購 */
+function renderPocket(){
+  const wrap=$("pocketList"); if(!wrap) return;
+  const arr=curEntries().map(([id,r])=>Object.assign({id},r))
+    .filter(r=>r.category!=="shopping" && !r.dateStart && recKind(r)!=="done");
+  arr.sort((a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u)return u; return (b.createdAt||0)-(a.createdAt||0); });
+  if(arr.length===0){ wrap.innerHTML='<div class="empty-state" style="padding:14px">百寶袋是空的，上面隨手記一筆吧。</div>'; return; }
+  wrap.innerHTML="";
+  arr.forEach(r=>wrap.appendChild(overviewCard(r,"todo")));
+}
+
+/* ============================================================
+   5. Tab 切換（行事曆 / 總覽 / 待購）
+   ============================================================ */
+$("navCal").addEventListener("click", ()=>switchTab("cal"));
+$("navOverview").addEventListener("click", ()=>switchTab("overview"));
+$("navShop").addEventListener("click", ()=>switchTab("shop"));
+$("navGoals").addEventListener("click", ()=>switchTab("goals"));
+function switchTab(t){
+  $("tabCal").classList.toggle("hidden", t!=="cal");
+  $("tabOverview").classList.toggle("hidden", t!=="overview");
+  $("tabShop").classList.toggle("hidden", t!=="shop");
+  $("tabGoals").classList.toggle("hidden", t!=="goals");
+  $("navCal").classList.toggle("active", t==="cal");
+  $("navOverview").classList.toggle("active", t==="overview");
+  $("navShop").classList.toggle("active", t==="shop");
+  $("navGoals").classList.toggle("active", t==="goals");
+  $("barTitle").textContent = t==="cal" ? "📅 行事曆" : (t==="overview" ? "📋 總覽" : (t==="shop" ? "🛒 待購清單" : "🎯 年度目標"));
+  if(t==="overview") renderOverview();
+  if(t==="shop") renderShop();
+  if(t==="goals") renderGoals();
+}
+
+/* ============================================================
+   5.5 多行事曆（3d）
+   ============================================================ */
+$("calBtn").addEventListener("click", openCalManager);
+
+function ensureDefaultCalendar(){
+  if(!state.calendars || Object.keys(state.calendars).length===0){
+    state.calendars={ main:{ name:"我的行事曆", createdAt:Date.now() } };
+    if(LOCAL_MODE) lsSaveCalendars(); else db.ref("calendars/main").set(state.calendars.main);
+  }
+  if(!state.currentCal || !state.calendars[state.currentCal]){
+    state.currentCal = state.calendars["main"] ? "main" : Object.keys(state.calendars)[0];
+    try{ localStorage.setItem("cal_current", state.currentCal); }catch(e){}
+  }
+}
+function calName(id){ const c=state.calendars[id]; return c? c.name : "行事曆"; }
+function renderCalBar(){
+  const el=$("barWho"); if(el) el.textContent="📂 "+calName(state.currentCal)+(LOCAL_MODE?"（本機）":"");
+}
+function setCurrentCal(id){
+  if(!state.calendars[id]) return;
+  state.currentCal=id;
+  try{ localStorage.setItem("cal_current", id); }catch(e){}
+  renderCalBar(); closeSheet(); renderAll();
+  toast("已切換到「"+calName(id)+"」");
+}
+function openCalManager(){
+  const ids=Object.keys(state.calendars);
+  let html='<p style="font-size:12px;color:var(--muted);margin:-2px 2px 12px;line-height:1.5">點名稱可切換。每本行事曆的資料各自獨立；用<b>同一組授權碼</b>登入的家人，會看到同樣這些行事曆（即分享方式）。</p>';
+  html+='<div id="calList">'+ids.map(id=>{
+    const on=id===state.currentCal;
+    return '<div class="cal-row'+(on?" on":"")+'"><span class="cal-name" data-cal="'+id+'">'+(on?"✓ ":"")+esc(calName(id))+'</span>'+
+      '<button type="button" class="cal-del" data-del="'+id+'">🗑</button></div>';
+  }).join("")+'</div>';
+  html+='<div class="chip-add" style="margin-top:10px"><input id="calNewName" autocomplete="off" placeholder="新行事曆名稱（如：家庭、工作）"><button id="calAddBtn" type="button">＋ 新增</button></div>';
+  openSheet("行事曆", html, null, null);
+  const sv=$("sheetSave"); if(sv) sv.style.display="none";
+  $("calList").querySelectorAll(".cal-name").forEach(s=>s.addEventListener("click", ()=>setCurrentCal(s.getAttribute("data-cal"))));
+  $("calList").querySelectorAll(".cal-del").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); deleteCalendar(b.getAttribute("data-del")); }));
+  $("calAddBtn").addEventListener("click", ()=>{ const nm=$("calNewName").value.trim(); if(nm){ addCalendar(nm); } else { toast("請輸入名稱"); } });
+}
+function addCalendar(name){
+  if(!requireAuth()) return;
+  const id=genId();
+  const c={ name, createdAt:Date.now() };
+  if(LOCAL_MODE){ state.calendars[id]=c; lsSaveCalendars(); }
+  else db.ref("calendars/"+id).set(c);
+  state.calendars[id]=c;
+  setCurrentCal(id);
+}
+function deleteCalendar(id){
+  if(!requireAuth()) return;
+  if(Object.keys(state.calendars).length<=1){ toast("至少保留一本行事曆"); return; }
+  const recs=Object.entries(state.records).filter(([rid,r])=>(r.cal||"main")===id);
+  openConfirm("刪除行事曆",
+    "確定要刪除行事曆「<b>"+esc(calName(id))+"</b>」嗎？",
+    function(){
+      openConfirm("再次確認",
+        "這會<b>一併刪除這本裡的 "+recs.length+" 筆記事／採購</b>，且<b>無法復原</b>。<br>確定要刪除嗎？",
+        function(){ doDeleteCalendar(id, recs); },
+        "確定刪除");
+    },
+    "繼續");
+}
+function doDeleteCalendar(id, recs){
+  if(LOCAL_MODE){
+    recs.forEach(([rid])=>delete state.records[rid]);
+    delete state.calendars[id];
+    lsSaveRecords(); lsSaveCalendars();
+  } else {
+    const updates={}; recs.forEach(([rid])=>updates["records/"+rid]=null); updates["calendars/"+id]=null;
+    db.ref().update(updates);
+    recs.forEach(([rid])=>delete state.records[rid]); delete state.calendars[id];
+  }
+  if(state.currentCal===id){ state.currentCal=Object.keys(state.calendars)[0]; try{ localStorage.setItem("cal_current", state.currentCal); }catch(e){} }
+  renderCalBar(); closeSheet(); renderAll(); toast("已刪除行事曆");
+}
+
+/* ============================================================
+   6. 行事曆
+   ============================================================ */
+$("prevMonth").addEventListener("click", ()=>changeMonth(-1));
+$("nextMonth").addEventListener("click", ()=>changeMonth(1));
+$("monthTitle").addEventListener("click", openMonthPicker);
+$("addEventBtn").addEventListener("click", ()=>openRecordForm(null, { dateStart:state.selected }));
+
+function changeMonth(delta){ state.view=new Date(state.view.getFullYear(), state.view.getMonth()+delta, 1); renderCalendar(); }
+
+function renderLegend(){
+  const el=$("calLegend"); if(!el) return;
+  el.innerHTML = CAT_ORDER.map(c=>'<span><i class="dot" style="background:'+catColor(c)+'"></i>'+CAT_ICON[c]+' '+CAT_LABEL[c]+'</span>').join("");
+}
+function dotsForDay(dateStr){
+  const cats=[]; let urgent=false;
+  curValues().forEach(r=>{
+    if(r && dayInRange(r,dateStr)){
+      if(cats.indexOf(r.category)<0) cats.push(r.category);
+      if(r.urgent) urgent=true;
+    }
+  });
+  return { cats, urgent };
+}
+function renderCalendar(){
+  const y=state.view.getFullYear(), m=state.view.getMonth();
+  $("monthTitle").textContent = y+" 年 "+(m+1)+" 月";
+  const grid=$("calGrid"); grid.innerHTML="";
+  const first=new Date(y,m,1).getDay();
+  const days=new Date(y,m+1,0).getDate();
+  const todayStr=ymd(new Date());
+
+  for(let i=0;i<first;i++){ const c=document.createElement("div"); c.className="cell empty"; grid.appendChild(c); }
+  for(let d=1;d<=days;d++){
+    const dateStr=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+    const c=document.createElement("div");
+    c.className="cell";
+    if(dateStr===todayStr) c.classList.add("today");
+    if(dateStr===state.selected) c.classList.add("sel");
+    const hol=holidayName(dateStr);
+    if(hol){ c.classList.add("holiday"); c.title=hol; }
+    const info=dotsForDay(dateStr);
+    let dots=info.cats.slice(0,4).map(cat=>'<i class="dot" style="background:'+catColor(cat)+'"></i>').join("");
+    if(info.urgent) dots='<span class="urg">❗️</span>'+dots;
+    c.innerHTML='<span class="num">'+d+'</span><span class="dots">'+dots+'</span>';
+    c.addEventListener("click", ()=>{ state.selected=dateStr; renderCalendar(); renderDayEvents(); });
+    grid.appendChild(c);
+  }
+}
+
+function renderDayEvents(){
+  const wrap=$("dayEvents");
+  const list=curEntries()
+    .filter(([id,r])=>dayInRange(r, state.selected))
+    .map(([id,r])=>Object.assign({id},r))
+    .sort((a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0) return u; return (a.start||"").localeCompare(b.start||""); });
+
+  const sel=new Date(state.selected+"T00:00:00");
+  $("dayHeading").textContent = (sel.getMonth()+1)+"/"+sel.getDate()+" 記事";
+  const hol=holidayName(state.selected);
+  const holBanner = hol ? '<div class="hol-banner">🇹🇼 '+esc(hol)+'</div>' : '';
+
+  if(list.length===0){ wrap.innerHTML=holBanner+'<div class="empty-state">這天還沒有記事，點「新增記事」加入。</div>'; return; }
+
+  wrap.innerHTML=holBanner;
+  list.forEach(r=>{
+    const k=recKind(r);
+    const card=document.createElement("div");
+    card.className="card"+(r.urgent?" urgent-card":"")+(k==="done"?" is-done":"");
+    const color=catColor(r.category);
+    const timeTxt=(r.start||"")+(r.end?(" – "+r.end):"");
+    const who=assigneeNames(r.assignees);
+    const meta=[];
+    if(timeTxt) meta.push('🕒 '+esc(timeTxt));
+    if(r.category==="shopping" && r.qty) meta.push('數量 '+esc(r.qty));
+    if(r.amount!=null && r.amount!=="") meta.push('💰 '+esc(r.amount));
+    if(hasRepeat(r)) meta.push(repeatText(r.repeat));
+    if(who.length) meta.push('<span class="who">👤 '+esc(who.join("、"))+'</span>');
+    if(r.countdown && r.dateStart && k!=="done") meta.push('⏳ '+countdownText(r.dateStart));
+    card.innerHTML=
+      '<div class="stripe" style="background:'+color+'"></div>'+
+      '<div class="body">'+
+        '<div class="row1">'+
+          (r.urgent?'<span class="urg-badge">❗️</span>':'')+
+          '<span class="kind-ico">'+KIND_ICO[k]+'</span>'+
+          '<span class="name">'+esc(r.title)+'</span>'+
+          pillHtml(r.category)+
+        '</div>'+
+        (meta.length?'<div class="meta">'+meta.join("")+'</div>':'')+
+        (r.note?'<div class="note">'+esc(r.note)+'</div>':'')+
+      '</div>'+
+      '<div class="acts">'+
+        '<button class="icon-btn" data-edit>✏️</button>'+
+        '<button class="icon-btn" data-del>🗑</button>'+
+      '</div>';
+    card.querySelector("[data-edit]").addEventListener("click", ()=>openEditor(r));
+    card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title));
+    wrap.appendChild(card);
+  });
+}
+
+/* 標題歷史 */
+function titleHistoryOptions(){
+  const seen=new Set();
+  curValues().forEach(r=>{ if(r&&r.title) seen.add(r.title); });
+  return Array.from(seen).slice(0,60).map(t=>'<option value="'+esc(t)+'">').join("");
+}
+
+/* 年月跳轉 */
+function openMonthPicker(){
+  let years=""; for(let yy=1980; yy<=2035; yy++) years+='<option value="'+yy+'"'+(yy===state.view.getFullYear()?" selected":"")+'>'+yy+' 年</option>';
+  let months=""; for(let mm=0; mm<12; mm++) months+='<option value="'+mm+'"'+(mm===state.view.getMonth()?" selected":"")+'>'+(mm+1)+' 月</option>';
+  openSheet("跳轉年月",
+    '<div class="two"><div class="field"><label>年</label><select id="pk_year">'+years+'</select></div>'+
+    '<div class="field"><label>月</label><select id="pk_month">'+months+'</select></div></div>',
+    function(){ state.view=new Date(Number($("pk_year").value), Number($("pk_month").value), 1); closeSheet(); renderCalendar(); },
+    null, "前往");
+}
+/* 月曆滑動 */
+(function(){
+  const card=$("calCard"); let sx=0, sy=0, tracking=false;
+  card.addEventListener("touchstart", e=>{ sx=e.touches[0].clientX; sy=e.touches[0].clientY; tracking=true; }, {passive:true});
+  card.addEventListener("touchend", e=>{
+    if(!tracking) return; tracking=false;
+    const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5){ changeMonth(dx<0?1:-1); }
+  }, {passive:true});
+})();
+
+/* ============================================================
+   6.5 總覽（查詢／回顧，可篩選）
+   ============================================================ */
+["ovDate","ovStatus","ovCategory","ovAssignee"].forEach(idd=>{
+  const el=$(idd); if(el) el.addEventListener("change", renderOverview);
+});
+$("ovDate").addEventListener("change", function(){
+  $("ovPickDate").classList.toggle("hidden", this.value!=="pick");
+});
+$("ovPickDate").addEventListener("change", renderOverview);
+
+/* 🎒 百寶袋：隨手記一筆（無日期記事，只有標題） */
+function quickAddPocket(){
+  if(!requireAuth()) return;
+  const inp=$("pocketInput"); const title=(inp.value||"").trim();
+  if(!title){ return; }
+  const data={ kind:"todo", title, category:"other", dateStart:"", dateEnd:"",
+    start:"", end:"", assignees:[], urgent:false, countdown:false, note:"",
+    status:"pending", createdAt:Date.now(), cal:state.currentCal };
+  if(LOCAL_MODE){ const key=genId(); state.records[key]=data; lsSaveRecords(); inp.value=""; renderAll(); return; }
+  const key=db.ref("records").push().key;
+  db.ref("records/"+key).update(data).then(()=>{ inp.value=""; }).catch(e=>{ console.error(e); toast("儲存失敗"); });
+}
+$("pocketAddBtn").addEventListener("click", quickAddPocket);
+$("pocketInput").addEventListener("keydown", e=>{ if(e.key==="Enter") quickAddPocket(); });
+
+function refreshOverviewFilterOptions(){
+  // 分類選單
+  const cs=$("ovCategory"); if(cs){ const cur=cs.value;
+    cs.innerHTML='<option value="all">全部分類</option>'+CAT_ORDER.map(c=>'<option value="'+c+'">'+CAT_ICON[c]+' '+CAT_LABEL[c]+'</option>').join("");
+    cs.value=cur && [...cs.options].some(o=>o.value===cur)?cur:"all";
+  }
+  // 負責人選單
+  const as=$("ovAssignee"); if(as){ const cur=as.value;
+    as.innerHTML='<option value="all">全部負責人</option>'+Object.entries(state.people).map(([id,p])=>'<option value="'+id+'">'+esc(p.name)+'</option>').join("");
+    as.value=cur && [...as.options].some(o=>o.value===cur)?cur:"all";
+  }
+}
+
+function overviewDateMatch(r){
+  const mode=$("ovDate").value;
+  if(mode==="all") return true;
+  const rg=recRange(r);
+  if(!rg) return true;                      // 真正無日期 → 一律顯示
+  if(mode==="today") return dayInRange(r, ymd(new Date()));
+  if(mode==="pick"){ const d=$("ovPickDate").value; return d ? dayInRange(r,d) : true; }
+  return true;
+}
+
+function renderOverview(){
+  const wrap=$("ovList");
+  const statusF=$("ovStatus").value;     // pending / done / all
+  const catF=$("ovCategory").value;
+  const whoF=$("ovAssignee").value;
+
+  // 篩選
+  let arr=curEntries().map(([id,r])=>Object.assign({id},r)).filter(r=>{
+    if(r.category==="shopping"){ if(catF!=="shopping") return false; }  // 採購預設不顯示，篩「購物」才查
+    else if(catF!=="all" && r.category!==catF) return false;
+    if(whoF!=="all" && !(r.assignees||[]).includes(whoF)) return false;
+    const k=recKind(r);
+    if(!overviewDateMatch(r)) return false;   // 無日期者一律顯示；有日期(含預期日)依篩選
+    if(statusF==="pending" && k==="done") return false;
+    if(statusF==="done" && k!=="done") return false;
+    return true;
+  });
+
+  // 分三態區段
+  const buckets={ scheduled:[], todo:[], done:[] };
+  arr.forEach(r=>buckets[recKind(r)].push(r));
+  const cmp=(a,b)=>{
+    const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0) return u;
+    const da=a.dateStart||"", dbb=b.dateStart||"";
+    if(da&&dbb&&da!==dbb) return da.localeCompare(dbb);
+    if(da&&!dbb) return -1; if(!da&&dbb) return 1;
+    return (a.start||"").localeCompare(b.start||"");
+  };
+  const effDate=r=>(r.dateStart||r.doneDate||"");
+  const cmpDone=(a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0)return u; return effDate(b).localeCompare(effDate(a)); };
+  buckets.scheduled.sort(cmp); buckets.todo.sort(cmp); buckets.done.sort(cmpDone);
+
+  const order = statusF==="done" ? ["done"] : (statusF==="pending" ? ["scheduled","todo"] : ["scheduled","todo","done"]);
+  let total=order.reduce((n,k)=>n+buckets[k].length,0);
+  if(total===0){ wrap.innerHTML='<div class="empty-state">沒有符合的記事，試著調整上方篩選。</div>'; return; }
+
+  wrap.innerHTML="";
+  order.forEach(k=>{
+    const items=buckets[k];
+    if(items.length===0) return;
+    const head=document.createElement("div");
+    head.className="ov-section-head";
+    head.innerHTML=KIND_ICO[k]+' '+KIND_LABEL[k]+'<span class="gcount">'+items.length+'</span>';
+    wrap.appendChild(head);
+    items.forEach(r=>wrap.appendChild(overviewCard(r, k)));
+  });
+}
+
+function overviewCard(r, k){
+  const card=document.createElement("div");
+  card.className="card"+(r.urgent?" urgent-card":"")+(k==="done"?" is-done":"");
+  const color=catColor(r.category);
+  const who=assigneeNames(r.assignees);
+  const timeTxt=(r.start||"")+(r.end?(" – "+r.end):"");
+  let dateTxt="", datePrefix="";
+  if(r.dateStart){ dateTxt=r.dateStart.slice(5)+(r.dateEnd&&r.dateEnd!==r.dateStart?("~"+r.dateEnd.slice(5)):""); if(k==="todo") datePrefix="預期 "; }
+  else if(k==="done" && r.doneDate){ dateTxt=r.doneDate.slice(5); datePrefix="完成 "; }
+  else if(k==="todo"){ dateTxt="無日期"; }
+  const meta=[];
+  if(dateTxt) meta.push(datePrefix+esc(dateTxt));
+  if(timeTxt) meta.push('🕒 '+esc(timeTxt));
+  if(r.category==="shopping" && r.qty) meta.push('數量 '+esc(r.qty));
+  if(r.amount!=null && r.amount!=="") meta.push('💰 '+esc(r.amount));
+    if(hasRepeat(r)) meta.push(repeatText(r.repeat));
+  if(who.length) meta.push('<span class="who">👤 '+esc(who.join("、"))+'</span>');
+  card.innerHTML=
+    '<button class="check'+(k==="done"?" on":"")+'" data-check>'+(k==="done"?"✓":"")+'</button>'+
+    '<div class="body">'+
+      '<div class="row1">'+(r.urgent?'<span class="urg-badge">❗️</span>':'')+
+        '<span class="name">'+esc(r.title)+'</span>'+pillHtml(r.category)+'</div>'+
+      (meta.length?'<div class="meta">'+meta.join("")+'</div>':'')+
+      (r.note?'<div class="note">'+esc(r.note)+'</div>':'')+
+    '</div>'+
+    '<div class="acts"><button class="icon-btn" data-edit>✏️</button><button class="icon-btn" data-del>🗑</button></div>';
+  card.querySelector("[data-check]").addEventListener("click", ()=>toggleDone(r.id));
+  card.querySelector("[data-edit]").addEventListener("click", ()=>openEditor(r));
+  card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title));
+  return card;
+}
+
+// 勾選切換完成；完成記在獨立的 doneDate，不動排定日
+function toggleDone(id){
+  if(!requireAuth()) return;
+  const r=state.records[id]; if(!r) return;
+  const patch={};
+  if(isDone(r)){
+    // 取消完成 → 乾淨還原（清掉完成日）
+    patch.kind = r.dateStart ? "scheduled" : "todo";
+    patch.status="pending";
+    patch.doneDate=null;
+  } else {
+    // 完成 → 記下完成日（今天），排定日保持不變
+    patch.kind="done"; patch.status="done";
+    patch.doneDate=ymd(new Date());
+    // 重複（onDone：採購/任務）→ 以完成日往後推，生成下一筆（只生一次）
+    if(hasRepeat(r) && (r.repeat.mode||"onDone")==="onDone" && !r.spawned){
+      patch.spawned=true;
+      const next=buildNextRecord(Object.assign({id},r), patch.doneDate);
+      writeRecord(next);
+    }
+  }
+  if(LOCAL_MODE){
+    Object.assign(state.records[id], patch);
+    if(patch.doneDate===null) delete state.records[id].doneDate;
+    lsSaveRecords(); renderAll(); return;
+  }
+  db.ref("records/"+id).update(patch).catch(e=>{ console.error(e); toast("更新失敗"); });
+}
+
+
+/* ============================================================
+   7. 待購清單（購物類未完成，依子分類分組）
+   ============================================================ */
+$("addItemBtn").addEventListener("click", ()=>openRecordForm(null, { category:"shopping", dateStart:"" }));
+
+function renderShop(){
+  const wrap=$("shopList");
+  const groups={}; SUBCAT_ORDER.forEach(s=>groups[s]=[]);
+  curEntries().forEach(([id,r])=>{
+    if(r && r.category==="shopping" && !isDone(r)){
+      const sc=groups[r.subcategory]?r.subcategory:"other";
+      groups[sc].push(Object.assign({id},r));
+    }
+  });
+  let total=0; SUBCAT_ORDER.forEach(s=>total+=groups[s].length);
+  if(total===0){ wrap.innerHTML='<div class="empty-state">目前沒有待購項目。點「新增待購」加入。</div>'; return; }
+
+  wrap.innerHTML="";
+  SUBCAT_ORDER.forEach(sc=>{
+    const arr=groups[sc];
+    if(arr.length===0) return;
+    arr.sort((a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0) return u; return (b.createdAt||0)-(a.createdAt||0); });
+    const head=document.createElement("div");
+    head.className="group-head";
+    head.innerHTML='<i class="dot" style="background:'+catColor("shopping")+'"></i>'+subcatIcon(sc)+' '+SUBCAT_LABEL[sc]+'<span class="gcount">'+arr.length+'</span>';
+    wrap.appendChild(head);
+    arr.forEach(r=>{
+      const card=document.createElement("div");
+      card.className="card item"+(r.urgent?" urgent-card":"");
+      card.innerHTML=
+        '<button class="check" data-check>'+'</button>'+
+        '<div class="body">'+
+          '<div class="row1">'+(r.urgent?'<span class="urg-badge">❗️</span>':'')+'<span class="name">'+esc(r.title)+'</span></div>'+
+          '<div class="meta"><span class="qty">數量 '+esc(r.qty||1)+'</span>'+
+            (r.amount!=null&&r.amount!==""?' <span>💰 '+esc(r.amount)+'</span>':'')+
+            (r.dateStart?' <span>📅 '+esc(r.dateStart)+'</span>':'')+
+            (hasRepeat(r)?' <span>'+repeatText(r.repeat)+'</span>':'')+
+          '</div>'+
+          (r.note?'<div class="note">'+esc(r.note)+'</div>':'')+
+        '</div>'+
+        '<div class="acts">'+
+          '<button class="icon-btn" data-edit>✏️</button>'+
+          '<button class="icon-btn" data-del>🗑</button>'+
+        '</div>';
+      card.querySelector("[data-check]").addEventListener("click", ()=>toggleShopDone(r.id));
+      card.querySelector("[data-edit]").addEventListener("click", ()=>openEditor(r));
+      card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title));
+      wrap.appendChild(card);
+    });
+  });
+}
+function toggleShopDone(id){
+  if(!requireAuth()) return;
+  const r=state.records[id]; if(!r) return;
+  const patch={ kind:"done", status:"done", doneDate:ymd(new Date()) };
+  let next=null;
+  // 重複採購（onDone）→ 以購買日往後推，生成下一筆
+  if(hasRepeat(r) && (r.repeat.mode||"onDone")==="onDone" && !r.spawned){
+    patch.spawned=true;
+    next=buildNextRecord(Object.assign({id},r), patch.doneDate);
+  }
+  if(LOCAL_MODE){
+    if(state.records[id]){ Object.assign(state.records[id], patch); }
+    if(next) writeRecord(next);
+    lsSaveRecords(); renderAll(); return;
+  }
+  db.ref("records/"+id).update(patch).then(()=>{ if(next) writeRecord(next); }).catch(e=>{ console.error(e); toast("更新失敗"); });
+}
+
+/* ============================================================
+   8. 新增/編輯記事（統一表單）
+   ============================================================ */
+/* 依記事類型開對應表單：採購→完整(購物)、無日期→百寶袋極簡、有日期→行程完整 */
+function openEditor(r){
+  if(!r) return;
+  if(r.category==="shopping") return openRecordForm(r);
+  if(!r.dateStart) return openPocketForm(r);     // 無排定日 → 百寶袋極簡
+  return openRecordForm(r);
+}
+
+/* 🎒 百寶袋極簡編輯：標題＋分類(選填)＋日期(選填,填了升級)＋急迫＋已完成＋備註 */
+function openPocketForm(rec){
+  const isEdit=!!rec; const r=rec||{};
+  const done=!!r.doneDate || recKind(r)==="done";
+  const cat=r.category||"other";
+  const html=
+    '<p style="font-size:12px;color:var(--muted);margin:-2px 2px 12px;line-height:1.5">🎒 百寶袋：無日期暫存。<b>填上日期就升級成行程</b>、上月曆。</p>'+
+    '<div class="field"><label>標題</label><input id="pk_title" autocomplete="off" value="'+esc(r.title||"")+'" placeholder="標題"></div>'+
+    '<div class="field"><label>分類（選填）</label>'+
+      iconPicker("pk_category", CAT_ORDER.filter(c=>c!=="shopping"), CAT_LABEL, CAT_ICON, cat)+'</div>'+
+    '<div class="field"><label>日期（填了就升級成行程）</label><input id="pk_date" type="date" value="'+(r.dateStart||"")+'"></div>'+
+    '<div class="toggle-row"><span>✅ 已完成</span><label class="switch"><input type="checkbox" id="pk_done"'+(done?" checked":"")+'><span class="slider"></span></label></div>'+
+    '<div class="field"><label>備註（可選）</label><textarea id="pk_note" placeholder="補充說明">'+esc(r.note||"")+'</textarea></div>';
+  openSheet(isEdit?"編輯百寶袋":"百寶袋", html,
+    function(){ savePocket(isEdit?r.id:null, r); },
+    isEdit?function(){ deleteRecord(r.id, r.title); }:null);
+  wireIconPicker("pk_category");
+}
+function savePocket(id, prev){
+  if(!requireAuth()) return;
+  const title=$("pk_title").value.trim();
+  if(!title){ toast("請輸入標題"); return; }
+  const done=$("pk_done").checked;
+  const dateStart=$("pk_date").value||"";
+  const kind = done ? "done" : (dateStart ? "scheduled" : "todo");
+  // 只動百寶袋表單控制的欄位，其餘沿用既有（不清掉）
+  const patch={
+    kind, title, category:$("pk_category").value||"other",
+    dateStart, urgent:(prev&&prev.urgent)||false, note:$("pk_note").value.trim(),
+    status: done?"done":"pending",
+    createdAt:(prev&&prev.createdAt)?prev.createdAt:Date.now()
+  };
+  patch.cal=(prev&&prev.cal)||state.currentCal;
+  patch.doneDate = done ? ((prev&&prev.doneDate)?prev.doneDate:ymd(new Date())) : null;
+
+  if(LOCAL_MODE){
+    const key=id||genId();
+    const merged=Object.assign({}, state.records[key]||{}, patch);
+    if(patch.doneDate===null) delete merged.doneDate;
+    state.records[key]=merged;
+    lsSaveRecords();
+    if(dateStart) state.selected=dateStart;
+    closeSheet(); renderAll(); toast(id?"已更新":"已新增");
+    return;
+  }
+  (async()=>{
+    try{
+      const key=id||db.ref("records").push().key;
+      await db.ref("records/"+key).update(patch);
+      if(dateStart) state.selected=dateStart;
+      closeSheet(); toast(id?"已更新":"已新增");
+    }catch(err){ console.error(err); toast("儲存失敗"); }
+  })();
+}
+
+function openRecordForm(rec, presets){
+  presets=presets||{};
+  const isEdit=!!rec; const r=rec||{};
+  const cat =r.category || presets.category || "life";
+  const ds  =(r.dateStart!==undefined ? r.dateStart : (presets.dateStart!==undefined ? presets.dateStart : state.selected));
+  const isShop=cat==="shopping";
+  const done = !!r.doneDate || recKind(r)==="done";
+  formAssignees=new Set(r.assignees||[]);
+  const rep=r.repeat||{}; const repUnit=rep.unit||"none"; const repEvery=rep.every||1; const repMode=rep.mode||"onDone";
+
+  const html=
+    '<div class="field"><label>標題 <span style="color:var(--faint);font-weight:400">🕐 可選用過的</span></label>'+
+      '<input id="rec_title" list="rec_title_hist" autocomplete="off" value="'+esc(r.title||"")+'" placeholder="標題">'+
+      '<datalist id="rec_title_hist">'+titleHistoryOptions()+'</datalist></div>'+
+    '<div class="field" id="rec_catbox"'+(isShop?' style="display:none"':'')+'><label>分類</label>'+
+      iconPicker("rec_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
+    '<div id="rec_shopbox"'+(isShop?"":' style="display:none"')+'>'+
+      '<div class="field"><label>購物子分類</label>'+
+        iconPicker("rec_subcategory", SUBCAT_ORDER, SUBCAT_LABEL, SUBCAT_ICON, (r.subcategory||"food"))+'</div>'+
+      '<div class="two">'+
+        '<div class="field"><label>數量</label><input id="rec_qty" type="number" min="1" value="'+(r.qty||1)+'"></div>'+
+        '<div class="field"><label>價格（選填）</label><input id="rec_price" type="number" inputmode="numeric" value="'+(isShop&&r.amount!=null?r.amount:"")+'" placeholder="例如 3990"></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="field"><label>日期（可空，填了就上月曆）</label><input id="rec_dateStart" type="date" value="'+(ds||"")+'"></div>'+
+    '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><label>結束日期（可空）</label><input id="rec_dateEnd" type="date" value="'+(r.dateEnd||"")+'"></div>'+
+    '<div class="two" id="rec_timebox"'+(isShop?' style="display:none"':'')+'>'+
+      '<div class="field"><label>開始時間</label><input id="rec_start" type="time" value="'+(r.start||"")+'"></div>'+
+      '<div class="field"><label>結束時間</label><input id="rec_end" type="time" value="'+(r.end||"")+'"></div>'+
+    '</div>'+
+    '<div class="field"><label>重複</label>'+
+      '<div class="two">'+
+        '<select id="rec_repeatUnit">'+
+          ['none|不重複','day|每…天','week|每…週','month|每…月','year|每…年'].map(o=>{const v=o.split("|")[0],t=o.split("|")[1];return '<option value="'+v+'"'+(repUnit===v?" selected":"")+'>'+t+'</option>';}).join("")+
+        '</select>'+
+        '<input id="rec_repeatEvery" type="number" min="1" value="'+repEvery+'" placeholder="間隔數">'+
+      '</div>'+
+      '<div class="toggle-row" id="rec_repeatAutoBox"'+((isShop||repUnit==="none")?' style="display:none"':'')+'><span>🔁 過了當天自動跳下次（紀念日／免完成）</span><label class="switch"><input type="checkbox" id="rec_repeatAuto"'+(repMode==="onDate"?" checked":"")+'><span class="slider"></span></label></div>'+
+      '<div style="font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5">採購／任務：勾完成才生下一筆（從完成日往後算）。紀念日：開上面開關，過了當天自動跳下次。</div>'+
+    '</div>'+
+    '<div id="rec_amountbox"'+(isShop?' style="display:none"':'')+'><div class="field"><label>金額（選填）</label>'+
+      '<input id="rec_amount" type="number" inputmode="numeric" value="'+(r.amount!=null?r.amount:"")+'" placeholder="例如 1200"></div></div>'+
+    '<div class="field"><div class="label-row"><label>執行人（可複選）</label><span class="manage-link" id="rec_manage">管理人員</span></div>'+
+      '<div class="chips" id="rec_assignees"></div>'+
+      '<div class="chip-add"><input id="rec_newperson" autocomplete="off" placeholder="新增人員名稱"><button id="rec_addperson" type="button">＋ 新增</button></div>'+
+    '</div>'+
+    '<div class="toggle-row"><span>❗️ 急迫（排在最上面）</span><label class="switch"><input type="checkbox" id="rec_urgent"'+(r.urgent?" checked":"")+'><span class="slider"></span></label></div>'+
+    '<div class="toggle-row" id="rec_cdbox"'+(isShop?' style="display:none"':'')+'><span>⏳ 顯示倒數天數</span><label class="switch"><input type="checkbox" id="rec_countdown"'+(r.countdown?" checked":"")+'><span class="slider"></span></label></div>'+
+    '<div class="toggle-row" id="rec_donebox"'+(isShop?' style="display:none"':'')+'><span>✅ 已完成 / 已發生</span><label class="switch"><input type="checkbox" id="rec_done"'+(done?" checked":"")+'><span class="slider"></span></label></div>'+
+    '<div class="field"><label>備註（可選）</label><textarea id="rec_note" placeholder="補充說明">'+esc(r.note||"")+'</textarea></div>';
+
+  openSheet(isShop?(isEdit?"編輯採購":"新增採購"):(isEdit?"編輯記事":"新增記事"), html,
+    function(){ saveRecord(isEdit?r.id:null, r); },
+    isEdit?function(){ deleteRecord(r.id, r.title); }:null);
+
+  renderAssigneeChips();
+  wireIconPicker("rec_category", function(v){
+    const shop=v==="shopping";
+    $("rec_shopbox").style.display=shop?"":"none";
+    $("rec_amountbox").style.display=shop?"none":"";
+    $("rec_cdbox").style.display=shop?"none":"";
+    $("rec_donebox").style.display=shop?"none":"";
+    $("rec_endbox").style.display=shop?"none":"";
+    $("rec_timebox").style.display=shop?"none":"";
+    $("rec_repeatAutoBox").style.display=(shop || $("rec_repeatUnit").value==="none")?"none":"";
+  });
+  wireIconPicker("rec_subcategory");
+  $("rec_repeatUnit").addEventListener("change", function(){
+    const shop=$("rec_category").value==="shopping";
+    $("rec_repeatAutoBox").style.display=(shop || this.value==="none")?"none":"";
+  });
+  $("rec_manage").addEventListener("click", openPeopleManager);
+  $("rec_addperson").addEventListener("click", async function(){
+    const nm=$("rec_newperson").value.trim();
+    if(!nm){ toast("請輸入名稱"); return; }
+    const id=await savePerson(nm);
+    if(id){ formAssignees.add(id); $("rec_newperson").value=""; renderAssigneeChips(); }
+  });
+}
+function renderAssigneeChips(){
+  const box=$("rec_assignees"); if(!box) return;
+  const ppl=Object.entries(state.people);
+  if(ppl.length===0){ box.innerHTML='<span style="font-size:12px;color:var(--faint)">尚無人員，請於下方新增</span>'; return; }
+  box.innerHTML=ppl.map(([id,p])=>'<button type="button" class="chip'+(formAssignees.has(id)?" on":"")+'" data-id="'+id+'">'+esc(p.name)+'</button>').join("");
+  box.querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click", ()=>{
+    const id=ch.getAttribute("data-id");
+    if(formAssignees.has(id)){ formAssignees.delete(id); ch.classList.remove("on"); }
+    else { formAssignees.add(id); ch.classList.add("on"); }
+  }));
+}
+function saveRecord(id, prev){
+  if(!requireAuth()) return;
+  const title=$("rec_title").value.trim();
+  if(!title){ toast("請輸入標題"); return; }
+  const category=$("rec_category").value;
+  const isShop=category==="shopping";
+  const dateStart=$("rec_dateStart").value||"";
+  const dateEnd=$("rec_dateEnd").value||"";
+  if(dateStart && dateEnd && dateEnd<dateStart){ toast("結束日期不能早於開始日期"); return; }
+  const done = isShop ? !!(prev && prev.doneDate) : $("rec_done").checked;
+  // 狀態由「有無日期 + 是否完成」自動推得
+  const kind = done ? "done" : (dateStart ? "scheduled" : "todo");
+
+  const data={
+    kind, title, category,
+    dateStart, dateEnd,
+    start: $("rec_start").value||"",
+    end:   $("rec_end").value||"",
+    assignees: Array.from(formAssignees),
+    urgent:    $("rec_urgent").checked,
+    countdown: $("rec_category").value==="shopping" ? false : $("rec_countdown").checked,
+    note:      $("rec_note").value.trim(),
+    status:    done ? "done" : "pending",
+    createdAt: (prev&&prev.createdAt) ? prev.createdAt : Date.now()
+  };
+  if(isShop){
+    data.subcategory=$("rec_subcategory").value||"other";
+    data.qty=Math.max(1, Number($("rec_qty").value)||1);
+    const pv=$("rec_price").value;
+    data.amount = (pv!=="" && !isNaN(Number(pv))) ? Number(pv) : null;
+  } else {
+    data.subcategory=null; data.qty=null;
+    const av=$("rec_amount").value;
+    data.amount = (av!=="" && !isNaN(Number(av))) ? Number(av) : null;
+  }
+  // 完成日：完成則保留原本或補今天；非完成則清掉
+  data.doneDate = done ? ((prev&&prev.doneDate) ? prev.doneDate : ymd(new Date())) : null;
+
+  // 重複（3b）
+  const ru=$("rec_repeatUnit").value;
+  if(ru && ru!=="none"){
+    const mode = isShop ? "onDone" : ($("rec_repeatAuto").checked ? "onDate" : "onDone");
+    if(mode==="onDate" && !dateStart){ toast("紀念日類重複需要日期"); return; }
+    data.repeat={ unit:ru, every:Math.max(1, Number($("rec_repeatEvery").value)||1), mode };
+  } else {
+    data.repeat=null;
+  }
+  data.spawned = !!(prev && prev.spawned);   // 沿用，避免重複生成
+  data.cal = (prev && prev.cal) || state.currentCal;   // 歸到目前行事曆
+
+  if(LOCAL_MODE){
+    const key=id||genId();
+    const merged=Object.assign({}, state.records[key]||{}, data);
+    if(data.subcategory===null) delete merged.subcategory;
+    if(data.qty===null) delete merged.qty;
+    if(data.amount===null) delete merged.amount;
+    if(data.doneDate===null) delete merged.doneDate;
+    if(data.repeat===null) delete merged.repeat;
+    state.records[key]=merged;
+    lsSaveRecords();
+    if(dateStart) state.selected=dateStart;
+    closeSheet(); renderAll(); toast(id?"已更新":"已新增");
+    return;
+  }
+  (async()=>{
+    try{
+      const key=id||db.ref("records").push().key;
+      await db.ref("records/"+key).update(data);
+      if(dateStart) state.selected=dateStart;
+      closeSheet(); toast(id?"已更新":"已新增");
+    }catch(err){ console.error(err); toast("儲存失敗"); }
+  })();
+}
+function deleteRecord(id, title){
+  if(!requireAuth()) return;
+  if(!id){ toast("缺少資料 ID"); return; }
+  if(!confirm("確定刪除「"+(title||"此記事")+"」？")) return;
+  if(LOCAL_MODE){ delete state.records[id]; lsSaveRecords(); closeSheet(); renderAll(); toast("已刪除"); return; }
+  (async()=>{ try{ await db.ref("records/"+id).remove(); closeSheet(); toast("已刪除"); }catch(e){ console.error(e); toast("刪除失敗"); } })();
+}
+
+/* ============================================================
+   8.5 年度目標（3c）
+   ============================================================ */
+$("addGoalBtn").addEventListener("click", ()=>openGoalForm(null));
+
+function daysToYearEnd(year){
+  const end=new Date(year,11,31); const today=new Date(); today.setHours(0,0,0,0);
+  return Math.max(0, Math.ceil((end-today)/86400000));
+}
+function goalProgress(g){
+  if(g.type==="milestone"){
+    const ms=g.milestones||[]; const done=ms.filter(m=>m.done).length;
+    return { done, total:ms.length, pct: ms.length? Math.round(done/ms.length*100):0 };
+  }
+  const tgt=Number(g.target)||0, cur=Number(g.current)||0;
+  return { done:cur, total:tgt, pct: tgt>0? Math.min(100, Math.round(cur/tgt*100)):0 };
+}
+function renderGoals(){
+  const wrap=$("goalList"); if(!wrap) return;
+  const yr=new Date().getFullYear();
+  const ye=$("goalYearEnd"); if(ye) ye.textContent="距離 "+yr+" 年底還有 "+daysToYearEnd(yr)+" 天";
+  const arr=Object.entries(state.goals||{}).map(([id,g])=>Object.assign({id},g));
+  arr.sort((a,b)=>((b.year||0)-(a.year||0)) || ((a.createdAt||0)-(b.createdAt||0)));
+  if(arr.length===0){ wrap.innerHTML='<div class="empty-state">還沒有目標，點「＋ 新增目標」開始。</div>'; return; }
+  wrap.innerHTML=""; arr.forEach(g=>wrap.appendChild(goalCard(g)));
+}
+function goalCard(g){
+  const card=document.createElement("div");
+  card.className="card goal-card";
+  const p=goalProgress(g); const col=catColor(g.category);
+  let h='<div class="stripe" style="background:'+col+'"></div><div class="body">';
+  h+='<div class="row1"><span class="name">'+esc(g.title)+'</span></div>';
+  h+='<div class="meta">'+pillHtml(g.category)+' <span>'+esc(g.year||"")+'</span></div>';
+  h+='<div class="goal-prog"><div class="goal-bar"><div class="goal-fill" style="width:'+p.pct+'%;background:'+col+'"></div></div><div class="goal-pct">'+p.pct+'%</div></div>';
+  if(g.type==="milestone"){
+    h+='<div class="goal-sub">完成 '+p.done+' / '+p.total+' 項</div><div class="goal-ms">';
+    (g.milestones||[]).forEach((m,i)=>{ h+='<label class="ms-row"><input type="checkbox" data-ms="'+i+'"'+(m.done?" checked":"")+'><span'+(m.done?' class="ms-done"':'')+'>'+esc(m.text)+'</span></label>'; });
+    h+='</div>';
+  } else {
+    h+='<div class="goal-sub">'+esc(p.done)+' / '+esc(p.total)+' '+esc(g.unit||"")+'</div>';
+  }
+  h+='</div><div class="acts">';
+  if(g.type==="number") h+='<button class="icon-btn" data-prog>＋進度</button>';
+  h+='<button class="icon-btn" data-edit>✏️</button><button class="icon-btn" data-del>🗑</button></div>';
+  card.innerHTML=h;
+  card.querySelector("[data-edit]").addEventListener("click", ()=>openGoalForm(g));
+  card.querySelector("[data-del]").addEventListener("click", ()=>deleteGoal(g.id, g.title));
+  const pb=card.querySelector("[data-prog]"); if(pb) pb.addEventListener("click", ()=>updateGoalProgress(g));
+  card.querySelectorAll("[data-ms]").forEach(cb=>cb.addEventListener("change", function(){ toggleMilestone(g.id, Number(this.getAttribute("data-ms"))); }));
+  return card;
+}
+function updateGoalProgress(g){
+  const cur=prompt("更新「"+g.title+"」目前進度"+(g.unit?("（"+g.unit+"）"):""), g.current!=null?g.current:0);
+  if(cur===null) return;
+  const v=Number(cur); if(isNaN(v)){ toast("請輸入數字"); return; }
+  saveGoalPatch(g.id, { current:v });
+}
+function toggleMilestone(id, idx){
+  const g=state.goals[id]; if(!g) return;
+  const ms=(g.milestones||[]).slice(); if(!ms[idx]) return;
+  ms[idx]={ text:ms[idx].text, done:!ms[idx].done };
+  saveGoalPatch(id, { milestones:ms });
+}
+function saveGoalPatch(id, patch){
+  if(!requireAuth()) return;
+  if(LOCAL_MODE){ Object.assign(state.goals[id], patch); lsSaveGoals(); renderGoals(); return; }
+  db.ref("goals/"+id).update(patch).catch(e=>{ console.error(e); toast("更新失敗"); });
+}
+function deleteGoal(id, title){
+  if(!requireAuth()) return;
+  if(!confirm("確定刪除目標「"+(title||"")+"」？")) return;
+  if(LOCAL_MODE){ delete state.goals[id]; lsSaveGoals(); closeSheet(); renderGoals(); toast("已刪除"); return; }
+  db.ref("goals/"+id).remove().then(()=>{ closeSheet(); toast("已刪除"); }).catch(e=>{ console.error(e); toast("刪除失敗"); });
+}
+
+let goalMilestones=[];   // 編輯時暫存里程碑
+function openGoalForm(goal){
+  const isEdit=!!goal; const g=goal||{};
+  const type=g.type||"number"; const cat=g.category||"life"; const yr=g.year||new Date().getFullYear();
+  goalMilestones=(g.milestones||[]).map(m=>({text:m.text,done:!!m.done}));
+  const html=
+    '<div class="field"><label>目標名稱</label><input id="g_title" autocomplete="off" value="'+esc(g.title||"")+'" placeholder="例如：存到 30 萬"></div>'+
+    '<div class="two">'+
+      '<div class="field"><label>年度</label><input id="g_year" type="number" value="'+yr+'"></div>'+
+      '<div class="field"><label>類型</label><select id="g_type">'+
+        '<option value="number"'+(type==="number"?" selected":"")+'>數值型（進度條）</option>'+
+        '<option value="milestone"'+(type==="milestone"?" selected":"")+'>里程碑型（清單）</option>'+
+      '</select></div>'+
+    '</div>'+
+    '<div class="field"><label>分類</label>'+iconPicker("g_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
+    '<div id="g_numbox"'+(type==="number"?"":' style="display:none"')+'>'+
+      '<div class="two">'+
+        '<div class="field"><label>目標值</label><input id="g_target" type="number" value="'+(g.target!=null?g.target:"")+'" placeholder="300000"></div>'+
+        '<div class="field"><label>目前</label><input id="g_current" type="number" value="'+(g.current!=null?g.current:0)+'"></div>'+
+      '</div>'+
+      '<div class="field"><label>單位（選填）</label><input id="g_unit" autocomplete="off" value="'+esc(g.unit||"")+'" placeholder="元 / 本 / 次"></div>'+
+    '</div>'+
+    '<div id="g_msbox"'+(type==="milestone"?"":' style="display:none"')+'>'+
+      '<div class="label-row"><label>里程碑清單</label><span class="manage-link" id="g_addms">＋ 加一項</span></div>'+
+      '<div id="g_mslist"></div>'+
+    '</div>'+
+    '<div class="field"><label>備註（可選）</label><textarea id="g_note" placeholder="補充說明">'+esc(g.note||"")+'</textarea></div>';
+  openSheet(isEdit?"編輯目標":"新增目標", html,
+    function(){ saveGoal(isEdit?g.id:null, g); },
+    isEdit?function(){ deleteGoal(g.id, g.title); }:null);
+  wireIconPicker("g_category");
+  $("g_type").addEventListener("change", function(){
+    $("g_numbox").style.display=this.value==="number"?"":"none";
+    $("g_msbox").style.display=this.value==="milestone"?"":"none";
+  });
+  $("g_addms").addEventListener("click", function(){ goalMilestones.push({text:"",done:false}); renderMsEditor(); });
+  renderMsEditor();
+}
+function renderMsEditor(){
+  const box=$("g_mslist"); if(!box) return;
+  box.innerHTML=goalMilestones.map((m,i)=>'<div class="ms-edit"><input data-mi="'+i+'" autocomplete="off" value="'+esc(m.text)+'" placeholder="里程碑 '+(i+1)+'"><button type="button" class="ms-del" data-md="'+i+'">✕</button></div>').join("")
+    || '<div style="font-size:12px;color:var(--faint);padding:4px 2px">點上方「＋ 加一項」新增里程碑</div>';
+  box.querySelectorAll("[data-mi]").forEach(inp=>inp.addEventListener("input", function(){ goalMilestones[Number(this.getAttribute("data-mi"))].text=this.value; }));
+  box.querySelectorAll("[data-md]").forEach(b=>b.addEventListener("click", function(){ goalMilestones.splice(Number(this.getAttribute("data-md")),1); renderMsEditor(); }));
+}
+function saveGoal(id, prev){
+  if(!requireAuth()) return;
+  const title=$("g_title").value.trim(); if(!title){ toast("請輸入目標名稱"); return; }
+  const type=$("g_type").value;
+  const data={
+    title, year:Number($("g_year").value)||new Date().getFullYear(),
+    type, category:$("g_category").value||"life",
+    note:$("g_note").value.trim(),
+    createdAt:(prev&&prev.createdAt)?prev.createdAt:Date.now()
+  };
+  if(type==="number"){
+    data.target=Number($("g_target").value)||0;
+    data.current=Number($("g_current").value)||0;
+    data.unit=$("g_unit").value.trim();
+    data.milestones=null;
+  } else {
+    data.milestones=goalMilestones.filter(m=>(m.text||"").trim()).map(m=>({text:m.text.trim(),done:!!m.done}));
+    data.target=null; data.current=null; data.unit=null;
+  }
+  if(LOCAL_MODE){
+    const key=id||genId();
+    const merged=Object.assign({}, state.goals[key]||{}, data);
+    ["target","current","unit","milestones"].forEach(k=>{ if(data[k]===null) delete merged[k]; });
+    state.goals[key]=merged; lsSaveGoals(); closeSheet(); renderGoals(); toast(id?"已更新":"已新增"); return;
+  }
+  const key=id||db.ref("goals").push().key;
+  db.ref("goals/"+key).update(data).then(()=>{ closeSheet(); toast(id?"已更新":"已新增"); }).catch(e=>{ console.error(e); toast("儲存失敗"); });
+}
+
+/* ============================================================
+   9. 執行人（人員）
+   ============================================================ */
+async function savePerson(name){
+  if(!requireAuth()) return null;
+  name=(name||"").trim(); if(!name) return null;
+  if(LOCAL_MODE){ const id=genId(); state.people[id]={ name, createdAt:Date.now() }; lsSavePeople(); return id; }
+  try{
+    const id=db.ref("people").push().key;
+    await db.ref("people/"+id).update({ name, createdAt:Date.now() });
+    state.people[id]={ name, createdAt:Date.now() };  // 樂觀更新，listener 之後同步
+    return id;
+  }catch(e){ console.error(e); toast("新增人員失敗"); return null; }
+}
+async function removePerson(id){
+  if(LOCAL_MODE){ delete state.people[id]; lsSavePeople(); renderAll(); return; }
+  try{ await db.ref("people/"+id).remove(); }catch(e){ console.error(e); toast("刪除失敗"); }
+}
+function openPeopleManager(){
+  const ppl=Object.entries(state.people);
+  const list= ppl.length
+    ? '<div id="pm_list">'+ppl.map(([id,p])=>'<div class="person-row"><span>'+esc(p.name)+'</span><button class="del" data-id="'+id+'" type="button">刪除</button></div>').join("")+'</div>'
+    : '<div id="pm_list"><p style="color:var(--faint);font-size:13px">尚無人員</p></div>';
+  openSheet("管理執行人",
+    list+'<div class="chip-add" style="margin-top:12px"><input id="pm_new" autocomplete="off" placeholder="新增人員名稱"><button id="pm_add" type="button">＋ 新增</button></div>',
+    closeSheet, null, "完成");
+  $("pm_add").addEventListener("click", async ()=>{
+    const nm=$("pm_new").value.trim(); if(!nm){ toast("請輸入名稱"); return; }
+    await savePerson(nm); openPeopleManager();
+  });
+  document.querySelectorAll("#pm_list .del").forEach(b=>b.addEventListener("click", async ()=>{
+    if(!confirm("刪除此人員？（既有記事的指派會略過此人）")) return;
+    await removePerson(b.getAttribute("data-id")); openPeopleManager();
+  }));
+}
+
+/* ============================================================
+   10. 通用 Modal
+   ============================================================ */
+function openSheet(title, innerHTML, onSave, onDelete, saveLabel){
+  const root=$("modalRoot");
+  root.innerHTML=
+    '<div class="overlay" id="ovl"><div class="sheet" id="sheet">'+
+      '<h3>'+esc(title)+'</h3>'+innerHTML+
+      '<div class="sheet-acts"><button class="btn-ghost" id="sheetCancel">取消</button>'+
+      '<button class="btn-primary" id="sheetSave">'+(saveLabel||"儲存")+'</button></div>'+
+      (onDelete?'<button class="btn-danger" id="sheetDelete">刪除</button>':'')+
+    '</div></div>';
+  $("sheetCancel").addEventListener("click", closeSheet);
+  $("sheetSave").addEventListener("click", onSave||closeSheet);
+  if(onDelete) $("sheetDelete").addEventListener("click", onDelete);
+  $("ovl").addEventListener("click", e=>{ if(e.target.id==="ovl") closeSheet(); });
+}
+function closeSheet(){ $("modalRoot").innerHTML=""; }
+
+/* 自製確認視窗（疊在最上層，手機一定會跳） */
+function openConfirm(title, messageHtml, onConfirm, confirmLabel){
+  let root=$("confirmRoot");
+  if(!root){ root=document.createElement("div"); root.id="confirmRoot"; document.body.appendChild(root); }
+  root.innerHTML=
+    '<div class="overlay" id="cfmOvl" style="z-index:80"><div class="sheet" id="cfmSheet">'+
+      '<h3>'+esc(title)+'</h3>'+
+      '<p style="font-size:14px;color:var(--ink);line-height:1.6;margin:0 0 18px">'+messageHtml+'</p>'+
+      '<div class="sheet-acts"><button class="btn-ghost" id="cfmCancel">取消</button>'+
+      '<button class="btn-danger" id="cfmOk">'+esc(confirmLabel||"確定")+'</button></div>'+
+    '</div></div>';
+  const close=()=>{ root.innerHTML=""; };
+  $("cfmCancel").addEventListener("click", close);
+  $("cfmOvl").addEventListener("click", e=>{ if(e.target.id==="cfmOvl") close(); });
+  $("cfmOk").addEventListener("click", ()=>{ close(); if(onConfirm) onConfirm(); });
+}
+
+/* ============================================================
+   11. 啟動
+   ============================================================ */
+(async ()=>{ try{ if(await checkAuth()){ state.isAdmin=true; enterApp(); } }catch(err){ console.error(err); } })();
+if(!_firebaseReady){
+  loginMsg.textContent="（離線測試模式：輸入預設碼 "+DEFAULT_CODE+" 即可進入，資料存在本機）";
+}
+</script>
+</body>
+</html>
