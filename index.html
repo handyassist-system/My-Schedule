@@ -576,6 +576,7 @@ function repeatText(rep){
 function occursOn(r, dateStr){
   if(!hasRepeat(r) || !r.dateStart) return false;
   if(dateStr < r.dateStart) return false;
+  if(r.repeatUntil && dateStr > r.repeatUntil) return false;   // 已停止重複：界線之後不再出現
   const b=r.dateStart.split("-").map(Number);
   const t=dateStr.split("-").map(Number);
   const n=Math.max(1, r.repeat.every||1), u=r.repeat.unit;
@@ -853,7 +854,7 @@ function resetToTodayOverview(){
   const t=new Date();
   if($("ovYear")) $("ovYear").value=String(t.getFullYear());
   if($("ovMonth")) $("ovMonth").value=String(t.getMonth()+1);
-  if($("ovDay")){ $("ovDay").disabled=false; $("ovDay").value=String(t.getDate()); }
+  if($("ovDay")){ $("ovDay").disabled=false; $("ovDay").value=""; }
   if($("ovStatus")) $("ovStatus").value="pending";
   if($("ovCategory")) $("ovCategory").value="all";
   if($("ovAssignee")) $("ovAssignee").value="all";
@@ -1044,7 +1045,7 @@ function renderDayEvents(){
     const _chk=card.querySelector("[data-check]");
     if(_chk) _chk.addEventListener("click", ()=>toggleDoneOn(r.id, state.selected));
     card.querySelector("[data-edit]").addEventListener("click", ()=>openEditor(r));
-    card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title));
+    card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title, state.selected));
     wrap.appendChild(card);
   });
 }
@@ -1098,7 +1099,7 @@ $("ovMonth").addEventListener("change", function(){
   let ms='<option value="">整年</option>'; for(let m=1;m<=12;m++) ms+='<option value="'+m+'">'+m+' 月</option>';
   $("ovMonth").innerHTML=ms; $("ovMonth").value=String(t.getMonth()+1);
   let ds='<option value="">整月</option>'; for(let d=1;d<=31;d++) ds+='<option value="'+d+'">'+d+' 日</option>';
-  $("ovDay").innerHTML=ds; $("ovDay").value=String(t.getDate());
+  $("ovDay").innerHTML=ds; $("ovDay").value="";
 })();
 
 /* 🎒 百寶袋：隨手記一筆（無日期記事，只有標題） */
@@ -1165,6 +1166,14 @@ function occInOvPeriod(r){
   for(const mo of months){ const dim=new Date(year,mo,0).getDate(); for(let day=1;day<=dim;day++){ const ds=year+"-"+pad(mo)+"-"+pad(day); if(occursOn(r,ds)) out.push(ds); } }
   return out;
 }
+function thisMonthStr(){ const n=new Date(); return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0"); }
+function inCurrentMonth(ds){ return !!ds && ds.slice(0,7)===thisMonthStr(); }
+function occInMonth(r, y, m){
+  const pad=k=>String(k).padStart(2,"0"); const out=[];
+  const dim=new Date(y, m, 0).getDate();
+  for(let day=1; day<=dim; day++){ const ds=y+"-"+pad(m)+"-"+pad(day); if(occursOn(r,ds)) out.push(ds); }
+  return out;
+}
 function buildOverviewRows(){
   const todo=(ovMode==="todo"); const today=ymd(new Date());
   const out=[];
@@ -1173,7 +1182,13 @@ function buildOverviewRows(){
     if(!rep){ out.push(Object.assign({id}, r)); return; }
     let occs=[];
     if(todo){
-      if(!r.isLog){ const dd=latestPendingOccUpTo(r, today); if(dd) occs=[dd]; }  // 純紀錄不算待辦
+      // 預設：當月發生日 ＋ 逾期（之前月份最近一筆未完成；純紀錄不算逾期）
+      const n=new Date(), cy=n.getFullYear(), cm=n.getMonth()+1;
+      occs = occInMonth(r, cy, cm);
+      if(!r.isLog){
+        const od = latestPendingOccUpTo(r, dayBefore(cy+"-"+String(cm).padStart(2,"0")+"-01"));
+        if(od && occs.indexOf(od)<0) occs.push(od);
+      }
     } else {
       occs = occInOvPeriod(r);
     }
@@ -1196,11 +1211,12 @@ function renderOverview(){
     if(whoF!=="all" && !(r.assignees||[]).includes(whoF)) return false;
     const k=recKind(r);
     if(todo){
-      // 待辦：逾期＋今天的未完成（🎒無日期百寶袋也算；採購無日期不算；未來不列；純紀錄不算待辦）
-      if(k==="done"||k==="log") return false;
+      // 預設：當月 ＋ 逾期（未完成）。已完成不顯示；純紀錄當月才顯示
+      if(k==="done") return false;
+      if(k==="log"){ const rg=recRange(r); return !!(rg && inCurrentMonth(rg[0])); }
       const rg=recRange(r);
-      if(!rg) return r.category!=="shopping";
-      return rg[0] <= today;
+      if(!rg) return r.category!=="shopping";   // 無日期 🎒百寶袋
+      return rg[0] < today || inCurrentMonth(rg[0]);   // 逾期 或 當月
     }
     if(!overviewDateMatch(r)) return false;   // 無日期者一律顯示；有日期(含預期日)依篩選
     if(k!=="log"){                            // 純紀錄不分未完成/已完成，一律顯示
@@ -1226,8 +1242,8 @@ function renderOverview(){
 
   const order = statusF==="done" ? ["done","log"] : (statusF==="pending" ? ["scheduled","todo","log"] : ["scheduled","todo","done","log"]);
   let total=order.reduce((n,k)=>n+buckets[k].length,0);
-  const hint = todo ? '<div class="ov-hint">📋 待辦：逾期與今天未完成（用上方年／月／日可查特定期間）</div>' : '';
-  if(total===0){ wrap.innerHTML=hint+'<div class="empty-state">'+(todo?'目前沒有逾期或今天要做的事 🎉':'沒有符合的記事，試著調整上方篩選。')+'</div>'; return; }
+  const hint = todo ? '<div class="ov-hint">📋 當月未完成 ＋ 逾期（用上方年／月／日可查其他期間）</div>' : '';
+  if(total===0){ wrap.innerHTML=hint+'<div class="empty-state">'+(todo?'目前沒有當月或逾期未完成的事 🎉':'沒有符合的記事，試著調整上方篩選。')+'</div>'; return; }
 
   wrap.innerHTML=hint;
   order.forEach(k=>{
@@ -1272,7 +1288,7 @@ function overviewCard(r, k){
   const _chk=card.querySelector("[data-check]");
   if(_chk) _chk.addEventListener("click", ()=>toggleDoneOn(r.id, r._occ || r.dateStart || ymd(new Date())));
   card.querySelector("[data-edit]").addEventListener("click", ()=>{ const base=state.records[r.id]; openEditor(base?Object.assign({id:r.id},base):r); });
-  card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title));
+  card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title, r._occ || r.dateStart));
   return card;
 }
 
@@ -1458,18 +1474,6 @@ function savePocket(id, prev){
   })();
 }
 
-// 表單：依目前狀態決定要不要顯示「✅已完成」開關
-// 採購、純紀錄、重複的一般記事 → 隱藏（重複的一般記事改在月曆上逐次打勾）
-function syncDoneBox(){
-  const db_=$("rec_donebox"); if(!db_) return;
-  const shop=$("rec_category").value==="shopping";
-  const isLogC=$("rec_isLog").checked;
-  const ru=$("rec_repeatUnit").value;
-  const repeating = ru && ru!=="none";
-  const hide = shop || isLogC || (repeating && !shop && !isLogC);
-  db_.style.display = hide ? "none" : "";
-}
-
 function openRecordForm(rec, presets){
   presets=presets||{};
   const isEdit=!!rec; const r=rec||{};
@@ -1507,7 +1511,7 @@ function openRecordForm(rec, presets){
         '</select>'+
         '<input id="rec_repeatEvery" type="number" min="1" value="'+repEvery+'" placeholder="間隔數">'+
       '</div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">勾「重複」後，這筆會自動顯示在每一個重複日（每年／每月／每週／每天），只存 1 筆、不會多生資料、不用每次重建。一般記事可在月曆上逐次打勾完成（只影響當次）；純紀錄不打勾、不劃線。</div>'+
+      '<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">勾「重複」：這筆會自動出現在每個重複日（每天／每週／每月／每年），不用每次重建。</div>'+
     '</div>'+
     '<div id="rec_amountbox"'+(isShop?' style="display:none"':'')+'><div class="field"><label>金額（選填）</label>'+
       '<input id="rec_amount" type="number" inputmode="numeric" value="'+(r.amount!=null?r.amount:"")+'" placeholder="例如 1200"></div></div>'+
@@ -1518,7 +1522,6 @@ function openRecordForm(rec, presets){
     '<div class="toggle-row"><span>❗️ 急迫（排在最上面）</span><label class="switch"><input type="checkbox" id="rec_urgent"'+(r.urgent?" checked":"")+'><span class="slider"></span></label></div>'+
     '<div class="toggle-row" id="rec_cdbox"'+(isShop?' style="display:none"':'')+'><span>⏳ 顯示倒數天數</span><label class="switch"><input type="checkbox" id="rec_countdown"'+(r.countdown?" checked":"")+'><span class="slider"></span></label></div>'+
     '<div class="toggle-row" id="rec_logbox"'+(isShop?' style="display:none"':'')+'><span>📌 純紀錄（已發生／要記的事，免打勾）</span><label class="switch"><input type="checkbox" id="rec_isLog"'+(r.isLog?" checked":"")+'><span class="slider"></span></label></div>'+
-    '<div class="toggle-row" id="rec_donebox"'+((isShop||r.isLog)?' style="display:none"':'')+'><span>✅ 已完成 / 已發生</span><label class="switch"><input type="checkbox" id="rec_done"'+(done?" checked":"")+'><span class="slider"></span></label></div>'+
     '<div class="field"><label>備註（可選）</label><textarea id="rec_note" placeholder="補充說明">'+esc(r.note||"")+'</textarea></div>';
 
   openSheet(isShop?(isEdit?"編輯採購":"新增採購"):(isEdit?"編輯記事":"新增記事"), html,
@@ -1534,12 +1537,8 @@ function openRecordForm(rec, presets){
     $("rec_logbox").style.display=shop?"none":"";
     $("rec_endbox").style.display=shop?"none":"";
     $("rec_timebox").style.display=shop?"none":"";
-    syncDoneBox();
   });
   wireIconPicker("rec_subcategory");
-  $("rec_isLog").addEventListener("change", syncDoneBox);
-  $("rec_repeatUnit").addEventListener("change", syncDoneBox);
-  syncDoneBox();
   $("rec_manage").addEventListener("click", openPeopleManager);
   $("rec_addperson").addEventListener("click", async function(){
     const nm=$("rec_newperson").value.trim();
@@ -1573,7 +1572,7 @@ function saveRecord(id, prev){
   const ru = $("rec_repeatUnit").value;
   const repeating = !!(ru && ru!=="none");
   const isRepTask = repeating && !isLog && !isShop;     // 重複的一般記事 → 完成改逐次(doneDates)
-  const done = isLog ? false : (isRepTask ? false : (isShop ? !!(prev && prev.doneDate) : $("rec_done").checked));
+  const done = isLog ? false : (isRepTask ? false : !!(prev && (prev.status==="done" || prev.doneDate)));
   // 狀態由「有無日期 + 是否完成」自動推得；純紀錄為 log；重複的一般記事保持 scheduled，完成逐次記
   const kind = isLog ? "log" : (done ? "done" : (dateStart ? "scheduled" : "todo"));
 
@@ -1636,15 +1635,38 @@ function saveRecord(id, prev){
     }catch(err){ console.error(err); toast("儲存失敗"); }
   })();
 }
-function deleteRecord(id, title){
+function dayBefore(ds){ const d=new Date(ds+"T00:00:00"); d.setDate(d.getDate()-1); return ymd(d); }
+function deleteRecord(id, title, occDate){
   if(!requireAuth()) return;
   if(!id){ toast("缺少資料 ID"); return; }
-  openConfirm("刪除記事", "確定刪除「<b>"+esc(title||"此記事")+"</b>」嗎？", function(){
+  const r=state.records[id];
+  const isRep = r && hasRepeat(r) && r.category!=="shopping" && r.dateStart;
+  const doFull = function(){
     if(!LOCAL_MODE){ db.ref("records/"+id).remove().catch(e=>{ console.error(e); toast("雲端刪除失敗"); }); }
     delete state.records[id];
     if(LOCAL_MODE) lsSaveRecords();
     closeSheet(); renderAll(); toast("已刪除");
-  }, "確定刪除");
+  };
+  // 重複記事，刪「後面某一筆」→ 刪此筆及之後、保留之前
+  if(isRep && occDate && occDate > r.dateStart){
+    openConfirm("刪除重複記事",
+      "「<b>"+esc(title||"此記事")+"</b>」是重複記事。<br>將刪除 <b>"+esc(occDate)+"</b> 及之後的重複，<b>先前的紀錄會保留</b>。",
+      function(){
+        const until=dayBefore(occDate);
+        if(LOCAL_MODE){ state.records[id].repeatUntil=until; lsSaveRecords(); closeSheet(); renderAll(); toast("已停止此筆之後的重複"); return; }
+        db.ref("records/"+id+"/repeatUntil").set(until).then(()=>{ closeSheet(); toast("已停止此筆之後的重複"); }).catch(e=>{ console.error(e); toast("更新失敗"); });
+      }, "確定刪除");
+    return;
+  }
+  // 重複記事，刪「原始那筆」或整筆刪 → 移除整個重複
+  if(isRep){
+    openConfirm("刪除整個重複",
+      "「<b>"+esc(title||"此記事")+"</b>」是重複記事的第一筆。<br>刪除會移除<b>整個重複（所有日期，包含未來）</b>，確定嗎？",
+      doFull, "確定刪除");
+    return;
+  }
+  // 非重複 / 採購 → 一般刪除
+  openConfirm("刪除記事", "確定刪除「<b>"+esc(title||"此記事")+"</b>」嗎？", doFull, "確定刪除");
 }
 
 /* ============================================================
