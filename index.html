@@ -258,6 +258,11 @@
   .goal-fill{height:100%;border-radius:6px;transition:width .3s}
   .goal-pct{font-size:12px;font-weight:700;color:var(--muted);min-width:34px;text-align:right}
   .goal-sub{font-size:12px;color:var(--muted);margin-top:4px}
+  .goal-status{margin-top:8px;font-size:13px;font-weight:600;color:var(--muted)}
+  .goal-status.is-done{color:#2CA02C}
+  .goal-segs{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+  .goal-segs .seg{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+  .goal-segs .seg-done{background:#E8F5E9;color:#2CA02C;border-color:#A5D6A7;font-weight:600}
   .goal-ms{margin-top:8px;display:flex;flex-direction:column;gap:4px}
   .ms-row{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
   .ms-row input{width:18px;height:18px;flex:none}
@@ -610,20 +615,6 @@ function occursOn(r, dateStr){
   if(u==="week") return diff%(7*n)===0;
   return diff%n===0;                                  // day
 }
-// 永久重複純紀錄：某期間(年／年月／年月日)內是否有發生日
-function logOccursInPeriod(r, y, m, d){
-  const pad=k=>String(k).padStart(2,"0");
-  if(m && d) return occursOn(r, y+"-"+pad(m)+"-"+pad(d));
-  const year=Number(y);
-  const months = m ? [Number(m)] : [1,2,3,4,5,6,7,8,9,10,11,12];
-  for(const mo of months){
-    const dim=new Date(year, mo, 0).getDate();
-    for(let day=1; day<=dim; day++){
-      if(occursOn(r, year+"-"+pad(mo)+"-"+pad(day))) return true;
-    }
-  }
-  return false;
-}
 // 某「發生日」這個記事是否已完成（重複的一般記事看 doneDates；其餘看整筆）
 function isDoneOn(r, dateStr){
   if(!r || r.isLog) return false;                       // 純紀錄無完成
@@ -874,7 +865,7 @@ function openActivityPanel(){
   const me=deviceName(); const list=(state.activity||[]);
   let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
     +'<span style="font-size:13px;color:var(--muted)">我的暱稱：<b>'+esc(me||"（未設定）")+'</b></span>'
-    +'<span class="manage-link" id="act_setname">設定暱稱</span></div>';
+    +'<span>'+((!LOCAL_MODE && list.length)?'<span class="manage-link" id="act_clear" style="margin-right:14px">清除動態</span>':'')+'<span class="manage-link" id="act_setname">設定暱稱</span></span></div>';
   if(LOCAL_MODE){ html+='<div class="empty-state">本機模式沒有家人共享，動態只在雲端模式顯示。</div>'; }
   else if(list.length===0){ html+='<div class="empty-state">還沒有動態。家人新增記事後會出現在這裡。</div>'; }
   else {
@@ -885,8 +876,14 @@ function openActivityPanel(){
   }
   openSheet("🔔 動態", html, null, null, "關閉");
   const sn=$("act_setname"); if(sn) sn.addEventListener("click", setDeviceNamePrompt);
+  const cl=$("act_clear"); if(cl) cl.addEventListener("click", clearActivity);
   const newest=list.length?(list[0].ts||0):Date.now();
   setActivityLastSeen(newest); renderActivityBadge();
+}
+function clearActivity(){
+  if(LOCAL_MODE) return;
+  if(!confirm("確定清除所有動態？此動作無法復原。")) return;
+  db.ref("activity").remove().then(()=>{ state.activity=[]; renderActivityBadge(); closeSheet(); toast("已清除動態"); }).catch(e=>{ console.error(e); toast("清除失敗"); });
 }
 
 /* 🎒 行事曆頁的百寶袋清單：無日期、未完成、非採購 */
@@ -922,8 +919,7 @@ function switchTab(t){
   if(t==="goals") renderGoals();
 }
 
-/* 跳出 App 再回來 → 自動回到「今日未完成」總覽清單 */
-/* 跳出 App 再回來 → 回到「行事曆」今天（總覽下次開啟仍為待辦） */
+/* 跳出 App 再回來 → 回到「行事曆」今天（總覽預設＝當月＋逾期） */
 function resetToTodayOverview(){
   if($("app").classList.contains("hidden")) return;   // 未登入不動
   ovMode="todo";
@@ -1570,7 +1566,6 @@ function openRecordForm(rec, presets){
   const cat =r.category || presets.category || "life";
   const ds  =(r.dateStart!==undefined ? r.dateStart : (presets.dateStart!==undefined ? presets.dateStart : state.selected));
   const isShop=cat==="shopping";
-  const done = !!r.doneDate || recKind(r)==="done";
   formAssignees=new Set(r.assignees||[]);
   const rep=r.repeat||{}; const repUnit=rep.unit||"none"; const repEvery=rep.every||1;
 
@@ -1773,8 +1768,7 @@ function daysToYearEnd(year){
 }
 function goalProgress(g){
   if(g.type==="simple"){
-    const pct=Math.max(0,Math.min(100,Math.round(Number(g.progress)||0)));
-    return { done:0, total:0, pct, simple:true };
+    return g.done ? { done:0, total:0, pct:100, complete:true } : { done:0, total:0, pct:0, simple:true };
   }
   if(g.type==="milestone"){
     const ms=g.milestones||[]; const done=ms.filter(m=>m.done).length;
@@ -1784,7 +1778,24 @@ function goalProgress(g){
   let pct;
   if(tgt===st) pct = (cur===tgt?100:0);
   else pct = Math.max(0, Math.min(100, Math.round((cur-st)/(tgt-st)*100)));
-  return { done:cur, total:tgt, pct };
+  return { done:cur, total:tgt, pct, complete: pct>=100 };
+}
+// 數值型分段間隔：依起始→目標、每 step 一階，回傳階段點與是否已達到
+function goalSegments(g){
+  if(g.type!=="number") return [];
+  const step=Math.abs(Number(g.step)||0); if(step<=0) return [];
+  const st=(g.start!=null)?Number(g.start):0, tgt=Number(g.target)||0, cur=Number(g.current)||0;
+  if(tgt===st) return [];
+  const up = tgt>st;
+  const n=Math.floor(Math.abs(tgt-st)/step);
+  const segs=[];
+  for(let i=1;i<=n;i++){
+    const v = up ? st+step*i : st-step*i;
+    if(up ? v>=tgt : v<=tgt) break;
+    segs.push({ val:v, done: up? cur>=v : cur<=v });
+  }
+  segs.push({ val:tgt, done: up? cur>=tgt : cur<=tgt });
+  return segs;
 }
 function renderGoals(){
   const wrap=$("goalList"); if(!wrap) return;
@@ -1813,39 +1824,47 @@ function goalCard(g){
   let h='<div class="stripe" style="background:'+col+'"></div><div class="body">';
   h+='<div class="row1"><span class="name">'+esc(g.title)+'</span></div>';
   h+='<div class="meta">'+pillHtml(g.category)+' <span>'+esc(g.year||"")+'</span></div>';
-  h+='<div class="goal-prog"><div class="goal-bar"><div class="goal-fill" style="width:'+p.pct+'%;background:'+col+'"></div></div><div class="goal-pct">'+p.pct+'%</div></div>';
-  if(g.type==="milestone"){
-    h+='<div class="goal-sub">完成 '+p.done+' / '+p.total+' 項</div><div class="goal-ms">';
-    const msList=(g.milestones||[]).map((m,i)=>({m,i}));
-    msList.sort((a,b)=>{ const da=a.m.date||"9999-99", db_=b.m.date||"9999-99"; return da<db_?-1:da>db_?1:a.i-b.i; });
-    msList.forEach(({m,i})=>{ h+='<label class="ms-row"><input type="checkbox" data-ms="'+i+'"'+(m.done?" checked":"")+'><span'+(m.done?' class="ms-done"':'')+'>'+esc(m.text)+(m.date?' <span style="color:var(--faint);font-size:12px">📅 '+esc(m.date.slice(5))+'</span>':'')+'</span></label>'; });
-    h+='</div>';
-  } else if(g.type==="simple"){
-    h+='<div class="goal-sub">'+(p.pct>=100?"已完成 🎉":"進行中")+'</div>';
+  if(g.type==="simple"){
+    h+='<div class="goal-status'+(p.complete?' is-done':'')+'">'+(p.complete?"已完成 🎉":"進行中")+'</div>';
   } else {
-    h+='<div class="goal-sub">'+esc(p.done)+' / '+esc(p.total)+' '+esc(g.unit||"")+'</div>';
+    h+='<div class="goal-prog"><div class="goal-bar"><div class="goal-fill" style="width:'+p.pct+'%;background:'+col+'"></div></div><div class="goal-pct">'+p.pct+'%</div></div>';
+    if(g.type==="milestone"){
+      h+='<div class="goal-sub">完成 '+p.done+' / '+p.total+' 項</div><div class="goal-ms">';
+      const msList=(g.milestones||[]).map((m,i)=>({m,i}));
+      msList.sort((a,b)=>{ const da=a.m.date||"9999-99", db_=b.m.date||"9999-99"; return da<db_?-1:da>db_?1:a.i-b.i; });
+      msList.forEach(({m,i})=>{ h+='<label class="ms-row"><input type="checkbox" data-ms="'+i+'"'+(m.done?" checked":"")+'><span'+(m.done?' class="ms-done"':'')+'>'+esc(m.text)+(m.date?' <span style="color:var(--faint);font-size:12px">📅 '+esc(m.date.slice(5))+'</span>':'')+'</span></label>'; });
+      h+='</div>';
+    } else {
+      h+='<div class="goal-sub">'+esc(p.done)+' / '+esc(p.total)+' '+esc(g.unit||"")+(p.complete?'　已完成 🎉':'')+'</div>';
+      const segs=goalSegments(g);
+      if(segs.length){ h+='<div class="goal-segs">'+segs.map(s=>'<span class="seg'+(s.done?' seg-done':'')+'">'+esc(s.val)+(s.done?' ✓':'')+'</span>').join("")+'</div>'; }
+    }
   }
   h+='</div><div class="acts">';
-  if(g.type==="number"||g.type==="simple") h+='<button class="icon-btn" data-prog>＋進度</button>';
-  h+='<button class="icon-btn" data-next title="複製到明年">→明年</button>';
+  if(g.type==="number") h+='<button class="icon-btn" data-prog>＋進度</button><button class="icon-btn" data-fin>✓ 標記完成</button>';
+  if(g.type==="simple") h+='<button class="icon-btn" data-done>'+(g.done?"↩︎ 取消完成":"✓ 標記完成")+'</button>';
+  h+='<button class="icon-btn" data-next title="複製到明年">📋 明年繼續</button>';
   h+='<button class="icon-btn" data-edit>✏️</button><button class="icon-btn" data-del>🗑</button></div>';
   card.innerHTML=h;
   card.querySelector("[data-edit]").addEventListener("click", ()=>openGoalForm(g));
   card.querySelector("[data-del]").addEventListener("click", ()=>deleteGoal(g.id, g.title));
   const nb=card.querySelector("[data-next]"); if(nb) nb.addEventListener("click", ()=>copyGoalToNextYear(g));
   const pb=card.querySelector("[data-prog]"); if(pb) pb.addEventListener("click", ()=>updateGoalProgress(g));
+  const fb=card.querySelector("[data-fin]"); if(fb) fb.addEventListener("click", ()=>markGoalDone(g.id));
+  const dn=card.querySelector("[data-done]"); if(dn) dn.addEventListener("click", ()=>toggleGoalDone(g.id));
   card.querySelectorAll("[data-ms]").forEach(cb=>cb.addEventListener("change", function(){ toggleMilestone(g.id, Number(this.getAttribute("data-ms"))); }));
   return card;
 }
+function markGoalDone(id){
+  const g=state.goals[id]; if(!g) return;
+  const tgt=Number(g.target)||0;
+  saveGoalPatch(id, { current: tgt });   // 目前值＝目標值 → 100%、區間全達成
+}
+function toggleGoalDone(id){
+  const g=state.goals[id]; if(!g) return;
+  saveGoalPatch(id, { done: !g.done });
+}
 function updateGoalProgress(g){
-  if(g.type==="simple"){
-    const cur=prompt("更新「"+g.title+"」進度 %（0-100）", g.progress!=null?g.progress:0);
-    if(cur===null) return;
-    let v=Math.round(Number(cur)); if(isNaN(v)){ toast("請輸入 0-100 的數字"); return; }
-    v=Math.max(0,Math.min(100,v));
-    saveGoalPatch(g.id, { progress:v });
-    return;
-  }
   const cur=prompt("更新「"+g.title+"」目前進度"+(g.unit?("（"+g.unit+"）"):""), g.current!=null?g.current:0);
   if(cur===null) return;
   const v=Number(cur); if(isNaN(v)){ toast("請輸入數字"); return; }
@@ -1866,10 +1885,9 @@ function copyGoalToNextYear(g){
   if(!requireAuth()) return;
   const ny=(Number(g.year)||new Date().getFullYear())+1;
   const copy=Object.assign({}, g); delete copy.id;
-  copy.year=ny; copy.createdAt=Date.now();
+  copy.year=ny; copy.createdAt=Date.now(); copy.done=false;
   if(copy.type==="milestone" && Array.isArray(copy.milestones)) copy.milestones=copy.milestones.map(m=>({text:m.text,done:false,date:m.date||null}));
   if(copy.type==="number") copy.current=(copy.start!=null?copy.start:0);
-  if(copy.type==="simple") copy.progress=0;
   const after=function(){ const sel=$("goalYearFilter"); if(sel){ sel.value=String(ny); } renderGoals(); toast("已複製到 "+ny+" 年"); };
   if(LOCAL_MODE){ const key=genId(); state.goals[key]=copy; lsSaveGoals(); after(); return; }
   const key=db.ref("goals").push().key;
@@ -1886,6 +1904,7 @@ let goalMilestones=[];   // 編輯時暫存里程碑
 function openGoalForm(goal){
   const isEdit=!!goal; const g=goal||{};
   const type=g.type||"number"; const cat=g.category||"life"; const yr=g.year||new Date().getFullYear();
+  const dir=g.dir||((g.target!=null&&g.start!=null&&Number(g.target)<Number(g.start))?"down":"up");
   goalMilestones=(g.milestones||[]).map(m=>({text:m.text,done:!!m.done,date:m.date||""}));
   const html=
     '<div class="field"><label>目標名稱</label><input id="g_title" autocomplete="off" value="'+esc(g.title||"")+'" placeholder="例如：存到 30 萬"></div>'+
@@ -1894,16 +1913,22 @@ function openGoalForm(goal){
       '<div class="field"><label>類型</label><select id="g_type">'+
         '<option value="number"'+(type==="number"?" selected":"")+'>數值型（進度條）</option>'+
         '<option value="milestone"'+(type==="milestone"?" selected":"")+'>里程碑型（清單）</option>'+
-        '<option value="simple"'+(type==="simple"?" selected":"")+'>簡單型（自訂進度，免數字）</option>'+
+        '<option value="simple"'+(type==="simple"?" selected":"")+'>簡單型（進行中／已完成）</option>'+
       '</select></div>'+
     '</div>'+
     '<div class="field"><label>分類</label>'+iconPicker("g_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
     '<div id="g_numbox"'+(type==="number"?"":' style="display:none"')+'>'+
       '<div class="two">'+
+        '<div class="field"><label>方向</label><select id="g_dir">'+
+          '<option value="up"'+(dir==="up"?" selected":"")+'>遞增（往上加）</option>'+
+          '<option value="down"'+(dir==="down"?" selected":"")+'>遞減（往下減，如減重）</option>'+
+        '</select></div>'+
+        '<div class="field"><label>間隔（選填）</label><input id="g_step" type="number" value="'+(g.step!=null?g.step:"")+'" placeholder="每階，如 50000"></div>'+
+      '</div>'+
+      '<div class="two">'+
         '<div class="field"><label>目標值</label><input id="g_target" type="number" value="'+(g.target!=null?g.target:"")+'" placeholder="300000"></div>'+
         '<div class="field"><label>目前</label><input id="g_current" type="number" value="'+(g.current!=null?g.current:0)+'"></div>'+
       '</div>'+
-      '<div class="field"><label>起始值（選填）</label><input id="g_start" type="number" value="'+(g.start!=null?g.start:"")+'" placeholder="留空＝自動（增加型從0、減重型從現況）"></div>'+
       '<div class="field"><label>單位（選填）</label><input id="g_unit" autocomplete="off" value="'+esc(g.unit||"")+'" placeholder="元 / 本 / 次"></div>'+
     '</div>'+
     '<div id="g_msbox"'+(type==="milestone"?"":' style="display:none"')+'>'+
@@ -1943,24 +1968,25 @@ function saveGoal(id, prev){
   if(type==="number"){
     data.target=Number($("g_target").value)||0;
     data.current=Number($("g_current").value)||0;
-    const sv=$("g_start").value;
-    if(sv!=="") data.start=Number(sv)||0;
-    else if(!id) data.start=(data.target<data.current)?data.current:0;   // 新目標：減重(目標<現況)起始＝現況；其餘＝0
-    else if(prev && prev.start!=null) data.start=Number(prev.start)||0;  // 編輯：保留原起始
-    else data.start=0;                                                    // 編輯舊資料：維持 0（=現況/目標）
+    data.dir=($("g_dir").value==="down")?"down":"up";
+    const stp=$("g_step").value;
+    data.step=(stp!=="")?(Math.abs(Number(stp))||null):null;
+    // 起始值自動：同方向編輯保留原值；新建（不分方向）都用目前值當起點
+    if(id && prev && prev.start!=null && (prev.dir||"up")===data.dir) data.start=Number(prev.start)||0;
+    else data.start=data.current;
     data.unit=$("g_unit").value.trim();
-    data.milestones=null; data.progress=null;
+    data.milestones=null; data.progress=null; data.done=null;
   } else if(type==="milestone"){
     data.milestones=goalMilestones.filter(m=>(m.text||"").trim()).map(m=>({text:m.text.trim(),done:!!m.done,date:m.date||null}));
-    data.target=null; data.current=null; data.unit=null; data.progress=null; data.start=null;
-  } else {   // simple（自訂進度）
-    data.progress=(prev&&prev.progress!=null)?prev.progress:0;
-    data.target=null; data.current=null; data.unit=null; data.milestones=null; data.start=null;
+    data.target=null; data.current=null; data.unit=null; data.progress=null; data.start=null; data.step=null; data.dir=null; data.done=null;
+  } else {   // simple（進行中／已完成）
+    data.done=!!(prev&&prev.done);
+    data.target=null; data.current=null; data.unit=null; data.milestones=null; data.progress=null; data.start=null; data.step=null; data.dir=null;
   }
   if(LOCAL_MODE){
     const key=id||genId();
     const merged=Object.assign({}, state.goals[key]||{}, data);
-    ["target","current","unit","milestones","progress","start"].forEach(k=>{ if(data[k]===null) delete merged[k]; });
+    ["target","current","unit","milestones","progress","start","step","dir","done"].forEach(k=>{ if(data[k]===null) delete merged[k]; });
     state.goals[key]=merged; lsSaveGoals(); closeSheet(); renderGoals(); toast(id?"已更新":"已新增"); return;
   }
   const key=id||db.ref("goals").push().key;
