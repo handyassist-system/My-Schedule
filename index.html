@@ -2,2098 +2,952 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>智能行事曆｜採購系統</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>食光地圖 · 美食搜尋與收藏</title>
 <style>
   :root{
-    --bg:#F6F7FB; --surface:#FFFFFF; --line:#E8EAF1;
-    --ink:#1E2230; --muted:#6B7280; --faint:#9AA1AE;
-    --primary:#4F46E5; --primary-d:#4338CA; --primary-soft:#EEF0FE;
-    --work:#3B82F6; --life:#22C55E; --health:#F59E0B; --important:#EF4444;
-    --hi:#EF4444; --mid:#F59E0B; --low:#94A3B8;
-    --done:#16A34A;
-    --shadow:0 1px 2px rgba(20,24,40,.06),0 6px 18px rgba(20,24,40,.06);
-    --r:14px;
+    --bg:#FBF7F0; --panel:#FFFFFF; --ink:#2A2622; --sub:#7C746B;
+    --line:#EBE3D8; --accent:#E2603B; --accent-d:#C24A28;
+    --gold:#E0A21C; --green:#3F8A5C; --pin:#5B6B7C;
+    --shadow:0 2px 10px rgba(42,38,34,.06);
+    --radius:14px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;padding:0}
+  html,body{margin:0;height:100%}
   body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang TC","Microsoft JhengHei",Roboto,sans-serif;
-    background:var(--bg); color:var(--ink);
-    font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    background:var(--bg); color:var(--ink); font-size:15px; line-height:1.5;
   }
-  button{font-family:inherit;cursor:pointer;border:none;background:none}
-  input,select,textarea{font-family:inherit;font-size:15px}
-  .hidden{display:none!important}
+  button{font-family:inherit;cursor:pointer}
+  input,select{font-family:inherit;font-size:15px}
 
   /* ---------- Login ---------- */
   #login{
-    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-    padding:24px;background:linear-gradient(160deg,#EEF0FE 0%,#F6F7FB 60%);
+    position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,#FBF7F0,#F3E9DB);padding:24px;
   }
   .login-card{
-    width:100%;max-width:360px;background:var(--surface);border-radius:20px;
-    padding:32px 26px;box-shadow:var(--shadow);text-align:center;
+    background:var(--panel);border:1px solid var(--line);border-radius:20px;
+    box-shadow:var(--shadow);padding:34px 28px;width:100%;max-width:360px;text-align:center;
   }
-  .login-card .logo{font-size:40px;line-height:1;margin-bottom:14px}
-  .login-card h1{margin:0 0 4px;font-size:21px;letter-spacing:.5px}
-  .login-card p{margin:0 0 24px;color:var(--muted);font-size:13.5px}
-  .code-input{
-    width:100%;padding:15px 16px;border:1.5px solid var(--line);border-radius:12px;
-    text-align:center;font-size:19px;letter-spacing:3px;outline:none;
-    transition:border-color .15s;
+  .login-card .logo{font-size:38px;line-height:1}
+  .login-card h1{font-size:21px;margin:14px 0 4px;letter-spacing:.5px}
+  .login-card p{color:var(--sub);font-size:13px;margin:0 0 22px}
+  .login-card input{
+    width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;
+    background:#FCFAF6;text-align:center;letter-spacing:3px;outline:none;
   }
-  .code-input:focus{border-color:var(--primary)}
-  .btn-primary{
-    width:100%;margin-top:14px;padding:15px;border-radius:12px;
-    background:var(--primary);color:#fff;font-size:16px;font-weight:600;
-    transition:background .15s,transform .05s;
+  .login-card input:focus{border-color:var(--accent)}
+  .login-card button{
+    width:100%;margin-top:14px;padding:13px;border:none;border-radius:12px;
+    background:var(--accent);color:#fff;font-size:16px;font-weight:600;
   }
-  .btn-primary:active{transform:scale(.99);background:var(--primary-d)}
-  .btn-primary:disabled{opacity:.55;cursor:default}
-  .login-msg{margin-top:14px;min-height:18px;font-size:13px;color:var(--important)}
-  .link-btn{margin-top:18px;background:transparent;color:var(--muted);font-size:13px;text-decoration:underline;padding:6px}
-  .code-hint{margin-top:8px;font-size:12px;color:var(--faint);letter-spacing:.3px}
+  .login-card button:active{background:var(--accent-d)}
+  .login-err{color:var(--accent-d);font-size:13px;min-height:18px;margin-top:10px}
 
   /* ---------- App shell ---------- */
-  #app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
-  header.bar{
-    position:sticky;top:0;z-index:20;background:rgba(246,247,251,.9);
-    backdrop-filter:blur(8px);padding:5px 14px 5px;
-    display:flex;align-items:center;justify-content:space-between;
-    border-bottom:1px solid var(--line);
+  #app{display:none;flex-direction:column;height:100%}
+  header.top{
+    display:flex;align-items:center;gap:10px;padding:11px 16px;
+    background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;
   }
-  header.bar .title{font-size:14px;font-weight:700;letter-spacing:.3px}
-  header.bar .who{font-size:11px;color:var(--faint);margin-top:0}
-  .logout{font-size:11.5px;color:var(--muted);padding:4px 9px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
-  .dp-toggle{display:flex;gap:5px;background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:4px;margin:8px 4px 2px}
-  .dp-tab{flex:1;border:none;background:transparent;padding:9px 6px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted)}
-  .dp-tab.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
-
-  main{flex:1;padding:14px 14px 96px}
-
-  /* ---------- Tabs ---------- */
-  .tabbar{
-    position:fixed;left:0;right:0;bottom:0;z-index:30;
-    max-width:560px;margin:0 auto;background:var(--surface);
-    border-top:1px solid var(--line);display:flex;
-    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+  header.top .brand{font-weight:700;font-size:17px;display:flex;align-items:center;gap:7px}
+  header.top .brand span{font-size:20px}
+  header.top nav{margin-left:auto;display:flex;gap:6px}
+  header.top nav button{
+    border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;
+    font-size:13.5px;color:var(--sub);
   }
-  .tabbar button{
-    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
-    padding:6px 0;color:var(--faint);font-size:11.5px;border-radius:12px;
+  header.top nav button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  main{flex:1;min-height:0;display:flex;flex-direction:column}
+
+  /* ---------- Filters ---------- */
+  .filters{
+    background:var(--panel);border-bottom:1px solid var(--line);padding:14px 16px;
   }
-  .tabbar button .ic{font-size:21px;line-height:1}
-  .tabbar button.active{color:var(--primary);background:var(--primary-soft)}
-
-  /* ---------- Calendar ---------- */
-  .cal-head{display:flex;align-items:center;justify-content:center;gap:6px;margin:2px 4px 7px}
-  .cal-head .month-title{font-size:18px;font-weight:700;padding:5px 8px;border-radius:10px}
-  .today-btn{margin-left:4px;padding:6px 12px;border-radius:10px;font-size:13px;font-weight:700;color:var(--primary);background:var(--primary-soft)}
-  .cal-head .month-title:active{background:var(--primary-soft)}
-  .nav-btn{width:34px;height:34px;border-radius:10px;font-size:18px;color:var(--muted);background:var(--surface);box-shadow:var(--shadow)}
-  .cal-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:10px 10px 9px;touch-action:pan-y}
-  .weekrow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
-  .weekrow span{text-align:center;font-size:12px;color:var(--faint);font-weight:600}
-  .weekrow span.sun{color:#EF4444}.weekrow span.sat{color:#3B82F6}
-  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
-  .cell{
-    aspect-ratio:1/1.1;min-height:46px;border-radius:10px;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:4px;position:relative;
-    font-size:15px;color:var(--ink);
+  .filters .grp{margin-bottom:12px}
+  .filters .grp:last-child{margin-bottom:0}
+  .lbl{font-size:12px;color:var(--sub);font-weight:600;margin-bottom:6px;display:block;letter-spacing:.4px}
+  .row{display:flex;flex-wrap:wrap;gap:8px}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{
+    border:1px solid var(--line);background:#FCFAF6;border-radius:999px;
+    padding:7px 13px;font-size:13.5px;color:var(--ink);user-select:none;transition:.12s;
   }
-  .cell.empty{visibility:hidden}
-  .cell.other{color:var(--faint)}
-  .cell:active{background:var(--bg)}
-  .cell.today{font-weight:800;background:#E5E7EB}
-  .cell.sel{background:var(--primary);color:#fff}
-  .cell.sel.today::before{border-color:rgba(255,255,255,.7)}
-  .dots{display:flex;gap:3px;height:6px;align-items:center}
-  .dot{width:6px;height:6px;border-radius:999px}
-  .dot.work{background:var(--work)}.dot.life{background:var(--life)}
-  .dot.health{background:var(--health)}.dot.important{background:var(--important)}
-  .cell.sel .dot{box-shadow:0 0 0 1px rgba(255,255,255,.6)}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .field{
+    flex:1;min-width:150px;padding:10px 12px;border:1px solid var(--line);
+    border-radius:10px;background:#FCFAF6;outline:none;
+  }
+  .field:focus{border-color:var(--accent)}
+  select.field{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237C746B'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+  .adv-toggle{
+    background:none;border:none;color:var(--accent-d);font-size:13px;font-weight:600;padding:2px 0;
+  }
+  .adv{display:none}
+  .adv.show{display:block}
+  .btn-row{display:flex;gap:8px;margin-top:10px}
+  .search-btn{
+    flex:1;padding:13px;border:none;border-radius:12px;
+    background:var(--accent);color:#fff;font-size:16px;font-weight:600;
+  }
+  .search-btn:active{background:var(--accent-d)}
+  .search-btn:disabled{opacity:.6}
+  .near-btn{
+    flex:0 0 auto;padding:13px 16px;border:1px solid var(--accent);border-radius:12px;
+    background:#fff;color:var(--accent-d);font-size:15px;font-weight:600;white-space:nowrap;
+  }
+  .near-btn:active{background:#FFF3E8}
+  .near-btn:disabled{opacity:.6}
 
-  .legend{display:flex;gap:14px;justify-content:center;margin-top:8px;flex-wrap:wrap}
-  .legend span{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
+  /* ---------- Content split ---------- */
+  .split{flex:1;min-height:0;display:flex}
+  .listcol{
+    width:42%;max-width:520px;min-width:300px;overflow-y:auto;
+    background:var(--bg);border-right:1px solid var(--line);
+  }
+  .mapcol{flex:1;position:relative;min-height:240px}
+  #map{position:absolute;inset:0}
+  .map-warn{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-align:center;color:var(--sub);font-size:13px;padding:24px;background:#F1ECE3;
+  }
 
-  /* ---------- Lists / cards ---------- */
-  .section-head{display:flex;align-items:center;justify-content:space-between;margin:9px 4px 7px}
-  .section-head h2{font-size:15px;margin:0;font-weight:700}
-  .add-btn{display:flex;align-items:center;gap:6px;background:var(--primary);color:#fff;font-weight:600;font-size:13.5px;padding:9px 14px;border-radius:999px;box-shadow:var(--shadow)}
-  .add-btn:active{background:var(--primary-d)}
-
+  .status{padding:14px 16px;color:var(--sub);font-size:13.5px}
   .card{
-    background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);
-    padding:13px 14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;
+    background:var(--panel);margin:10px 12px;border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
   }
-  .card .stripe{width:4px;align-self:stretch;border-radius:999px;flex:none}
-  .card .body{flex:1;min-width:0}
-  .card .row1{display:flex;align-items:center;gap:8px}
-  .card .name{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .card .time{font-size:12.5px;color:var(--muted);margin-top:2px}
-  .card .note{font-size:12.5px;color:var(--faint);margin-top:4px;white-space:pre-wrap;word-break:break-word}
-  .pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;flex:none}
-  .pill.work{background:#E7F0FE;color:#2563EB}
-  .pill.life{background:#E6F8EE;color:#16A34A}
-  .pill.health{background:#FEF3E2;color:#D97706}
-  .pill.important{background:#FDE8E8;color:#DC2626}
-  .pill.hi{background:#FDE8E8;color:#DC2626}
-  .pill.mid{background:#FEF3E2;color:#D97706}
-  .pill.low{background:#EEF1F5;color:#64748B}
-  .card .acts{display:flex;gap:6px;flex:none}
-  .icon-btn{width:32px;height:32px;border-radius:9px;font-size:15px;color:var(--muted);background:var(--bg)}
-  .icon-btn:active{background:var(--line)}
-
-  /* shopping item check */
-  .check{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;margin-top:1px}
-  .check.on{background:var(--done);border-color:var(--done)}
-  .item.done .name{text-decoration:line-through;color:var(--faint)}
-
-  .qty{font-size:12.5px;color:var(--muted)}
-  .filters{display:flex;flex-direction:column;gap:8px;padding:2px 4px 12px}
-  .filter-row{display:flex;gap:8px;align-items:center}
-  .filter-label{font-size:12px;color:var(--faint);font-weight:700;min-width:30px;flex:none}
-  .filters select{
-    flex:1 1 0;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:10px;
-    background:var(--surface);color:var(--ink);outline:none;font-size:14px;
+  .card .head{display:flex;gap:12px;padding:13px 14px;cursor:pointer;align-items:flex-start}
+  .card .nm{font-weight:600;font-size:15.5px;flex:1}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:5px;font-size:13px;color:var(--sub)}
+  .rate{color:var(--gold);font-weight:600}
+  .open{color:var(--green);font-weight:600}
+  .closed{color:var(--accent-d);font-weight:600}
+  .price{color:var(--ink);font-weight:600}
+  .fav-row{display:flex;gap:6px;padding:0 14px 13px}
+  .fav-row button{
+    flex:1;border:1px solid var(--line);background:#FCFAF6;border-radius:9px;
+    padding:8px 4px;font-size:12.5px;color:var(--sub);
   }
-  .empty-state{text-align:center;color:var(--faint);padding:40px 20px;font-size:14px}
-  .ov-hint{font-size:12px;color:var(--muted);background:var(--primary-soft);border-radius:10px;padding:8px 12px;margin:0 4px 10px;line-height:1.5}
+  .fav-row button.set-want{background:#FFF3E8;border-color:#F4C99F;color:var(--accent-d)}
+  .fav-row button.set-been{background:#EAF5EE;border-color:#A9D4BC;color:var(--green)}
+  .fav-row button.set-pocket{background:#EEF1F5;border-color:#B7C3D0;color:var(--pin)}
 
-  /* ---------- Modal ---------- */
-  .overlay{position:fixed;inset:0;z-index:50;background:rgba(20,24,40,.4);display:flex;align-items:flex-end;justify-content:center}
-  .sheet{
-    width:100%;max-width:560px;background:var(--surface);
-    border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));
-    max-height:90vh;overflow-y:auto;animation:slideUp .2s ease;
+  .detail{border-top:1px solid var(--line);padding:14px;display:none;background:#FCFAF6}
+  .detail.show{display:block}
+  .detail .drow{margin:7px 0;font-size:13.5px;display:flex;gap:8px}
+  .detail .drow b{color:var(--sub);font-weight:600;min-width:46px}
+  .detail a{color:var(--accent-d);text-decoration:none;word-break:break-all}
+  .detail .acts{display:flex;gap:8px;margin-top:12px}
+  .detail .acts a{
+    flex:1;text-align:center;background:var(--accent);color:#fff;border-radius:9px;
+    padding:10px;font-weight:600;font-size:13.5px;
   }
-  @keyframes slideUp{from{transform:translateY(40px);opacity:.6}to{transform:translateY(0);opacity:1}}
-  .sheet h3{margin:2px 0 16px;font-size:17px}
-  .field{margin-bottom:13px}
-  .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-weight:600}
-  .field input,.field select,.field textarea{
-    width:100%;padding:12px;border:1.5px solid var(--line);border-radius:11px;outline:none;
-    background:var(--surface);color:var(--ink);
-  }
-  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary)}
-  .field textarea{resize:vertical;min-height:64px}
-  .two{display:flex;gap:10px}.two>*{flex:1}
-  .sheet-acts{display:flex;gap:10px;margin-top:8px}
-  .sheet-acts .btn-primary{margin-top:0}
-  .btn-ghost{flex:none;padding:15px 18px;border-radius:12px;background:var(--bg);color:var(--muted);font-weight:600}
-  .btn-danger{width:100%;margin-top:10px;padding:13px;border-radius:12px;background:#FDE8E8;color:#DC2626;font-weight:600}
+  .detail .acts a.alt{background:#fff;color:var(--accent-d);border:1px solid var(--accent)}
 
-  .day-events{margin-top:6px}
+  /* ---------- Favorites view ---------- */
+  .fav-view{display:none;flex:1;overflow-y:auto;background:var(--bg)}
+  .fav-view.show{display:block}
+  .fav-filter{display:flex;gap:6px;padding:14px 16px 4px;flex-wrap:wrap}
+  .empty{text-align:center;color:var(--sub);padding:60px 24px;font-size:14px}
+
+  .pill{display:inline-block;font-size:11.5px;padding:2px 9px;border-radius:999px;font-weight:600}
+  .pill.want{background:#FFF3E8;color:var(--accent-d)}
+  .pill.been{background:#EAF5EE;color:var(--green)}
+  .pill.pocket{background:#EEF1F5;color:var(--pin)}
+
   .toast{
-    position:fixed;left:50%;bottom:108px;transform:translateX(-50%);
-    background:#1E2230;color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;
-    z-index:99;box-shadow:var(--shadow);opacity:0;transition:opacity .2s;pointer-events:none;
+    position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;
+    opacity:0;transition:.22s;z-index:60;pointer-events:none;
   }
-  .toast.show{opacity:1}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  /* ---- 第一批：假日 / 急迫 / 倒數 / 開關 ---- */
-  .cell.holiday .num{color:#EF4444;font-weight:700}
-  .cell.sel.holiday .num{color:#fff}
-  .dots .urg{font-size:9px;line-height:1}
-  .hol-banner{background:#FDECEC;color:#DC2626;font-size:13px;font-weight:600;
-    padding:8px 12px;border-radius:10px;margin-bottom:10px;text-align:center}
-  .urg-badge{font-size:13px;flex:none;line-height:1}
-  .card.urgent-card{box-shadow:0 0 0 1.5px rgba(239,68,68,.45),var(--shadow)}
-  .countdown{display:inline-block;margin-top:5px;font-size:12px;font-weight:600;
-    color:#B45309;background:#FEF3E2;padding:2px 9px;border-radius:999px}
-  .toggle-row{display:flex;align-items:center;justify-content:space-between;
-    padding:11px 2px;border-top:1px solid var(--line);font-size:14px;color:var(--ink)}
-  .toggle-row:first-of-type{border-top:none}
-  .switch{position:relative;display:inline-block;width:46px;height:27px;flex:none}
-  .switch input{opacity:0;width:0;height:0}
-  .switch .slider{position:absolute;inset:0;background:#D7DBE3;border-radius:999px;transition:.2s}
-  .switch .slider::before{content:"";position:absolute;height:21px;width:21px;left:3px;top:3px;
-    background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-  .switch input:checked + .slider{background:var(--primary)}
-  .switch input:checked + .slider::before{transform:translateX(19px)}
-
-  /* ---- 第二批 2a：記事/分類/執行人/待購分組 ---- */
-  .legend{display:flex;gap:8px 12px;justify-content:center;margin-top:6px;flex-wrap:wrap;font-size:12.5px}
-  .legend span{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted)}
-  .type-badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;flex:none}
-  .type-task{background:#EAF1FE;color:#2563EB}
-  .type-record{background:#F1ECFB;color:#7C3AED}
-  .meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 10px}
-  .meta .who{color:#0D9488}
-  .shop-hint{font-size:12px;color:var(--faint);margin:2px 4px 12px}
-  .group-head{display:flex;align-items:center;gap:7px;margin:16px 4px 8px;font-size:13px;font-weight:700;color:var(--ink)}
-  .group-head .gcount{font-size:11px;font-weight:600;color:var(--faint);background:var(--bg);padding:1px 8px;border-radius:999px}
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
-  .chip{padding:7px 13px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);
-    color:var(--muted);font-size:13px;font-weight:600}
-  .chip.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-d)}
-  .chip-add{display:flex;gap:8px;margin-top:9px}
-  .chip-add input{flex:1;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;outline:none}
-  .chip-add button{flex:none;padding:0 15px;border-radius:10px;background:var(--bg);color:var(--muted);font-weight:600}
-  .label-row{display:flex;align-items:center;justify-content:space-between}
-  .manage-link{font-size:12px;color:var(--primary);font-weight:600}
-  .person-row{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-top:1px solid var(--line)}
-  .person-row:first-of-type{border-top:none}
-  .person-row .del{color:#DC2626;font-size:13px;padding:5px 10px;border-radius:8px;background:#FDE8E8}
-
-  /* 🎒 百寶袋 快速記 */
-  .pocket-add{display:flex;align-items:center;gap:8px;background:var(--surface);
-    border-radius:12px;box-shadow:var(--shadow);padding:8px 10px;margin:2px 4px 12px}
-  .pocket-add .pocket-ico{font-size:18px;flex:none}
-  .pocket-add input{flex:1;border:none;outline:none;font-size:15px;background:transparent;color:var(--ink)}
-  .pocket-add button{flex:none;width:32px;height:32px;border-radius:9px;background:var(--primary);
-    color:#fff;font-size:18px;font-weight:700;line-height:1}
-  .pocket-add button:active{background:var(--primary-d)}
-
-  /* 分類圖示點選器 */
-  .iconpick{display:flex;flex-wrap:wrap;gap:7px}
-  .iconchip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-    width:62px;padding:8px 4px;border-radius:12px;background:var(--bg);border:1.5px solid transparent;
-    color:var(--muted);font-size:11px;line-height:1.2;transition:all .12s}
-  .iconchip .ic{font-size:20px;line-height:1}
-  .iconchip .lb{white-space:nowrap}
-  .iconchip.on{background:#EAF2FF;border-color:var(--primary);color:var(--primary);font-weight:600}
-
-  /* 年度目標 */
-  .goal-card .goal-prog{display:flex;align-items:center;gap:8px;margin-top:8px}
-  .goal-bar{flex:1;height:9px;border-radius:6px;background:var(--bg);overflow:hidden}
-  .goal-fill{height:100%;border-radius:6px;transition:width .3s}
-  .goal-pct{font-size:12px;font-weight:700;color:var(--muted);min-width:34px;text-align:right}
-  .goal-sub{font-size:12px;color:var(--muted);margin-top:4px}
-  .goal-status{margin-top:8px;font-size:13px;font-weight:600;color:var(--muted)}
-  .goal-status.is-done{color:#2CA02C}
-  .goal-segs{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
-  .goal-segs .seg{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
-  .goal-segs .seg-done{background:#E8F5E9;color:#2CA02C;border-color:#A5D6A7;font-weight:600}
-  .goal-ms{margin-top:8px;display:flex;flex-direction:column;gap:4px}
-  .ms-row{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
-  .ms-row input{width:18px;height:18px;flex:none}
-  .ms-done{text-decoration:line-through;color:var(--faint)}
-  .ms-edit{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-  .ms-edit input{flex:1}
-  .ms-del{flex:none;width:30px;height:30px;border-radius:8px;background:#FDE8E8;color:#DC2626;font-size:14px}
-
-  /* 多行事曆 */
-  .cal-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 12px;border-radius:12px;background:var(--bg);margin-bottom:8px}
-  .cal-row.on{background:#EAF2FF;border:1.5px solid var(--primary)}
-  .cal-name{flex:1;font-size:15px;color:var(--ink);font-weight:600;cursor:pointer}
-  .cal-del{flex:none;width:34px;height:34px;border-radius:9px;background:#FDE8E8;color:#DC2626;font-size:15px}
-  .iconchip:active{transform:scale(.94)}
-
-  /* ---- 第二批 2b：三態 / 總覽 ---- */
-  .seg{display:flex;gap:6px}
-  .seg button{flex:1;padding:11px 6px;border-radius:11px;border:1.5px solid var(--line);
-    background:var(--surface);color:var(--muted);font-size:14px;font-weight:600}
-  .seg button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-d)}
-  .ov-section-head{display:flex;align-items:center;gap:8px;margin:18px 4px 9px;font-size:13.5px;font-weight:700;color:var(--ink)}
-  .ov-section-head .gcount{font-size:11px;font-weight:600;color:var(--faint);background:var(--bg);padding:1px 8px;border-radius:999px}
-  .kind-ico{font-size:13px;flex:none}
-  .card.is-done{opacity:.62}
-  .card.is-done .name{text-decoration:line-through}
-  .card.is-log{background:#FCF6E9}
-  .card.is-log .kind-ico{filter:none}
-  .card.is-log-past{opacity:.6}
-  .card.is-log-past .name{text-decoration:none}
-  .logmark{width:26px;height:26px;flex:none;display:flex;align-items:center;justify-content:center;font-size:16px;margin-top:1px}
-  .dot.logdot{width:7px;height:7px;box-shadow:0 0 0 1.5px #FFF}
-  .dot.msdot{width:7px;height:7px;background:#7C3AED;border-radius:2px;transform:rotate(45deg)}
-  .ms-marker{display:flex;align-items:center;gap:8px;padding:9px 12px;margin-bottom:8px;background:#F5F3FF;border:1px solid #E9E5FF;border-left:3px solid #7C3AED;border-radius:10px;cursor:pointer}
-  .ms-marker-ico{font-size:15px}
-  .ms-marker-txt{font-size:13px;color:#4C1D95;line-height:1.4}
-  .act-badge{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;background:#EF4444;color:#fff;font-size:10px;line-height:16px;border-radius:999px;text-align:center;font-weight:700}
-  .act-list{display:flex;flex-direction:column;gap:8px}
-  .act-item{display:flex;gap:10px;align-items:flex-start;padding:10px;background:#fff;border:1px solid var(--line);border-radius:10px}
-  .act-ico{font-size:16px}
-  .act-txt{font-size:14px;line-height:1.4}
-  .act-time{font-size:12px;color:var(--faint);margin-top:2px}
-  .cell.sel .dot.logdot{box-shadow:0 0 0 1.5px rgba(255,255,255,.85)}
-  .check.on{background:var(--done);border-color:var(--done)}
-  .filters input[type=date]{flex:none;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+  @media (max-width:820px){
+    html,body{height:auto}
+    #app{height:auto;min-height:100vh}
+    main{flex:none}
+    .split{flex-direction:column;height:auto}
+    .listcol{width:100%;max-width:none;min-width:0;border-right:none;overflow:visible}
+    .mapcol{order:-1;height:300px;flex:none;border-bottom:1px solid var(--line)}
+    header.top nav button{padding:7px 11px}
+  }
 </style>
 </head>
 <body>
 
-<!-- ===================== LOGIN ===================== -->
+<!-- ============ LOGIN ============ -->
 <div id="login">
   <div class="login-card">
-    <div class="logo" id="logo">🔐</div>
-    <h1>智能行事曆</h1>
-    <p>請輸入授權碼登入</p>
-    <input id="codeInput" class="code-input" type="text" inputmode="text" autocomplete="off" placeholder="請輸入密碼" maxlength="40">
-    <div class="code-hint">輸入登入密碼（英文會自動轉大寫）</div>
-    <button id="loginBtn" class="btn-primary">登入</button>
-    <div id="loginMsg" class="login-msg"></div>
+    <div class="logo">🍜</div>
+    <h1>食光地圖</h1>
+    <p>美食搜尋與收藏系統</p>
+    <input id="pw" type="password" placeholder="輸入授權碼" autocomplete="off" inputmode="text">
+    <button id="loginBtn">進入系統</button>
+    <div class="login-err" id="loginErr"></div>
   </div>
 </div>
 
-<!-- ===================== APP ===================== -->
-<div id="app" class="hidden">
-  <header class="bar">
-    <div>
-      <div class="title" id="barTitle">📅 行事曆</div>
-      <div class="who" id="barWho"></div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="logout" id="activityBtn" style="position:relative">🔔<span id="activityBadge" class="act-badge" style="display:none"></span></button>
-      <button class="logout" id="calBtn">📂 行事曆</button>
-      <button class="logout" id="logoutBtn">登出</button>
-    </div>
+<!-- ============ APP ============ -->
+<div id="app">
+  <header class="top">
+    <div class="brand"><span>🍜</span>食光地圖</div>
+    <nav>
+      <button id="navSearch" class="active">搜尋</button>
+      <button id="navFav">我的收藏</button>
+      <button id="navLogout" style="color:var(--accent-d)">登出</button>
+    </nav>
   </header>
 
   <main>
-    <!-- Calendar tab -->
-    <section id="tabCal">
-      <div class="cal-head">
-        <button class="nav-btn" id="prevMonth">‹</button>
-        <button class="month-title" id="monthTitle">—</button>
-        <button class="nav-btn" id="nextMonth">›</button>
-        <button class="today-btn" id="todayBtn">今日</button>
-      </div>
-      <div class="cal-card" id="calCard">
-        <div class="weekrow">
-          <span class="sun">日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span class="sat">六</span>
+    <!-- ---- Filters (search view) ---- -->
+    <section class="filters" id="filters">
+      <div class="grp">
+        <span class="lbl">國家</span>
+        <div class="seg" id="segCountry">
+          <div class="chip on" data-v="TW">台灣</div>
+          <div class="chip" data-v="JP">日本</div>
+          <div class="chip" data-v="OTHER">其他</div>
         </div>
-        <div class="grid" id="calGrid"></div>
-        <div class="legend" id="calLegend"></div>
       </div>
 
-      <div class="dp-toggle">
-        <button class="dp-tab active" id="dpTabDay" type="button">今日記事</button>
-        <button class="dp-tab" id="dpTabPocket" type="button">🎒 百寶袋</button>
+      <div class="grp">
+        <span class="lbl" id="regionLbl">地區（縣市）</span>
+        <div class="row">
+          <select class="field" id="regionSel"></select>
+          <input class="field" id="regionFree" placeholder="自由輸入地區 / 車站名稱" style="display:none">
+        </div>
       </div>
 
-      <div id="paneDay">
-        <div class="section-head">
-          <h2 id="dayHeading">今日記事</h2>
-          <button class="add-btn" id="addEventBtn">＋ 新增記事</button>
+      <div class="grp">
+        <span class="lbl">店家類別（Places type）</span>
+        <div class="seg" id="segType">
+          <div class="chip on" data-v="restaurant">餐廳</div>
+          <div class="chip" data-v="cafe">咖啡廳</div>
+          <div class="chip" data-v="bakery">烘焙</div>
+          <div class="chip" data-v="convenience_store">便利商店</div>
+          <div class="chip" data-v="supermarket">超市</div>
         </div>
-        <div id="dayEvents" class="day-events"></div>
       </div>
 
-      <div id="panePocket" style="display:none">
-        <div class="section-head">
-          <h2>🎒 百寶袋 <span style="font-size:12px;color:var(--faint);font-weight:400">隨手筆記</span></h2>
+      <div class="grp">
+        <span class="lbl">餐廳類別（關鍵字）</span>
+        <div class="seg" id="segKw">
+          <div class="chip" data-v="火鍋">火鍋</div>
+          <div class="chip" data-v="燒肉">燒肉</div>
+          <div class="chip" data-v="拉麵">拉麵</div>
+          <div class="chip" data-v="壽司">壽司</div>
+          <div class="chip" data-v="韓式">韓式</div>
+          <div class="chip" data-v="義式">義式</div>
+          <div class="chip" data-v="早餐">早餐</div>
+          <div class="chip" data-v="小吃">小吃</div>
+          <div class="chip" data-v="甜點">甜點</div>
         </div>
-        <div class="pocket-add">
-          <span class="pocket-ico">🎒</span>
-          <input type="text" id="pocketInput" autocomplete="off" placeholder="想到什麼，先記這裡…">
-          <button id="pocketAddBtn" type="button">＋</button>
+      </div>
+
+      <button class="adv-toggle" id="advToggle">進階篩選 ▾</button>
+      <div class="adv" id="advBox">
+        <div class="grp" style="margin-top:10px">
+          <span class="lbl">價位</span>
+          <div class="seg" id="segPrice">
+            <div class="chip" data-v="low">平價</div>
+            <div class="chip" data-v="mid">中等</div>
+            <div class="chip" data-v="high">高價</div>
+          </div>
         </div>
-        <div id="pocketList" class="day-events"></div>
+        <div class="grp">
+          <span class="lbl">評價星級</span>
+          <div class="seg" id="segStar">
+            <div class="chip" data-v="3.5">≥ 3.5</div>
+            <div class="chip" data-v="4">≥ 4.0</div>
+            <div class="chip" data-v="4.5">≥ 4.5</div>
+          </div>
+        </div>
+        <div class="grp">
+          <span class="lbl">其他</span>
+          <div class="seg">
+            <div class="chip" id="chipOpen">營業中</div>
+            <div class="chip" id="chipBuffet">吃到飽</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="search-btn" id="searchBtn">🔍 搜尋美食</button>
+        <button class="near-btn" id="nearBtn">📍 我附近</button>
       </div>
     </section>
 
-    <!-- Overview tab -->
-    <section id="tabOverview" class="hidden">
-      <div class="section-head" style="margin-top:4px">
-        <h2>總覽 <span style="font-size:12px;color:var(--faint);font-weight:400">查詢／回顧</span></h2>
+    <!-- ---- Split: list + map ---- -->
+    <div class="split" id="splitView">
+      <div class="listcol" id="listcol">
+        <div class="status" id="status">設定條件後按「搜尋美食」開始。</div>
       </div>
-      <div class="filters">
-        <div class="filter-row">
-          <span class="filter-label">期間</span>
-          <select id="ovYear"></select>
-          <select id="ovMonth"></select>
-          <select id="ovDay"></select>
-        </div>
-        <div class="filter-row">
-          <span class="filter-label">篩選</span>
-          <select id="ovStatus">
-            <option value="pending">未完成</option>
-            <option value="done">已完成</option>
-            <option value="all">全部</option>
-          </select>
-          <select id="ovCategory"><option value="all">全部分類</option></select>
-          <select id="ovAssignee"><option value="all">全部負責人</option></select>
-        </div>
+      <div class="mapcol">
+        <div id="map"></div>
+        <div class="map-warn" id="mapWarn">地圖載入中…若長時間空白，請確認已填入 Google API Key。</div>
       </div>
-      <div id="ovList"></div>
-    </section>
+    </div>
 
-    <!-- Shopping tab -->
-    <section id="tabShop" class="hidden">
-      <div class="section-head" style="margin-top:4px">
-        <h2>待購清單</h2>
-        <button class="add-btn" id="addItemBtn">＋ 新增待購</button>
+    <!-- ---- Favorites view ---- -->
+    <div class="fav-view" id="favView">
+      <div class="fav-filter" id="favFilter">
+        <div class="chip on" data-v="all">全部</div>
+        <div class="chip" data-v="want">⭐ 想去</div>
+        <div class="chip" data-v="been">✅ 去過</div>
+        <div class="chip" data-v="pocket">📌 口袋名單</div>
       </div>
-      <p class="shop-hint">勾選後自動完成並從清單消失，依購物子分類分組。</p>
-      <div id="shopList"></div>
-    </section>
-
-    <section id="tabGoals" class="hidden">
-      <div class="section-head" style="margin-top:4px">
-        <h2>🎯 年度目標</h2>
-        <button class="add-btn" id="addGoalBtn">＋ 新增目標</button>
-      </div>
-      <p class="shop-hint" id="goalYearEnd"></p>
-      <div style="display:flex;align-items:center;gap:8px;margin:0 0 10px">
-        <label style="font-size:13px;color:var(--muted)">年度</label>
-        <select id="goalYearFilter" style="flex:none;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff"></select>
-      </div>
-      <div id="goalList"></div>
-    </section>
+      <div id="favList"></div>
+    </div>
   </main>
-
-  <nav class="tabbar">
-    <button id="navCal" class="active"><span class="ic">📅</span>行事曆</button>
-    <button id="navOverview"><span class="ic">📋</span>總覽</button>
-    <button id="navShop"><span class="ic">🛒</span>待購</button>
-    <button id="navGoals"><span class="ic">🎯</span>目標</button>
-  </nav>
 </div>
 
-<div id="modalRoot"></div>
-<div id="toast" class="toast"></div>
+<div class="toast" id="toast"></div>
 
-<!-- Firebase compat SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<!-- Firebase（Realtime Database，compat 版，單檔免打包） -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-/* ============================================================
-   智能行事曆　個人記事系統（記事 records + 人員 people）
-   Firebase Realtime Database / update() / 授權碼登入
-   v2a：任務/紀錄、10 分類、購物子分類、執行人、日期區間、待購分組
-   ============================================================ */
+/* =====================================================================
+   食光地圖 — 單一檔案美食搜尋與收藏系統
+   - 登入：密碼驗證（localStorage / sessionStorage），非 OAuth
+   - 搜尋：Google Maps JavaScript API（places library，前端呼叫）
+   - 收藏：localStorage，採 Firestore-ready schema（可日後改 Firestore）
+   ===================================================================== */
 
-/* ---------- 0. Firebase 設定（已填，my-project-c89db） ---------- */
-const firebaseConfig = {
-  apiKey:            "AIzaSyBGfQ1oKOrt723tJ3w7LIwDLSh0nGwRF30",
-  authDomain:        "my-project-c89db.firebaseapp.com",
-  databaseURL:       "https://my-project-c89db-default-rtdb.firebaseio.com",
-  projectId:         "my-project-c89db",
-  storageBucket:     "my-project-c89db.firebasestorage.app",
-  messagingSenderId: "301172719437",
-  appId:             "1:301172719437:web:83c981eea84caf77c38104"
+/* ====== 設定區 ====== */
+const CONFIG = {
+  GOOGLE_API_KEY: "AIzaSyDwDkp_ISyy5YEwmWbtq64YIHNhWNDb9fw",   // ← 你的 Google API Key（請務必在 Cloud Console 設網域限制）
+  ACCESS_CODE: "0430",                       // ← 進入系統的授權碼
+  FIREBASE: {
+    apiKey: "AIzaSyBGfQ1oKOrt723tJ3w7LIwDLSh0nGwRF30",
+    authDomain: "my-project-c89db.firebaseapp.com",
+    databaseURL: "https://my-project-c89db-default-rtdb.firebaseio.com",
+    projectId: "my-project-c89db",
+    storageBucket: "my-project-c89db.firebasestorage.app",
+    messagingSenderId: "301172719437",
+    appId: "1:301172719437:web:94d3444dd629f81ac38104"
+  },
+  DB_PATH: "foodmap_favorites",              // RTDB 獨立路徑，與行事曆/舊食光地圖分開
+  STORAGE_FAV: "foodmap_favorites_v1",       // localStorage 離線快取
+  STORAGE_SESSION: "foodmap_auth"
 };
 
-let _firebaseReady = false;
-let db = null;
-try {
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.database();
-  _firebaseReady = true;
-} catch (e) {
-  console.error("Firebase 初始化失敗", e);
-  _firebaseReady = false;
-}
+/* ====== 地區資料 ====== */
+const REGIONS = {
+  TW: ["台北市","新北市","桃園市","台中市","台南市","高雄市","基隆市","新竹市","新竹縣",
+       "苗栗縣","彰化縣","南投縣","雲林縣","嘉義市","嘉義縣","屏東縣","宜蘭縣","花蓮縣",
+       "台東縣","澎湖縣","金門縣","連江縣"],
+  JP: ["大阪","京都","神戶","東京","新宿站","澀谷站","新大阪站","京都站","梅田",
+       "難波","名古屋","札幌","福岡","橫濱","鳥取","米子","境港"]
+};
 
-/* ---------- 1. 全域狀態 ---------- */
+/* =====================================================================
+   SearchEngine：集中管理所有搜尋邏輯（query 組裝 + type/keyword 組合 + 客戶端篩選）
+   ===================================================================== */
+const SearchEngine = {
+  service: null,
+  map: null,
+  ready: false,
+
+  // 由目前篩選狀態組出送往 Google 的查詢字串
+  buildQuery(s){
+    const parts = [];
+    if (s.region) parts.push(s.region);
+    if (s.keyword) parts.push(s.keyword);
+    if (s.buffet) parts.push("吃到飽");
+    if (parts.length === 0) parts.push("美食");
+    return parts.join(" ");
+  },
+
+  // 價位分級對應 Google price_level（0–4）
+  // 平價 low: 0–1 / 中等 mid: 2 / 高價 high: 3–4
+  priceRange(bucket){
+    if (bucket==="low")  return {min:0, max:1};
+    if (bucket==="mid")  return {min:2, max:2};
+    if (bucket==="high") return {min:3, max:4};
+    return null;
+  },
+
+  // 組出 textSearch 請求（type + keyword 組合）
+  buildRequest(s){
+    const req = {
+      query: this.buildQuery(s),
+      type: s.type || "restaurant"
+    };
+    if (s.openNow) req.openNow = true;
+    const pr = this.priceRange(s.price);
+    if (pr){ req.minPrice = pr.min; req.maxPrice = pr.max; }
+    return req;
+  },
+
+  // Google 回傳後的客戶端二次篩選（星級、價位區間、吃到飽字樣）
+  applyClientFilters(results, s){
+    const pr = this.priceRange(s.price);
+    return results.filter(p=>{
+      if (s.minStar && (p.rating||0) < Number(s.minStar)) return false;
+      if (pr && p.price_level != null){
+        if (p.price_level < pr.min || p.price_level > pr.max) return false;
+      }
+      if (s.buffet){
+        const t = ((p.name||"") + " " + (p.formatted_address||p.vicinity||"")).toLowerCase();
+        if (!/吃到飽|食べ放題|all you can eat|buffet|バイキング/i.test(t)) {
+          // 允許名稱含相關字；若 Google 已用 query 過濾仍保留
+        }
+      }
+      return true;
+    });
+  },
+
+  // 執行搜尋
+  run(state){
+    return new Promise((resolve, reject)=>{
+      if (!this.ready || !this.service){ reject("MAPS_NOT_READY"); return; }
+      const req = this.buildRequest(state);
+      this.service.textSearch(req, (results, status)=>{
+        const OK = google.maps.places.PlacesServiceStatus.OK;
+        const ZERO = google.maps.places.PlacesServiceStatus.ZERO_RESULTS;
+        if (status === OK && results){
+          resolve(this.applyClientFilters(results, state));
+        } else if (status === ZERO){
+          resolve([]);
+        } else {
+          reject(status);
+        }
+      });
+    });
+  },
+
+  // 附近搜尋（以使用者座標 + 半徑），nearbySearch 支援 type/keyword/openNow/價位
+  runNearby(state, center, radius){
+    return new Promise((resolve, reject)=>{
+      if (!this.ready || !this.service){ reject("MAPS_NOT_READY"); return; }
+      const req = {
+        location: center,
+        radius: radius || 1500,
+        type: state.type || "restaurant"
+      };
+      const kw = [];
+      if (state.keyword) kw.push(state.keyword);
+      if (state.buffet) kw.push("吃到飽");
+      if (kw.length) req.keyword = kw.join(" ");
+      if (state.openNow) req.openNow = true;
+      const pr = this.priceRange(state.price);
+      if (pr){ req.minPrice = pr.min; req.maxPrice = pr.max; }
+      this.service.nearbySearch(req, (results, status)=>{
+        const OK = google.maps.places.PlacesServiceStatus.OK;
+        const ZERO = google.maps.places.PlacesServiceStatus.ZERO_RESULTS;
+        if (status === OK && results) resolve(this.applyClientFilters(results, state));
+        else if (status === ZERO) resolve([]);
+        else reject(status);
+      });
+    });
+  },
+
+  // 取得單店詳細（電話、官網、營業、座標）
+  details(placeId){
+    return new Promise((resolve, reject)=>{
+      this.service.getDetails({
+        placeId,
+        fields:["place_id","name","formatted_address","formatted_phone_number",
+                "website","url","rating","price_level","geometry","opening_hours"]
+      }, (place, status)=>{
+        if (status === google.maps.places.PlacesServiceStatus.OK) resolve(place);
+        else reject(status);
+      });
+    });
+  }
+};
+
+/* =====================================================================
+   FavStore：收藏資料層
+   - 主儲存：Firebase Realtime Database（雲端，跨裝置同步）
+   - 離線快取：localStorage（沒網路時仍可瀏覽收藏）
+   - 記憶體 _cache 讓 UI 仍可同步讀取
+   Schema 對齊文件結構，key = placeId
+   ===================================================================== */
+const FavStore = {
+  _cache: {},
+  ref: null,
+  ready: false,
+  onChange: null,
+
+  // 初始化 Firebase；失敗則退回純 localStorage
+  init(onChange){
+    this.onChange = onChange;
+    // 先載入離線快取，畫面立即有資料
+    try { this._cache = JSON.parse(localStorage.getItem(CONFIG.STORAGE_FAV)) || {}; }
+    catch(e){ this._cache = {}; }
+    try{
+      if (!window.firebase || !firebase.initializeApp) throw new Error("no-sdk");
+      if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
+      this.ref = firebase.database().ref(CONFIG.DB_PATH);
+      // 即時監聽：雲端有變動就更新快取並重繪
+      this.ref.on("value", snap=>{
+        this._cache = snap.val() || {};
+        this._mirror();
+        this.ready = true;
+        if (this.onChange) this.onChange();
+      }, err=>{
+        console.warn("RTDB 讀取失敗，改用離線快取：", err);
+        this.ready = false;
+        if (this.onChange) this.onChange();
+      });
+    }catch(e){
+      console.warn("Firebase 未就緒，改用離線快取：", e);
+      this.ready = false;
+    }
+  },
+
+  _mirror(){ localStorage.setItem(CONFIG.STORAGE_FAV, JSON.stringify(this._cache)); },
+
+  // 文件結構（Firestore/RTDB 通用）
+  toDoc(place, category, state){
+    const loc = place.geometry && place.geometry.location;
+    return {
+      placeId: place.place_id,
+      name: place.name || "",
+      address: place.formatted_address || place.vicinity || "",
+      rating: place.rating != null ? place.rating : null,
+      priceLevel: place.price_level != null ? place.price_level : null,
+      lat: loc ? loc.lat() : null,
+      lng: loc ? loc.lng() : null,
+      category: category,                 // want / been / pocket
+      country: (state && state.country) || null,
+      region: (state && state.region) || null,
+      phone: place.formatted_phone_number || null,
+      website: place.website || null,
+      mapUrl: place.url || null,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+  },
+
+  get(placeId){ return this._cache[placeId] || null; },
+  all(){ return Object.values(this._cache); },
+
+  set(place, category, state){
+    const existing = this._cache[place.place_id];
+    const doc = this.toDoc(place, category, state);
+    if (existing) doc.createdAt = existing.createdAt;
+    this._cache[place.place_id] = doc;
+    this._mirror();
+    if (this.ref) this.ref.child(place.place_id).set(doc).catch(e=>console.warn("雲端寫入失敗：",e));
+    return doc;
+  },
+
+  updateCategory(placeId, category){
+    const d = this._cache[placeId];
+    if (!d) return;
+    d.category = category; d.updatedAt = Date.now();
+    this._mirror();
+    if (this.ref) this.ref.child(placeId).update({category, updatedAt:d.updatedAt}).catch(e=>console.warn(e));
+  },
+
+  remove(placeId){
+    delete this._cache[placeId];
+    this._mirror();
+    if (this.ref) this.ref.child(placeId).remove().catch(e=>console.warn("雲端刪除失敗：",e));
+  }
+};
+
+/* =====================================================================
+   App state + UI
+   ===================================================================== */
 const state = {
-  user: null,
-  view: new Date(),
-  selected: ymd(new Date()),
-  records: {},
-  people: {},
-  goals: {},
-  calendars: {},
-  isAdmin: false,
-  currentCal: (function(){ try{ return localStorage.getItem("cal_current")||"main"; }catch(e){ return "main"; } })(),
-  recordsBound: false,
-  peopleBound: false,
-  goalsBound: false,
-  calendarsBound: false
+  country:"TW", region:"", type:"restaurant", keyword:"",
+  price:"", minStar:"", openNow:false, buffet:false
 };
-let formAssignees = new Set();   // 編輯記事時暫存已選執行人
+let markers = [];
+let lastResults = [];
 
-/* ---------- 1.5 分類定義 ---------- */
-const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
-const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
-const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
-const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
-const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C/電器", other:"其他" };
-const CAT_ICON = { life:"🏠", work:"💼", health:"🩺", travel:"✈️", study:"📚", shopping:"🛒", finance:"💰", activity:"🎉", side:"💡", other:"📦" };
-const SUBCAT_ICON = { food:"🥦", daily:"🧴", clothing:"👕", travelgear:"🧳", electronics:"🔌", other:"📦" };
-function catIcon(c){ return CAT_ICON[c] || "📦"; }
-function subcatIcon(s){ return SUBCAT_ICON[s] || "📦"; }
-const TYPE_LABEL = { task:"任務", record:"紀錄" };
+const $ = sel => document.querySelector(sel);
 
-/* 三態：排程 / 待辦 / 完成 */
-const KIND_LABEL = { scheduled:"行程", todo:"百寶袋", done:"完成", log:"純紀錄" };
-const KIND_ICO   = { scheduled:"🗓️", todo:"🎒", done:"✅", log:"📌" };
-const LOG_COLOR  = "#D9A441";   // 純紀錄：琥珀金
-// 從記事推得狀態（相容舊資料）
-function recKind(r){
-  if(!r) return "todo";
-  if(r.isLog) return "log";
-  if(r.kind && r.kind!=="log") return r.kind;
-  if((r.status||"pending")==="done") return "done";
-  if(r.dateStart) return "scheduled";
-  return "todo";
-}
-function isDone(r){ return recKind(r)==="done"; }
-// 純紀錄且日期已過（最後一天 < 今天）→ 卡片變淡用
-function isPastLog(r){
-  if(recKind(r)!=="log") return false;
-  if(hasRepeat(r)) return false;          // 永久重複的純紀錄＝一直會再來，不變淡
-  const rg=recRange(r);
-  return !!(rg && rg[1] < ymd(new Date()));
-}
-
-/* 台灣國定假日（行政院人事行政總處核定，2026/6 起 + 2027 全年；含補假） */
-const HOLIDAYS = {
-  "2026-06-19":"端午節","2026-09-25":"中秋節","2026-09-28":"教師節",
-  "2026-10-09":"國慶日(補假)","2026-10-10":"國慶日","2026-10-25":"光復節","2026-10-26":"光復節(補假)",
-  "2026-12-25":"行憲紀念日","2027-01-01":"元旦","2027-02-04":"小年夜","2027-02-05":"除夕",
-  "2027-02-06":"春節","2027-02-07":"春節","2027-02-08":"春節","2027-02-09":"春節(補假)","2027-02-10":"春節(補假)",
-  "2027-02-28":"和平紀念日","2027-03-01":"和平紀念日(補假)","2027-04-04":"兒童節","2027-04-05":"清明節",
-  "2027-04-06":"兒童節(補假)","2027-04-30":"勞動節(補假)","2027-05-01":"勞動節","2027-06-09":"端午節",
-  "2027-09-15":"中秋節","2027-09-28":"教師節","2027-10-10":"國慶日","2027-10-11":"國慶日(補假)",
-  "2027-10-25":"光復節","2027-12-24":"行憲紀念日(補假)","2027-12-25":"行憲紀念日","2027-12-31":"開國紀念日(補假)"
-};
-function holidayName(s){ return HOLIDAYS[s] || null; }
-function countdownText(dateStr){
-  const today=new Date(ymd(new Date())+"T00:00:00");
-  const d=new Date(dateStr+"T00:00:00");
-  const diff=Math.round((d-today)/86400000);
-  if(diff===0) return "今天";
-  if(diff>0) return "倒數 "+diff+" 天";
-  return "已過 "+(-diff)+" 天";
-}
-
-/* ---------- 2. 小工具 ---------- */
-function $(id){ return document.getElementById(id); }
-function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
-function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
-function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
-function requireAuth(){ if(!state.user){ toast("尚未登入"); return false; } return true; }
-function genId(){ return "id_"+Date.now()+"_"+Math.floor(Math.random()*100000); }
-function catColor(c){ return CAT_COLOR[c] || "#64748B"; }
-function catLabel(c){ return CAT_LABEL[c] || "其他"; }
-function pillHtml(c){ const col=catColor(c); return '<span class="pill" style="background:'+col+'22;color:'+col+'">'+catIcon(c)+' '+catLabel(c)+'</span>'; }
-/* 圖示點選器：產生 HTML（含隱藏 input 保存值），搭配 wireIconPicker 綁定 */
-function iconPicker(inputId, order, labels, icons, selected){
-  return '<div class="iconpick" id="'+inputId+'_pick">'+
-    order.map(c=>'<button type="button" class="iconchip'+(selected===c?" on":"")+'" data-v="'+c+'" title="'+labels[c]+'">'+
-      '<span class="ic">'+icons[c]+'</span><span class="lb">'+labels[c]+'</span></button>').join("")+
-    '</div><input type="hidden" id="'+inputId+'" value="'+selected+'">';
-}
-function wireIconPicker(inputId, onChange){
-  const pick=$(inputId+"_pick"), inp=$(inputId);
-  if(!pick||!inp) return;
-  pick.querySelectorAll(".iconchip").forEach(b=>b.addEventListener("click", function(){
-    inp.value=this.getAttribute("data-v");
-    pick.querySelectorAll(".iconchip").forEach(x=>x.classList.toggle("on", x===this));
-    if(onChange) onChange(inp.value);
-  }));
-}
-function assigneeNames(ids){ return (ids||[]).map(id=>state.people[id]&&state.people[id].name).filter(Boolean); }
-// 記事的「有效日期區間」：有排定日用排定日；無排定日但已完成則用完成日
-function recRange(r){
-  if(!r) return null;
-  if(r.dateStart) return [r.dateStart, r.dateEnd || r.dateStart];
-  if(isDone(r) && r.doneDate) return [r.doneDate, r.doneDate];
-  return null;
-}
-// 記事是否落在某日（支援日期區間 + 完成日）
-function dayInRange(r, dateStr){
-  const rg = recRange(r);
-  if(!rg) return false;
-  return dateStr >= rg[0] && dateStr <= rg[1];
-}
-
-/* ---------- 多行事曆（3d）：只取目前這本 ---------- */
-function inCal(r){ return r && (r.cal||"main")===state.currentCal; }
-function curEntries(){ return Object.entries(state.records).filter(([id,r])=>inCal(r)); }
-function curValues(){ return Object.values(state.records).filter(inCal); }
-
-/* ---------- 重複（3b） ---------- */
-const REPEAT_UNIT_LABEL = { day:"天", week:"週", month:"個月", year:"年" };
-function hasRepeat(r){ return r && r.repeat && r.repeat.unit && r.repeat.unit!=="none"; }
-function repeatText(rep){
-  if(!rep || !rep.unit || rep.unit==="none") return "";
-  const n=Math.max(1, rep.every||1);
-  return "🔁 每"+(n>1?n:"")+REPEAT_UNIT_LABEL[rep.unit];
-}
-// 任一重複記事：某日(YYYY-MM-DD)是否落在重複發生日（O(1)、用算的，不生成資料）
-function occursOn(r, dateStr){
-  if(!hasRepeat(r) || !r.dateStart) return false;
-  if(dateStr < r.dateStart) return false;
-  if(r.repeatUntil && dateStr > r.repeatUntil) return false;   // 已停止重複：界線之後不再出現
-  const b=r.dateStart.split("-").map(Number);
-  const t=dateStr.split("-").map(Number);
-  const n=Math.max(1, r.repeat.every||1), u=r.repeat.unit;
-  if(u==="year"){
-    if(t[1]!==b[1] || t[2]!==b[2]) return false;     // 同月同日（閏2/29只會對到閏年）
-    const dy=t[0]-b[0];
-    return dy>=0 && dy%n===0;
+/* ---------- 登入 ---------- */
+let favInited = false;
+function showApp(){
+  $("#login").style.display="none";
+  $("#app").style.display="flex";
+  buildRegionOptions();
+  if (!favInited){
+    favInited = true;
+    // 啟動雲端收藏同步；雲端有變動時，若正在看收藏頁就自動重繪
+    FavStore.init(()=>{ if ($("#favView").classList.contains("show")) renderFavList(); });
   }
-  if(u==="month"){
-    if(t[2]!==b[2]) return false;                    // 同一號（31號只會對到有31天的月）
-    const md=(t[0]-b[0])*12+(t[1]-b[1]);
-    return md>=0 && md%n===0;
+}
+function tryLogin(){
+  const v = $("#pw").value.trim();
+  if (v === CONFIG.ACCESS_CODE){
+    sessionStorage.setItem(CONFIG.STORAGE_SESSION, "1");
+    $("#loginErr").textContent="";
+    showApp();
+  } else {
+    $("#loginErr").textContent="授權碼錯誤，請再試一次。";
+    $("#pw").value="";
   }
-  const diff=Math.round((Date.UTC(t[0],t[1]-1,t[2]) - Date.UTC(b[0],b[1]-1,b[2]))/86400000);
-  if(diff<0) return false;
-  if(u==="week") return diff%(7*n)===0;
-  return diff%n===0;                                  // day
 }
-// 某「發生日」這個記事是否已完成（重複的一般記事看 doneDates；其餘看整筆）
-function isDoneOn(r, dateStr){
-  if(!r || r.isLog) return false;                       // 純紀錄無完成
-  if(hasRepeat(r) && r.category!=="shopping" && r.dateStart){
-    return Array.isArray(r.doneDates) && r.doneDates.indexOf(dateStr)>=0;
-  }
-  return isDone(r);                                      // 非重複 / 採購：整筆完成
-}
-// 某「發生日」這個記事的顯示類別（log / done / scheduled / …）
-function kindOn(r, dateStr){
-  if(r && r.isLog) return "log";
-  if(hasRepeat(r) && r.category!=="shopping" && r.dateStart){
-    return isDoneOn(r, dateStr) ? "done" : "scheduled";
-  }
-  return recKind(r);
-}
-// 在某日期(YYYY-MM-DD)往後加一個間隔
-function addInterval(ymdStr, rep){
-  const p=ymdStr.split("-").map(Number);
-  const dt=new Date(p[0], p[1]-1, p[2]);
-  const n=Math.max(1, rep.every||1);
-  if(rep.unit==="day")        dt.setDate(dt.getDate()+n);
-  else if(rep.unit==="week")  dt.setDate(dt.getDate()+7*n);
-  else if(rep.unit==="month") dt.setMonth(dt.getMonth()+n);
-  else if(rep.unit==="year")  dt.setFullYear(dt.getFullYear()+n);
-  return ymd(dt);
-}
-// 從 base 日往後推，找到第一個 >= today 的日期（跳過已過的，避免堆積）
-function nextFutureDate(base, rep, today){
-  let d=addInterval(base, rep), guard=0;
-  while(d < today && guard<2000){ d=addInterval(d, rep); guard++; }
-  return d;
-}
-// 產生「下一筆」記事物件（不含 id），用於 onDone（採購/任務完成後）
-function buildNextRecord(r, baseDate){
-  const today=ymd(new Date());
-  let nd=addInterval(baseDate, r.repeat);
-  if(nd < today) nd=nextFutureDate(baseDate, r.repeat, today);
-  const copy=Object.assign({}, r);
-  delete copy.id;
-  copy.dateStart=nd;
-  copy.doneDate=null; copy.status="pending"; copy.kind="scheduled";
-  copy.spawned=false;
-  copy.createdAt=Date.now();
-  return copy;
-}
-function writeRecord(rec){
-  if(LOCAL_MODE){ const key=genId(); state.records[key]=rec; lsSaveRecords(); }
-  else { const key=db.ref("records").push().key; db.ref("records/"+key).set(rec); }
-}
-// 純紀錄(log)+重複：日期過了 → 生下一筆未來的，舊的留著當歷史（生日）
-function processRecurrences(){
-  const today=ymd(new Date());
-  let changed=false;
-  curEntries().forEach(([id,r])=>{
-    if(!hasRepeat(r)) return;
-    if(r.isLog) return;   // 純紀錄＝永久重複，改用「算的」顯示，不再生成資料
-    // 非純紀錄重複：未來日期卻被標完成 → 清回未完成（保險）
-    if(isDone(r) && r.dateStart && r.dateStart > today){
-      if(LOCAL_MODE){ const rr=state.records[id]; rr.status="pending"; rr.kind="scheduled"; delete rr.doneDate; changed=true; }
-      else { db.ref("records/"+id).update({ status:"pending", kind:"scheduled", doneDate:null }); }
-    }
+$("#loginBtn").addEventListener("click", tryLogin);
+$("#pw").addEventListener("keydown", e=>{ if(e.key==="Enter") tryLogin(); });
+$("#navLogout").addEventListener("click", ()=>{
+  sessionStorage.removeItem(CONFIG.STORAGE_SESSION);
+  location.reload();
+});
+if (sessionStorage.getItem(CONFIG.STORAGE_SESSION) === "1") showApp();
+
+/* ---------- chip 多狀態管理 ---------- */
+function singleChip(box, cb){
+  box.querySelectorAll(".chip").forEach(c=>{
+    c.addEventListener("click", ()=>{
+      box.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+      c.classList.add("on");
+      cb(c.dataset.v);
+    });
   });
-  if(changed && LOCAL_MODE){ lsSaveRecords(); }
 }
-
-/* ---------- 2.5 儲存模式 ---------- */
-const LOCAL_MODE = !_firebaseReady;
-function lsLoad(){
-  try{ state.records = JSON.parse(localStorage.getItem("cal_records")||"{}") || {}; }catch(e){ state.records={}; }
-  try{ state.people  = JSON.parse(localStorage.getItem("cal_people") ||"{}") || {}; }catch(e){ state.people={}; }
-  try{ state.goals   = JSON.parse(localStorage.getItem("cal_goals")  ||"{}") || {}; }catch(e){ state.goals={}; }
-  try{ state.calendars = JSON.parse(localStorage.getItem("cal_calendars")||"{}") || {}; }catch(e){ state.calendars={}; }
-}
-function lsSaveCalendars(){ try{ localStorage.setItem("cal_calendars", JSON.stringify(state.calendars)); }catch(e){ toast("本機儲存失敗"); } }
-function lsSaveRecords(){ try{ localStorage.setItem("cal_records", JSON.stringify(state.records)); }catch(e){ toast("本機儲存失敗"); } }
-function lsSavePeople(){ try{ localStorage.setItem("cal_people", JSON.stringify(state.people)); }catch(e){ toast("本機儲存失敗"); } }
-function lsSaveGoals(){ try{ localStorage.setItem("cal_goals", JSON.stringify(state.goals)); }catch(e){ toast("本機儲存失敗"); } }
-
-/* ---------- 2.6 舊資料自動轉換（events/items → records） ---------- */
-const MAP_TYPE = { work:"work", life:"life", health:"health", important:"other" };
-const MAP_ITEMCAT = { food:"food", household:"daily", clothing:"clothing", travel:"travelgear", "3C":"electronics", other:"other" };
-function convertOld(oldE, oldI){
-  const out={};
-  Object.entries(oldE||{}).forEach(([id,e])=>{
-    if(!e) return;
-    out["mig_e_"+id]={
-      type:"task", title:e.title||"(未命名)", category:MAP_TYPE[e.type]||"life",
-      dateStart:e.date||"", dateEnd:"", start:e.start||"", end:e.end||"",
-      assignees:[], urgent:!!e.urgent||e.type==="important", countdown:!!e.countdown,
-      status:"pending", note:e.note||"", createdAt:Date.now()
-    };
+// 可清除的單選（再點一次取消）
+function toggleSingleChip(box, cb){
+  box.querySelectorAll(".chip").forEach(c=>{
+    c.addEventListener("click", ()=>{
+      const wasOn = c.classList.contains("on");
+      box.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+      if (!wasOn){ c.classList.add("on"); cb(c.dataset.v); }
+      else cb("");
+    });
   });
-  Object.entries(oldI||{}).forEach(([id,it])=>{
-    if(!it) return;
-    out["mig_i_"+id]={
-      type:"task", title:it.name||"(未命名)", category:"shopping",
-      subcategory:MAP_ITEMCAT[it.category]||"other", qty:it.qty||1,
-      dateStart:"", dateEnd:"", start:"", end:"", assignees:[],
-      urgent:false, countdown:false, status:it.status||"pending",
-      note:it.note||"", createdAt:it.createdAt||Date.now()
-    };
-  });
-  return out;
-}
-function localMigrateIfNeeded(){
-  if(localStorage.getItem("cal_v2_migrated")) return;
-  let oldE={}, oldI={};
-  try{ oldE=JSON.parse(localStorage.getItem("cal_events")||"{}")||{}; }catch(e){}
-  try{ oldI=JSON.parse(localStorage.getItem("cal_items") ||"{}")||{}; }catch(e){}
-  const conv=convertOld(oldE,oldI);
-  if(Object.keys(conv).length){
-    let cur={}; try{ cur=JSON.parse(localStorage.getItem("cal_records")||"{}")||{}; }catch(e){}
-    Object.assign(cur,conv);
-    localStorage.setItem("cal_records", JSON.stringify(cur));
-  }
-  localStorage.setItem("cal_v2_migrated","1");
-}
-async function fbMigrateIfNeeded(){
-  if(localStorage.getItem("cal_v2_migrated_fb")) return;
-  try{
-    const es=await db.ref("events").once("value");
-    const is=await db.ref("items").once("value");
-    const conv=convertOld(es.val()||{}, is.val()||{});
-    if(Object.keys(conv).length){
-      const updates={};
-      Object.keys(conv).forEach(k=>updates["records/"+k]=conv[k]);
-      await db.ref().update(updates);
-    }
-    localStorage.setItem("cal_v2_migrated_fb","1");
-  }catch(e){ console.warn("FB 舊資料轉換略過", e); }
 }
 
-/* ============================================================
-   3. 授權碼登入（共用碼模式，保留離線測試）
-   ============================================================ */
-const AUTH_KEY    = "cal_auth";
-const AUTH_FB_KEY = "cal_v1_auth";
-const DEFAULT_CODE = "0430";
+singleChip($("#segCountry"), v=>{ state.country=v; buildRegionOptions(); });
+singleChip($("#segType"), v=>{ state.type=v; });
+toggleSingleChip($("#segKw"), v=>{ state.keyword=v; });
+toggleSingleChip($("#segPrice"), v=>{ state.price=v; });
+toggleSingleChip($("#segStar"), v=>{ state.minStar=v; });
+$("#chipOpen").addEventListener("click", function(){ this.classList.toggle("on"); state.openNow=this.classList.contains("on"); });
+$("#chipBuffet").addEventListener("click", function(){ this.classList.toggle("on"); state.buffet=this.classList.contains("on"); });
 
-const codeInput=$("codeInput"), loginBtn=$("loginBtn"), loginMsg=$("loginMsg");
-loginBtn.addEventListener("click", doLogin);
-codeInput.addEventListener("input", ()=>{ const p=codeInput.selectionStart; codeInput.value=codeInput.value.toUpperCase(); try{ codeInput.setSelectionRange(p,p); }catch(e){} });
-codeInput.addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
-
-async function resolveCode(){
-  return DEFAULT_CODE;   /* 固定密碼，不可在 App 內變更 */
-}
-async function checkAuth(){
-  const saved=localStorage.getItem(AUTH_KEY);
-  if(!saved) return false;
-  return saved === await resolveCode();
-}
-async function verifyAuthCode(input){
-  const correct=await resolveCode();
-  if(input===correct){ localStorage.setItem(AUTH_KEY, input); return true; }
-  return false;
-}
-
-async function doLogin(){
-  loginMsg.textContent="";
-  const code=codeInput.value.trim();
-  if(!code){ loginMsg.textContent="請輸入密碼"; return; }
-  loginBtn.disabled=true; loginBtn.textContent="驗證中…";
-  const ok=await verifyAuthCode(code);
-  loginBtn.disabled=false; loginBtn.textContent="登入";
-  if(ok){ state.isAdmin=true; enterApp(); }
-  else { loginMsg.textContent="密碼錯誤，請重試"; codeInput.value=""; }
-}
-function enterApp(){
-  state.user = localStorage.getItem(AUTH_KEY) || DEFAULT_CODE;
-  $("login").classList.add("hidden");
-  $("app").classList.remove("hidden");
-  const ab=$("adminPanelBtn"); if(ab) ab.style.display = state.isAdmin ? "" : "none";
-  renderLegend();
-  bindData();
-  renderAll();
-}
-$("logoutBtn").addEventListener("click", ()=>{
-  if(state.recordsBound){ db.ref("records").off(); state.recordsBound=false; }
-  if(state.peopleBound){ db.ref("people").off(); state.peopleBound=false; }
-  state.user=null; state.records={}; state.people={}; state.goals={}; state.isAdmin=false;
-  state.activity=[];
-  localStorage.removeItem(AUTH_KEY);
-  localStorage.removeItem("cal_admin_on");
-  $("app").classList.add("hidden");
-  $("login").classList.remove("hidden");
-  codeInput.value=""; loginMsg.textContent="";
+$("#advToggle").addEventListener("click", function(){
+  const box=$("#advBox"); box.classList.toggle("show");
+  this.textContent = box.classList.contains("show") ? "進階篩選 ▴" : "進階篩選 ▾";
 });
 
+/* ---------- 地區選單 ---------- */
+function buildRegionOptions(){
+  const sel=$("#regionSel"), free=$("#regionFree"), lbl=$("#regionLbl");
+  if (state.country==="OTHER"){
+    sel.style.display="none"; free.style.display="block";
+    lbl.textContent="地區（自由輸入）";
+    state.region = free.value.trim();
+    return;
+  }
+  sel.style.display="block"; free.style.display="none";
+  lbl.textContent = state.country==="JP" ? "地區（城市 / 車站名稱）" : "地區（縣市）";
+  const list = REGIONS[state.country] || [];
+  sel.innerHTML = '<option value="">不限地區</option>' +
+    list.map(r=>`<option value="${r}">${r}</option>`).join("");
+  state.region = "";
+}
+$("#regionSel").addEventListener("change", e=>{ state.region=e.target.value; });
+$("#regionFree").addEventListener("input", e=>{ state.region=e.target.value.trim(); });
 
-/* ============================================================
-   4. 資料綁定
-   ============================================================ */
-function bindData(){
-  if(LOCAL_MODE){ localMigrateIfNeeded(); lsLoad(); ensureDefaultCalendar(); renderCalBar(); renderAll(); return; }
-  fbMigrateIfNeeded().then(()=>{
-    if(!state.calendarsBound){ db.ref("calendars").on("value", s=>{ state.calendars=s.val()||{}; ensureDefaultCalendar(); renderCalBar(); renderAll(); }); state.calendarsBound=true; }
-    if(!state.recordsBound){ db.ref("records").on("value", s=>{ state.records=s.val()||{}; renderAll(); }); state.recordsBound=true; }
-    if(!state.peopleBound){ db.ref("people").on("value", s=>{ state.people=s.val()||{}; renderAll(); }); state.peopleBound=true; }
-    if(!state.goalsBound){ db.ref("goals").on("value", s=>{ state.goals=s.val()||{}; renderGoals(); }); state.goalsBound=true; }
-    bindActivity();
+/* ---------- 導覽切換 ---------- */
+function switchView(view){
+  const isFav = view==="fav";
+  $("#navSearch").classList.toggle("active", !isFav);
+  $("#navFav").classList.toggle("active", isFav);
+  $("#filters").style.display = isFav ? "none":"block";
+  $("#splitView").style.display = isFav ? "none":"flex";
+  $("#favView").classList.toggle("show", isFav);
+  if (isFav) renderFavList();
+}
+$("#navSearch").addEventListener("click", ()=>switchView("search"));
+$("#navFav").addEventListener("click", ()=>switchView("fav"));
+
+/* ---------- Google Maps 初始化 ---------- */
+function initMap(){
+  SearchEngine.map = new google.maps.Map($("#map"), {
+    center:{lat:23.7,lng:121},
+    zoom:7, mapTypeControl:false, streetViewControl:false, fullscreenControl:false
   });
+  SearchEngine.service = new google.maps.places.PlacesService(SearchEngine.map);
+  SearchEngine.ready = true;
+  $("#mapWarn").style.display="none";
 }
-function renderAll(){ processRecurrences(); refreshOverviewFilterOptions(); renderCalendar(); renderDayEvents(); renderPocket(); renderOverview(); renderShop(); renderGoals(); }
+window.initMap = initMap;
 
-/* ===== ⑤ App 內通知（動態）===== */
-function deviceName(){ try{ return localStorage.getItem("cal_devname")||""; }catch(e){ return ""; } }
-function setDeviceNamePrompt(){
-  const v=prompt("設定你的暱稱（讓家人知道是誰新增的）", deviceName());
-  if(v===null) return;
-  try{ localStorage.setItem("cal_devname",(v||"").trim()); }catch(e){}
-  renderActivityBadge(); toast("已設定暱稱");
-}
-function activityLastSeen(){ try{ return Number(localStorage.getItem("cal_actseen")||0); }catch(e){ return 0; } }
-function setActivityLastSeen(ts){ try{ localStorage.setItem("cal_actseen", String(ts||0)); }catch(e){} }
-function pushActivity(title, kind){
-  if(LOCAL_MODE) return;                       // 本機模式無共享對象
-  try{ db.ref("activity").push({ title:(title||"").slice(0,60), kind:kind||"", actor:deviceName()||"有人", ts:Date.now() }); }catch(e){}
-}
-function bindActivity(){
-  if(LOCAL_MODE || state.activityBound) return;
+/* ---------- 載入 Maps script ---------- */
+(function loadMaps(){
+  if (!CONFIG.GOOGLE_API_KEY || CONFIG.GOOGLE_API_KEY==="YOUR_GOOGLE_API_KEY"){
+    $("#mapWarn").textContent="尚未設定 Google API Key。請開啟原始碼，於 CONFIG.GOOGLE_API_KEY 填入金鑰後重新整理。";
+    return;
+  }
+  const s=document.createElement("script");
+  s.src=`https://maps.googleapis.com/maps/api/js?key=${CONFIG.GOOGLE_API_KEY}&libraries=places&language=zh-TW&callback=initMap`;
+  s.async=true;
+  s.onerror=()=>{ $("#mapWarn").textContent="Google Maps 載入失敗，請確認金鑰、帳單與 API 啟用狀態。"; };
+  document.head.appendChild(s);
+})();
+
+/* ---------- 執行搜尋 ---------- */
+$("#searchBtn").addEventListener("click", doSearch);
+async function doSearch(){
+  if (!SearchEngine.ready){
+    toast("地圖尚未就緒，請先設定 API Key");
+    return;
+  }
+  const btn=$("#searchBtn"); btn.disabled=true; btn.textContent="搜尋中…";
+  $("#status").textContent="搜尋中…"; $("#status").style.display="block";
+  clearMarkers();
   try{
-    db.ref("activity").limitToLast(40).on("value", s=>{
-      const v=s.val()||{};
-      state.activity=Object.entries(v).map(([k,a])=>Object.assign({key:k},a)).sort((x,y)=>(y.ts||0)-(x.ts||0));
-      renderActivityBadge();
-    });
-    state.activityBound=true;
-  }catch(e){}
-}
-function renderActivityBadge(){
-  const b=$("activityBadge"); if(!b) return;
-  const me=deviceName(), seen=activityLastSeen();
-  const n=(state.activity||[]).filter(a=>(a.ts||0)>seen && a.actor!==me).length;
-  if(n>0){ b.textContent=n>99?"99+":String(n); b.style.display=""; } else { b.style.display="none"; }
-}
-function actTimeText(ts){
-  if(!ts) return "";
-  const diff=Math.floor((Date.now()-ts)/60000);
-  if(diff<1) return "剛剛";
-  if(diff<60) return diff+" 分鐘前";
-  if(diff<1440) return Math.floor(diff/60)+" 小時前";
-  const d=new Date(ts);
-  return (d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-}
-function openActivityPanel(){
-  const me=deviceName(); const list=(state.activity||[]);
-  let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
-    +'<span style="font-size:13px;color:var(--muted)">我的暱稱：<b>'+esc(me||"（未設定）")+'</b></span>'
-    +'<span>'+((!LOCAL_MODE && list.length)?'<span class="manage-link" id="act_clear" style="margin-right:14px">清除動態</span>':'')+'<span class="manage-link" id="act_setname">設定暱稱</span></span></div>';
-  if(LOCAL_MODE){ html+='<div class="empty-state">本機模式沒有家人共享，動態只在雲端模式顯示。</div>'; }
-  else if(list.length===0){ html+='<div class="empty-state">還沒有動態。家人新增記事後會出現在這裡。</div>'; }
-  else {
-    html+='<div class="act-list">'+list.map(a=>{
-      const mine=a.actor===me;
-      return '<div class="act-item"><span class="act-ico">'+(KIND_ICO[a.kind]||"📝")+'</span><div class="act-body"><div class="act-txt"><b>'+esc(a.actor||"有人")+'</b> 新增了：'+esc(a.title)+(mine?' <span style="color:var(--faint)">（你）</span>':'')+'</div><div class="act-time">'+actTimeText(a.ts)+'</div></div></div>';
-    }).join("")+'</div>';
-  }
-  openSheet("🔔 動態", html, null, null, "關閉");
-  const sn=$("act_setname"); if(sn) sn.addEventListener("click", setDeviceNamePrompt);
-  const cl=$("act_clear"); if(cl) cl.addEventListener("click", clearActivity);
-  const newest=list.length?(list[0].ts||0):Date.now();
-  setActivityLastSeen(newest); renderActivityBadge();
-}
-function clearActivity(){
-  if(LOCAL_MODE) return;
-  if(!confirm("確定清除所有動態？此動作無法復原。")) return;
-  db.ref("activity").remove().then(()=>{ state.activity=[]; renderActivityBadge(); closeSheet(); toast("已清除動態"); }).catch(e=>{ console.error(e); toast("清除失敗"); });
-}
-
-/* 🎒 行事曆頁的百寶袋清單：無日期、未完成、非採購 */
-function renderPocket(){
-  const wrap=$("pocketList"); if(!wrap) return;
-  const arr=curEntries().map(([id,r])=>Object.assign({id},r))
-    .filter(r=>r.category!=="shopping" && !r.dateStart && recKind(r)!=="done" && recKind(r)!=="log");
-  arr.sort((a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u)return u; return (b.createdAt||0)-(a.createdAt||0); });
-  if(arr.length===0){ wrap.innerHTML='<div class="empty-state" style="padding:14px">百寶袋是空的，上面隨手記一筆吧。</div>'; return; }
-  wrap.innerHTML="";
-  arr.forEach(r=>wrap.appendChild(overviewCard(r,"todo")));
-}
-
-/* ============================================================
-   5. Tab 切換（行事曆 / 總覽 / 待購）
-   ============================================================ */
-$("navCal").addEventListener("click", ()=>switchTab("cal"));
-$("navOverview").addEventListener("click", ()=>switchTab("overview"));
-$("navShop").addEventListener("click", ()=>switchTab("shop"));
-$("navGoals").addEventListener("click", ()=>switchTab("goals"));
-function switchTab(t){
-  $("tabCal").classList.toggle("hidden", t!=="cal");
-  $("tabOverview").classList.toggle("hidden", t!=="overview");
-  $("tabShop").classList.toggle("hidden", t!=="shop");
-  $("tabGoals").classList.toggle("hidden", t!=="goals");
-  $("navCal").classList.toggle("active", t==="cal");
-  $("navOverview").classList.toggle("active", t==="overview");
-  $("navShop").classList.toggle("active", t==="shop");
-  $("navGoals").classList.toggle("active", t==="goals");
-  $("barTitle").textContent = t==="cal" ? "📅 行事曆" : (t==="overview" ? "📋 總覽" : (t==="shop" ? "🛒 待購清單" : "🎯 年度目標"));
-  if(t==="overview") renderOverview();
-  if(t==="shop") renderShop();
-  if(t==="goals") renderGoals();
-}
-
-/* 跳出 App 再回來 → 回到「行事曆」今天（總覽預設＝當月＋逾期） */
-function resetToTodayOverview(){
-  if($("app").classList.contains("hidden")) return;   // 未登入不動
-  ovMode="todo";
-  const t=new Date();
-  if($("ovYear")) $("ovYear").value=String(t.getFullYear());
-  if($("ovMonth")) $("ovMonth").value=String(t.getMonth()+1);
-  if($("ovDay")){ $("ovDay").disabled=false; $("ovDay").value=""; }
-  if($("ovStatus")) $("ovStatus").value="pending";
-  if($("ovCategory")) $("ovCategory").value="all";
-  if($("ovAssignee")) $("ovAssignee").value="all";
-  switchTab("cal");   // 回到行事曆頁
-  goToToday();        // 跳到今天
-}
-document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") resetToTodayOverview(); });
-
-/* ============================================================
-   5.5 多行事曆（3d）
-   ============================================================ */
-$("calBtn").addEventListener("click", openCalManager);
-
-function ensureDefaultCalendar(){
-  if(!state.calendars || Object.keys(state.calendars).length===0){
-    state.calendars={ main:{ name:"我的行事曆", createdAt:Date.now() } };
-    if(LOCAL_MODE) lsSaveCalendars(); else db.ref("calendars/main").set(state.calendars.main);
-  }
-  if(!state.currentCal || !state.calendars[state.currentCal]){
-    state.currentCal = state.calendars["main"] ? "main" : Object.keys(state.calendars)[0];
-    try{ localStorage.setItem("cal_current", state.currentCal); }catch(e){}
+    const results = await SearchEngine.run(state);
+    lastResults = results;
+    renderResults(results);
+  }catch(err){
+    $("#status").textContent = err==="MAPS_NOT_READY"
+      ? "地圖尚未就緒，請設定 API Key。" : "搜尋發生問題（"+err+"），請調整條件再試。";
+  }finally{
+    btn.disabled=false; btn.textContent="🔍 搜尋美食";
   }
 }
-function calName(id){ const c=state.calendars[id]; return c? c.name : "行事曆"; }
-function renderCalBar(){
-  const el=$("barWho"); if(el) el.textContent="📂 "+calName(state.currentCal)+(LOCAL_MODE?"（本機）":"");
-}
-function setCurrentCal(id){
-  if(!state.calendars[id]) return;
-  state.currentCal=id;
-  try{ localStorage.setItem("cal_current", id); }catch(e){}
-  renderCalBar(); closeSheet(); renderAll();
-  toast("已切換到「"+calName(id)+"」");
-}
-function openCalManager(){
-  const ids=Object.keys(state.calendars);
-  let html='<p style="font-size:12px;color:var(--muted);margin:-2px 2px 12px;line-height:1.5">點名稱可切換。每本行事曆的資料各自獨立；用<b>同一組授權碼</b>登入的家人，會看到同樣這些行事曆（即分享方式）。</p>';
-  html+='<div id="calList">'+ids.map(id=>{
-    const on=id===state.currentCal;
-    return '<div class="cal-row'+(on?" on":"")+'"><span class="cal-name" data-cal="'+id+'">'+(on?"✓ ":"")+esc(calName(id))+'</span>'+
-      '<button type="button" class="cal-del" data-del="'+id+'">🗑</button></div>';
-  }).join("")+'</div>';
-  html+='<div class="chip-add" style="margin-top:10px"><input id="calNewName" autocomplete="off" placeholder="新行事曆名稱（如：家庭、工作）"><button id="calAddBtn" type="button">＋ 新增</button></div>';
-  openSheet("行事曆", html, null, null);
-  const sv=$("sheetSave"); if(sv) sv.style.display="none";
-  $("calList").querySelectorAll(".cal-name").forEach(s=>s.addEventListener("click", ()=>setCurrentCal(s.getAttribute("data-cal"))));
-  $("calList").querySelectorAll(".cal-del").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); deleteCalendar(b.getAttribute("data-del")); }));
-  $("calAddBtn").addEventListener("click", ()=>{ const nm=$("calNewName").value.trim(); if(nm){ addCalendar(nm); } else { toast("請輸入名稱"); } });
-}
-function addCalendar(name){
-  if(!requireAuth()) return;
-  const id=genId();
-  const c={ name, createdAt:Date.now() };
-  if(LOCAL_MODE){ state.calendars[id]=c; lsSaveCalendars(); }
-  else db.ref("calendars/"+id).set(c);
-  state.calendars[id]=c;
-  setCurrentCal(id);
-}
-function deleteCalendar(id){
-  if(!requireAuth()) return;
-  if(Object.keys(state.calendars).length<=1){ toast("至少保留一本行事曆"); return; }
-  const recs=Object.entries(state.records).filter(([rid,r])=>(r.cal||"main")===id);
-  openConfirm("刪除行事曆",
-    "確定要刪除行事曆「<b>"+esc(calName(id))+"</b>」嗎？",
-    function(){
-      openConfirm("再次確認",
-        "這會<b>一併刪除這本裡的 "+recs.length+" 筆記事／採購</b>，且<b>無法復原</b>。<br>確定要刪除嗎？",
-        function(){ doDeleteCalendar(id, recs); },
-        "確定刪除");
-    },
-    "繼續");
-}
-function doDeleteCalendar(id, recs){
-  if(LOCAL_MODE){
-    recs.forEach(([rid])=>delete state.records[rid]);
-    delete state.calendars[id];
-    lsSaveRecords(); lsSaveCalendars();
-  } else {
-    const updates={}; recs.forEach(([rid])=>updates["records/"+rid]=null); updates["calendars/"+id]=null;
-    db.ref().update(updates);
-    recs.forEach(([rid])=>delete state.records[rid]); delete state.calendars[id];
-  }
-  if(state.currentCal===id){ state.currentCal=Object.keys(state.calendars)[0]; try{ localStorage.setItem("cal_current", state.currentCal); }catch(e){} }
-  renderCalBar(); closeSheet(); renderAll(); toast("已刪除行事曆");
-}
 
-/* ============================================================
-   6. 行事曆
-   ============================================================ */
-$("prevMonth").addEventListener("click", ()=>changeMonth(-1));
-$("nextMonth").addEventListener("click", ()=>changeMonth(1));
-$("todayBtn").addEventListener("click", goToToday);
-function goToToday(){ const t=new Date(); state.view=new Date(t.getFullYear(), t.getMonth(), 1); state.selected=ymd(t); showCalPane("day"); renderCalendar(); renderDayEvents(); }
-$("monthTitle").addEventListener("click", openMonthPicker);
-$("addEventBtn").addEventListener("click", ()=>openRecordForm(null, { dateStart:state.selected }));
-
-function changeMonth(delta){ state.view=new Date(state.view.getFullYear(), state.view.getMonth()+delta, 1); renderCalendar(); }
-
-function renderLegend(){
-  const el=$("calLegend"); if(!el) return;
-  el.innerHTML = CAT_ORDER.map(c=>'<span><i class="dot" style="background:'+catColor(c)+'"></i>'+CAT_ICON[c]+' '+CAT_LABEL[c]+'</span>').join("");
-}
-function goalMsForDay(dateStr){
-  const out=[];
-  Object.entries(state.goals||{}).forEach(([gid,g])=>{
-    if(g && g.type==="milestone" && Array.isArray(g.milestones)){
-      g.milestones.forEach((m,idx)=>{ if(m && m.date===dateStr) out.push({goalId:gid, msIdx:idx, goalTitle:g.title||"目標", text:m.text||"", done:!!m.done}); });
+/* ---------- 附近搜尋（手機定位） ---------- */
+$("#nearBtn").addEventListener("click", doNearby);
+function doNearby(){
+  if (!SearchEngine.ready){ toast("地圖尚未就緒，請先設定 API Key"); return; }
+  if (!navigator.geolocation){ toast("此瀏覽器不支援定位"); return; }
+  const btn=$("#nearBtn"); btn.disabled=true; btn.textContent="定位中…";
+  $("#status").textContent="正在取得你的位置…"; $("#status").style.display="block";
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const center={lat:pos.coords.latitude, lng:pos.coords.longitude};
+    clearMarkers();
+    if (SearchEngine.map){
+      new google.maps.Marker({
+        map:SearchEngine.map, position:center, title:"我的位置",
+        icon:{path:google.maps.SymbolPath.CIRCLE,scale:8,fillColor:"#1A73E8",fillOpacity:1,strokeColor:"#fff",strokeWeight:2}
+      });
+      SearchEngine.map.panTo(center); SearchEngine.map.setZoom(15);
     }
-  });
-  return out;
-}
-function dotsForDay(dateStr){
-  const cats=[]; let urgent=false, log=false;
-  curValues().forEach(r=>{
-    if(r && (dayInRange(r,dateStr) || occursOn(r,dateStr))){
-      if(recKind(r)==="log") log=true;
-      else if(cats.indexOf(r.category)<0) cats.push(r.category);
-      if(r.urgent) urgent=true;
+    $("#status").textContent="搜尋你附近…";
+    try{
+      const results = await SearchEngine.runNearby(state, center, 1500);
+      lastResults = results;
+      renderResults(results, true);
+    }catch(err){
+      $("#status").textContent="附近搜尋發生問題（"+err+"），請調整條件再試。";
+    }finally{
+      btn.disabled=false; btn.textContent="📍 我附近";
     }
-  });
-  const ms = goalMsForDay(dateStr).length>0;
-  return { cats, urgent, log, ms };
+  }, err=>{
+    btn.disabled=false; btn.textContent="📍 我附近";
+    const msg = err.code===1 ? "你拒絕了定位權限，請到瀏覽器設定開啟。"
+      : err.code===2 ? "目前無法取得位置，請確認定位已開啟。"
+      : "定位逾時，請再試一次。";
+    $("#status").textContent=msg; toast("定位失敗");
+  }, {enableHighAccuracy:true, timeout:10000, maximumAge:0});
 }
-function renderCalendar(){
-  const y=state.view.getFullYear(), m=state.view.getMonth();
-  $("monthTitle").textContent = y+" 年 "+(m+1)+" 月";
-  const grid=$("calGrid"); grid.innerHTML="";
-  const first=new Date(y,m,1).getDay();
-  const days=new Date(y,m+1,0).getDate();
-  const todayStr=ymd(new Date());
+function priceText(lv){
+  if (lv==null) return "價位未提供";
+  if (lv<=1) return "平價";
+  if (lv===2) return "中等";
+  return "高價";
+}
+function openText(p){
+  const oh=p.opening_hours;
+  if (!oh) return "";
+  const o = (typeof oh.isOpen==="function") ? oh.isOpen() : oh.open_now;
+  if (o===true) return '<span class="open">營業中</span>';
+  if (o===false) return '<span class="closed">休息中</span>';
+  return "";
+}
 
-  for(let i=0;i<first;i++){ const c=document.createElement("div"); c.className="cell empty"; grid.appendChild(c); }
-  for(let d=1;d<=days;d++){
-    const dateStr=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
-    const c=document.createElement("div");
-    c.className="cell";
-    if(dateStr===todayStr) c.classList.add("today");
-    if(dateStr===state.selected) c.classList.add("sel");
-    const hol=holidayName(dateStr);
-    if(hol){ c.classList.add("holiday"); c.title=hol; }
-    const info=dotsForDay(dateStr);
-    const catCap = info.log ? 3 : 4;
-    let dots=info.cats.slice(0,catCap).map(cat=>'<i class="dot" style="background:'+catColor(cat)+'"></i>').join("");
-    if(info.log) dots='<i class="dot logdot" style="background:'+LOG_COLOR+'"></i>'+dots;
-    if(info.ms) dots='<i class="dot msdot"></i>'+dots;
-    if(info.urgent) dots='<span class="urg">❗️</span>'+dots;
-    c.innerHTML='<span class="num">'+d+'</span><span class="dots">'+dots+'</span>';
-    c.addEventListener("click", ()=>{ state.selected=dateStr; showCalPane("day"); renderCalendar(); renderDayEvents(); });
-    grid.appendChild(c);
+function renderResults(list){
+  const col=$("#listcol");
+  if (!list.length){
+    col.innerHTML='<div class="status">找不到符合條件的店家，試著放寬篩選或更換地區。</div>';
+    return;
   }
-}
-
-function renderDayEvents(){
-  const wrap=$("dayEvents");
-  const list=curEntries()
-    .filter(([id,r])=>dayInRange(r, state.selected) || occursOn(r, state.selected))
-    .map(([id,r])=>Object.assign({id},r))
-    .sort((a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0) return u; return (a.start||"").localeCompare(b.start||""); });
-
-  const sel=new Date(state.selected+"T00:00:00");
-  $("dayHeading").textContent = (sel.getMonth()+1)+"/"+sel.getDate()+" 記事";
-  const hol=holidayName(state.selected);
-  const holBanner = hol ? '<div class="hol-banner">🇹🇼 '+esc(hol)+'</div>' : '';
-  const msDay=goalMsForDay(state.selected);
-  const msHtml=msDay.map(x=>'<div class="ms-marker"><span class="ms-marker-ico">🎯</span><span class="ms-marker-txt"><b>'+esc(x.goalTitle)+'</b>　'+esc(x.text)+(x.done?' ✓':'')+'</span></div>').join("");
-
-  if(list.length===0 && !msHtml){ wrap.innerHTML=holBanner+'<div class="empty-state">這天還沒有記事，點「新增記事」加入。</div>'; return; }
-
-  wrap.innerHTML=holBanner+msHtml;
-  wrap.querySelectorAll(".ms-marker").forEach(el=>el.addEventListener("click", ()=>switchTab("goals")));
-  list.forEach(r=>{
-    const k=kindOn(r, state.selected);
+  col.innerHTML='<div class="status">共 '+list.length+' 間店家</div>';
+  list.forEach(p=>{
     const card=document.createElement("div");
-    card.className="card"+(r.urgent?" urgent-card":"")+(k==="done"?" is-done":"")+(k==="log"?" is-log":"")+(isPastLog(r)?" is-log-past":"");
-    const color=(k==="log")?LOG_COLOR:catColor(r.category);
-    const timeTxt=(r.start||"")+(r.end?(" – "+r.end):"");
-    const who=assigneeNames(r.assignees);
-    const meta=[];
-    if(timeTxt) meta.push('🕒 '+esc(timeTxt));
-    if(r.category==="shopping" && r.qty) meta.push('數量 '+esc(r.qty));
-    if(r.amount!=null && r.amount!=="") meta.push('💰 '+esc(r.amount));
-    if(hasRepeat(r)) meta.push(repeatText(r.repeat));
-    if(who.length) meta.push('<span class="who">👤 '+esc(who.join("、"))+'</span>');
-    if(r.countdown && r.dateStart && k!=="done") meta.push('⏳ '+countdownText(r.dateStart));
-    card.innerHTML=
-      '<div class="stripe" style="background:'+color+'"></div>'+
-      '<div class="body">'+
-        '<div class="row1">'+
-          (r.urgent?'<span class="urg-badge">❗️</span>':'')+
-          '<span class="kind-ico">'+KIND_ICO[k]+'</span>'+
-          '<span class="name">'+esc(r.title)+'</span>'+
-          pillHtml(r.category)+
-        '</div>'+
-        (meta.length?'<div class="meta">'+meta.join("")+'</div>':'')+
-        (r.note?'<div class="note">'+esc(r.note)+'</div>':'')+
-      '</div>'+
-      '<div class="acts">'+
-        (r.isLog ? '' : '<button class="check'+(k==="done"?" on":"")+'" data-check>'+(k==="done"?"✓":"")+'</button>')+
-        '<button class="icon-btn" data-edit>✏️</button>'+
-        '<button class="icon-btn" data-del>🗑</button>'+
-      '</div>';
-    const _chk=card.querySelector("[data-check]");
-    if(_chk) _chk.addEventListener("click", ()=>toggleDoneOn(r.id, state.selected));
-    card.querySelector("[data-edit]").addEventListener("click", ()=>openEditor(r));
-    card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title, state.selected));
+    card.className="card";
+    card.innerHTML = `
+      <div class="head">
+        <div class="nm">${esc(p.name||"")}
+          <div class="meta">
+            ${p.rating!=null?'<span class="rate">★ '+p.rating.toFixed(1)+'</span>':''}
+            <span class="price">${priceText(p.price_level)}</span>
+            ${openText(p)}
+          </div>
+        </div>
+        <span style="color:var(--sub);font-size:13px">展開 ▾</span>
+      </div>
+      <div class="fav-row">
+        ${favBtn(p.place_id,"want","⭐ 想去")}
+        ${favBtn(p.place_id,"been","✅ 去過")}
+        ${favBtn(p.place_id,"pocket","📌 口袋")}
+      </div>
+      <div class="detail" id="d-${p.place_id}"></div>`;
+    const head=card.querySelector(".head");
+    head.addEventListener("click", ()=>toggleDetail(p, card.querySelector(".detail"), head));
+    card.querySelectorAll(".fav-row button").forEach(b=>{
+      b.addEventListener("click", e=>{ e.stopPropagation(); onFav(p, b.dataset.cat, card); });
+    });
+    col.appendChild(card);
+    addMarker(p);
+    refreshFavButtons(card, p.place_id);
+  });
+  fitMarkers();
+}
+
+function favBtn(id, cat, label){
+  return `<button data-cat="${cat}">${label}</button>`;
+}
+function refreshFavButtons(scope, placeId){
+  const cur = FavStore.get(placeId);
+  scope.querySelectorAll(".fav-row button").forEach(b=>{
+    b.classList.remove("set-want","set-been","set-pocket");
+    if (cur && cur.category===b.dataset.cat) b.classList.add("set-"+b.dataset.cat);
+  });
+}
+
+async function onFav(place, cat, card){
+  const cur = FavStore.get(place.place_id);
+  if (cur && cur.category===cat){
+    FavStore.remove(place.place_id);
+    toast("已移除收藏");
+  } else {
+    // 補抓詳細以存入完整資料
+    let full = place;
+    try { full = await SearchEngine.details(place.place_id); } catch(e){}
+    FavStore.set(full, cat, state);
+    toast(cat==="want"?"已加入 ⭐ 想去":cat==="been"?"已標記 ✅ 去過":"已加入 📌 口袋名單");
+  }
+  if (card) refreshFavButtons(card, place.place_id);
+}
+
+/* ---------- 展開店家詳細 ---------- */
+async function toggleDetail(p, box, head){
+  if (box.classList.contains("show")){
+    box.classList.remove("show");
+    head.querySelector("span:last-child").textContent="展開 ▾";
+    return;
+  }
+  head.querySelector("span:last-child").textContent="收合 ▴";
+  box.classList.add("show");
+  box.innerHTML='<div class="status" style="padding:4px 0">載入詳細…</div>';
+  try{
+    const d = await SearchEngine.details(p.place_id);
+    focusMarker(d);
+    const nav = d.geometry
+      ? `https://www.google.com/maps/dir/?api=1&destination=${d.geometry.location.lat()},${d.geometry.location.lng()}&destination_place_id=${d.place_id}`
+      : (d.url||"#");
+    box.innerHTML = `
+      <div class="drow"><b>地址</b><span>${esc(d.formatted_address||"—")}</span></div>
+      ${d.formatted_phone_number?`<div class="drow"><b>電話</b><a href="tel:${d.formatted_phone_number}">${d.formatted_phone_number}</a></div>`:""}
+      ${d.website?`<div class="drow"><b>官網</b><a href="${d.website}" target="_blank" rel="noopener">${d.website}</a></div>`:""}
+      <div class="acts">
+        <a href="${nav}" target="_blank" rel="noopener">🧭 導航</a>
+        <a class="alt" href="${d.url||"#"}" target="_blank" rel="noopener">在 Google 地圖開啟</a>
+      </div>`;
+  }catch(e){
+    box.innerHTML='<div class="status" style="padding:4px 0">無法載入詳細資訊。</div>';
+  }
+}
+
+/* ---------- 地圖標記 ---------- */
+function clearMarkers(){ markers.forEach(m=>m.setMap(null)); markers=[]; }
+function addMarker(p){
+  if (!p.geometry || !SearchEngine.map) return;
+  const m=new google.maps.Marker({
+    map:SearchEngine.map, position:p.geometry.location, title:p.name
+  });
+  const info=new google.maps.InfoWindow({
+    content:`<strong>${esc(p.name||"")}</strong><br>${p.rating!=null?"★ "+p.rating.toFixed(1):""}`
+  });
+  m.addListener("click", ()=>info.open(SearchEngine.map, m));
+  m._placeId=p.place_id;
+  markers.push(m);
+}
+function fitMarkers(){
+  if (!markers.length || !SearchEngine.map) return;
+  const b=new google.maps.LatLngBounds();
+  markers.forEach(m=>b.extend(m.getPosition()));
+  SearchEngine.map.fitBounds(b);
+  if (markers.length===1) SearchEngine.map.setZoom(16);
+}
+function focusMarker(d){
+  if (!d.geometry || !SearchEngine.map) return;
+  SearchEngine.map.panTo(d.geometry.location);
+  SearchEngine.map.setZoom(16);
+}
+
+/* ---------- 我的收藏 ---------- */
+let favFilter="all";
+function fav(){return FavStore.all();}
+$("#favFilter").querySelectorAll(".chip").forEach(c=>{
+  c.addEventListener("click", ()=>{
+    $("#favFilter").querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+    c.classList.add("on"); favFilter=c.dataset.v; renderFavList();
+  });
+});
+const PILL = {want:["want","⭐ 想去"], been:["been","✅ 去過"], pocket:["pocket","📌 口袋名單"]};
+function renderFavList(){
+  const wrap=$("#favList");
+  let items = FavStore.all().sort((a,b)=>b.updatedAt-a.updatedAt);
+  if (favFilter!=="all") items=items.filter(i=>i.category===favFilter);
+  if (!items.length){
+    wrap.innerHTML='<div class="empty">這個分類還沒有收藏。<br>到「搜尋」標記想去、去過或口袋名單吧。</div>';
+    return;
+  }
+  wrap.innerHTML="";
+  items.forEach(it=>{
+    const nav = (it.lat!=null)
+      ? `https://www.google.com/maps/dir/?api=1&destination=${it.lat},${it.lng}&destination_place_id=${it.placeId}`
+      : (it.mapUrl||"#");
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`
+      <div class="head" style="cursor:default">
+        <div class="nm">${esc(it.name)}
+          <div class="meta">
+            ${it.rating!=null?'<span class="rate">★ '+it.rating.toFixed(1)+'</span>':''}
+            <span class="price">${priceText(it.priceLevel)}</span>
+            <span class="pill ${PILL[it.category][0]}">${PILL[it.category][1]}</span>
+          </div>
+          <div class="meta">${esc(it.address||"")}</div>
+        </div>
+      </div>
+      <div class="detail show" style="border-top:none;background:transparent">
+        ${it.phone?`<div class="drow"><b>電話</b><a href="tel:${it.phone}">${it.phone}</a></div>`:""}
+        ${it.website?`<div class="drow"><b>官網</b><a href="${it.website}" target="_blank" rel="noopener">${it.website}</a></div>`:""}
+        <div class="acts">
+          <a href="${nav}" target="_blank" rel="noopener">🧭 導航</a>
+          <a class="alt" href="${it.mapUrl||nav}" target="_blank" rel="noopener">地圖</a>
+        </div>
+        <div class="fav-row" style="padding:12px 0 0">
+          <button data-c="want"  class="${it.category==='want'?'set-want':''}">⭐ 想去</button>
+          <button data-c="been"  class="${it.category==='been'?'set-been':''}">✅ 去過</button>
+          <button data-c="pocket"class="${it.category==='pocket'?'set-pocket':''}">📌 口袋</button>
+          <button data-c="del" style="flex:.6;color:var(--accent-d)">🗑 刪除</button>
+        </div>
+      </div>`;
+    card.querySelectorAll(".fav-row button").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        if (b.dataset.c==="del"){ FavStore.remove(it.placeId); toast("已刪除"); }
+        else { FavStore.updateCategory(it.placeId, b.dataset.c); toast("已更新分類"); }
+        renderFavList();
+      });
+    });
     wrap.appendChild(card);
   });
 }
 
-/* 標題歷史 */
-function titleHistoryOptions(){
-  const seen=new Set();
-  curValues().forEach(r=>{ if(r&&r.title) seen.add(r.title); });
-  return Array.from(seen).slice(0,60).map(t=>'<option value="'+esc(t)+'">').join("");
-}
-
-/* 年月跳轉 */
-function openMonthPicker(){
-  let years=""; for(let yy=1980; yy<=2035; yy++) years+='<option value="'+yy+'"'+(yy===state.view.getFullYear()?" selected":"")+'>'+yy+' 年</option>';
-  let months=""; for(let mm=0; mm<12; mm++) months+='<option value="'+mm+'"'+(mm===state.view.getMonth()?" selected":"")+'>'+(mm+1)+' 月</option>';
-  openSheet("跳轉年月",
-    '<div class="two"><div class="field"><label>年</label><select id="pk_year">'+years+'</select></div>'+
-    '<div class="field"><label>月</label><select id="pk_month">'+months+'</select></div></div>',
-    function(){ state.view=new Date(Number($("pk_year").value), Number($("pk_month").value), 1); closeSheet(); renderCalendar(); },
-    null, "前往");
-}
-/* 月曆滑動 */
-(function(){
-  const card=$("calCard"); let sx=0, sy=0, tracking=false;
-  card.addEventListener("touchstart", e=>{ sx=e.touches[0].clientX; sy=e.touches[0].clientY; tracking=true; }, {passive:true});
-  card.addEventListener("touchend", e=>{
-    if(!tracking) return; tracking=false;
-    const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
-    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5){ changeMonth(dx<0?1:-1); }
-  }, {passive:true});
-})();
-
-/* ============================================================
-   6.5 總覽（查詢／回顧，可篩選）
-   ============================================================ */
-let ovMode = "todo";   // todo=待辦(逾期+今天未完成)；period=查特定期間
-["ovStatus","ovCategory","ovAssignee","ovYear","ovDay"].forEach(idd=>{
-  const el=$(idd); if(el) el.addEventListener("change", ()=>{ ovMode="period"; renderOverview(); });
-});
-// 月份改變時：選「整年」就停用日；否則開放日
-$("ovMonth").addEventListener("change", function(){
-  const noMonth = this.value==="";
-  $("ovDay").disabled = noMonth;
-  if(noMonth) $("ovDay").value="";
-  ovMode="period"; renderOverview();
-});
-(function initOvPickers(){
-  const t=new Date();
-  let ys=""; for(let y=2020;y<=2035;y++) ys+='<option value="'+y+'">'+y+' 年</option>';
-  $("ovYear").innerHTML=ys; $("ovYear").value=String(t.getFullYear());
-  let ms='<option value="">整年</option>'; for(let m=1;m<=12;m++) ms+='<option value="'+m+'">'+m+' 月</option>';
-  $("ovMonth").innerHTML=ms; $("ovMonth").value=String(t.getMonth()+1);
-  let ds='<option value="">整月</option>'; for(let d=1;d<=31;d++) ds+='<option value="'+d+'">'+d+' 日</option>';
-  $("ovDay").innerHTML=ds; $("ovDay").value="";
-})();
-
-/* 🎒 百寶袋：隨手記一筆（無日期記事，只有標題） */
-function quickAddPocket(){
-  if(!requireAuth()) return;
-  const inp=$("pocketInput"); const title=(inp.value||"").trim();
-  if(!title){ return; }
-  const data={ kind:"todo", title, category:"other", dateStart:"", dateEnd:"",
-    start:"", end:"", assignees:[], urgent:false, countdown:false, note:"",
-    status:"pending", createdAt:Date.now(), cal:state.currentCal };
-  if(LOCAL_MODE){ const key=genId(); state.records[key]=data; lsSaveRecords(); inp.value=""; renderAll(); return; }
-  const key=db.ref("records").push().key;
-  db.ref("records/"+key).update(data).then(()=>{ inp.value=""; pushActivity(title, "todo"); }).catch(e=>{ console.error(e); toast("儲存失敗"); });
-}
-function showCalPane(which){
-  const day = which!=="pocket";
-  const pd=$("paneDay"), pp=$("panePocket"), td=$("dpTabDay"), tp=$("dpTabPocket");
-  if(!pd||!pp) return;
-  pd.style.display=day?"":"none";
-  pp.style.display=day?"none":"";
-  if(td) td.classList.toggle("active", day);
-  if(tp) tp.classList.toggle("active", !day);
-}
-if($("dpTabDay")) $("dpTabDay").addEventListener("click", ()=>showCalPane("day"));
-if($("dpTabPocket")) $("dpTabPocket").addEventListener("click", ()=>showCalPane("pocket"));
-$("pocketAddBtn").addEventListener("click", quickAddPocket);
-$("pocketInput").addEventListener("keydown", e=>{ if(e.key==="Enter") quickAddPocket(); });
-
-function refreshOverviewFilterOptions(){
-  // 分類選單
-  const cs=$("ovCategory"); if(cs){ const cur=cs.value;
-    cs.innerHTML='<option value="all">全部分類</option>'+CAT_ORDER.map(c=>'<option value="'+c+'">'+CAT_ICON[c]+' '+CAT_LABEL[c]+'</option>').join("");
-    cs.value=cur && [...cs.options].some(o=>o.value===cur)?cur:"all";
-  }
-  // 負責人選單
-  const as=$("ovAssignee"); if(as){ const cur=as.value;
-    as.innerHTML='<option value="all">全部負責人</option>'+Object.entries(state.people).map(([id,p])=>'<option value="'+id+'">'+esc(p.name)+'</option>').join("");
-    as.value=cur && [...as.options].some(o=>o.value===cur)?cur:"all";
-  }
-}
-
-function overviewDateMatch(r){
-  const rg=recRange(r);
-  if(!rg) return r.category!=="shopping";   // 無日期：🎒百寶袋顯示；採購(純待購)不灌進總覽
-  const y=$("ovYear").value, m=$("ovMonth").value, d=$("ovDay").value;
-  if(!y) return true;
-  const pad=n=>String(n).padStart(2,"0");
-  if(m && d){                               // 年＋月＋日 → 那一天
-    return dayInRange(r, y+"-"+pad(m)+"-"+pad(d));
-  }
-  if(m){                                    // 年＋月 → 整月
-    const ym=y+"-"+pad(m);
-    return rg[0] <= (ym+"-31") && rg[1] >= (ym+"-01");
-  }
-  return rg[0] <= (y+"-12-31") && rg[1] >= (y+"-01-01");   // 只有年 → 整年
-}
-// ---- 總覽：把重複的一般任務/純紀錄展開成「各發生日」的列 ----
-function firstOccOnOrAfter(r, fromStr){
-  const d=new Date(fromStr+"T00:00:00");
-  for(let i=0;i<400;i++){ const ds=ymd(d); if(occursOn(r,ds)) return ds; d.setDate(d.getDate()+1); }
-  return null;
-}
-function latestPendingOccUpTo(r, today){
-  const d=new Date(today+"T00:00:00");
-  for(let i=0;i<400;i++){ const ds=ymd(d); if(ds<r.dateStart) break; if(occursOn(r,ds) && !isDoneOn(r,ds)) return ds; d.setDate(d.getDate()-1); }
-  return null;
-}
-function occInOvPeriod(r){
-  const y=$("ovYear").value, m=$("ovMonth").value, d=$("ovDay").value;
-  const pad=k=>String(k).padStart(2,"0");
-  if(!y){ const nx=firstOccOnOrAfter(r, ymd(new Date())); return nx?[nx]:[]; }
-  if(m && d){ const ds=y+"-"+pad(m)+"-"+pad(d); return occursOn(r,ds)?[ds]:[]; }
-  const year=Number(y), out=[];
-  const months = m ? [Number(m)] : [1,2,3,4,5,6,7,8,9,10,11,12];
-  for(const mo of months){ const dim=new Date(year,mo,0).getDate(); for(let day=1;day<=dim;day++){ const ds=year+"-"+pad(mo)+"-"+pad(day); if(occursOn(r,ds)) out.push(ds); } }
-  return out;
-}
-function thisMonthStr(){ const n=new Date(); return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0"); }
-function inCurrentMonth(ds){ return !!ds && ds.slice(0,7)===thisMonthStr(); }
-function occInMonth(r, y, m){
-  const pad=k=>String(k).padStart(2,"0"); const out=[];
-  const dim=new Date(y, m, 0).getDate();
-  for(let day=1; day<=dim; day++){ const ds=y+"-"+pad(m)+"-"+pad(day); if(occursOn(r,ds)) out.push(ds); }
-  return out;
-}
-function buildOverviewRows(){
-  const todo=(ovMode==="todo"); const today=ymd(new Date());
-  const out=[];
-  curEntries().forEach(([id,r])=>{
-    const rep = hasRepeat(r) && r.category!=="shopping" && r.dateStart;
-    if(!rep){ out.push(Object.assign({id}, r)); return; }
-    let occs=[];
-    if(todo){
-      // 預設：當月發生日 ＋ 逾期（之前月份最近一筆未完成；純紀錄不算逾期）
-      const n=new Date(), cy=n.getFullYear(), cm=n.getMonth()+1;
-      occs = occInMonth(r, cy, cm);
-      if(!r.isLog){
-        const od = latestPendingOccUpTo(r, dayBefore(cy+"-"+String(cm).padStart(2,"0")+"-01"));
-        if(od && occs.indexOf(od)<0) occs.push(od);
-      }
-    } else {
-      occs = occInOvPeriod(r);
-    }
-    occs.forEach(dd=>out.push(Object.assign({id}, r, { dateStart:dd, _occ:dd, kind: kindOn(r,dd) })));
-  });
-  return out;
-}
-
-function renderOverview(){
-  const wrap=$("ovList");
-  const todo = (ovMode==="todo");
-  const statusF= todo ? "pending" : $("ovStatus").value;     // pending / done / all
-  const catF=$("ovCategory").value;
-  const whoF=$("ovAssignee").value;
-  const today=ymd(new Date());
-
-  // 篩選
-  let arr=buildOverviewRows().filter(r=>{
-    if(catF!=="all" && r.category!==catF) return false;   // 全部分類含採購；選特定分類才篩
-    if(whoF!=="all" && !(r.assignees||[]).includes(whoF)) return false;
-    const k=recKind(r);
-    if(todo){
-      // 預設：當月 ＋ 逾期（未完成）。已完成不顯示；純紀錄當月才顯示
-      if(k==="done") return false;
-      if(k==="log"){ const rg=recRange(r); return !!(rg && inCurrentMonth(rg[0])); }
-      const rg=recRange(r);
-      if(!rg) return r.category!=="shopping";   // 無日期 🎒百寶袋
-      return rg[0] < today || inCurrentMonth(rg[0]);   // 逾期 或 當月
-    }
-    if(!overviewDateMatch(r)) return false;   // 無日期者一律顯示；有日期(含預期日)依篩選
-    if(k!=="log"){                            // 純紀錄不分未完成/已完成，一律顯示
-      if(statusF==="pending" && k==="done") return false;
-      if(statusF==="done" && k!=="done") return false;
-    }
-    return true;
-  });
-
-  // 分三態區段
-  const buckets={ scheduled:[], todo:[], done:[], log:[] };
-  arr.forEach(r=>buckets[recKind(r)].push(r));
-  const cmp=(a,b)=>{
-    const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0) return u;
-    const da=a.dateStart||"", dbb=b.dateStart||"";
-    if(da&&dbb&&da!==dbb) return da.localeCompare(dbb);
-    if(da&&!dbb) return -1; if(!da&&dbb) return 1;
-    return (a.start||"").localeCompare(b.start||"");
-  };
-  const effDate=r=>(r.dateStart||r.doneDate||"");
-  const cmpDone=(a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0)return u; return effDate(b).localeCompare(effDate(a)); };
-  buckets.scheduled.sort(cmp); buckets.todo.sort(cmp); buckets.done.sort(cmpDone);
-
-  const order = statusF==="done" ? ["done","log"] : (statusF==="pending" ? ["scheduled","todo","log"] : ["scheduled","todo","done","log"]);
-  let total=order.reduce((n,k)=>n+buckets[k].length,0);
-  const hint = todo ? '<div class="ov-hint">📋 當月未完成 ＋ 逾期（用上方年／月／日可查其他期間）</div>' : '';
-  if(total===0){ wrap.innerHTML=hint+'<div class="empty-state">'+(todo?'目前沒有當月或逾期未完成的事 🎉':'沒有符合的記事，試著調整上方篩選。')+'</div>'; return; }
-
-  wrap.innerHTML=hint;
-  order.forEach(k=>{
-    const items=buckets[k];
-    if(items.length===0) return;
-    const head=document.createElement("div");
-    head.className="ov-section-head";
-    head.innerHTML=KIND_ICO[k]+' '+KIND_LABEL[k]+'<span class="gcount">'+items.length+'</span>';
-    wrap.appendChild(head);
-    items.forEach(r=>wrap.appendChild(overviewCard(r, k)));
-  });
-}
-
-function overviewCard(r, k){
-  const card=document.createElement("div");
-  card.className="card"+(r.urgent?" urgent-card":"")+(k==="done"?" is-done":"")+(k==="log"?" is-log":"")+(isPastLog(r)?" is-log-past":"");
-  const color=catColor(r.category);
-  const who=assigneeNames(r.assignees);
-  const timeTxt=(r.start||"")+(r.end?(" – "+r.end):"");
-  let dateTxt="", datePrefix="";
-  if(r.dateStart){ dateTxt=r.dateStart.slice(5)+(r.dateEnd&&r.dateEnd!==r.dateStart?("~"+r.dateEnd.slice(5)):""); if(k==="todo") datePrefix="預期 "; }
-  else if(k==="done" && r.doneDate){ dateTxt=r.doneDate.slice(5); datePrefix="完成 "; }
-  else if(k==="todo"){ dateTxt="無日期"; }
-  const meta=[];
-  if(dateTxt) meta.push(datePrefix+esc(dateTxt));
-  if(timeTxt) meta.push('🕒 '+esc(timeTxt));
-  if(r.category==="shopping" && r.qty) meta.push('數量 '+esc(r.qty));
-  if(r.amount!=null && r.amount!=="") meta.push('💰 '+esc(r.amount));
-    if(hasRepeat(r)) meta.push(repeatText(r.repeat));
-  if(who.length) meta.push('<span class="who">👤 '+esc(who.join("、"))+'</span>');
-  card.innerHTML=
-    (k==="log"
-      ? '<span class="logmark">📌</span>'
-      : '<button class="check'+(k==="done"?" on":"")+'" data-check>'+(k==="done"?"✓":"")+'</button>')+
-    '<div class="body">'+
-      '<div class="row1">'+(r.urgent?'<span class="urg-badge">❗️</span>':'')+
-        '<span class="name">'+esc(r.title)+'</span>'+pillHtml(r.category)+'</div>'+
-      (meta.length?'<div class="meta">'+meta.join("")+'</div>':'')+
-      (r.note?'<div class="note">'+esc(r.note)+'</div>':'')+
-    '</div>'+
-    '<div class="acts"><button class="icon-btn" data-edit>✏️</button><button class="icon-btn" data-del>🗑</button></div>';
-  const _chk=card.querySelector("[data-check]");
-  if(_chk) _chk.addEventListener("click", ()=>toggleDoneOn(r.id, r._occ || r.dateStart || ymd(new Date())));
-  card.querySelector("[data-edit]").addEventListener("click", ()=>{ const base=state.records[r.id]; openEditor(base?Object.assign({id:r.id},base):r); });
-  card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title, r._occ || r.dateStart));
-  return card;
-}
-
-// 切換完成（依發生日）：純紀錄不打勾；非重複/採購→整筆；非採購重複→只切換當次（doneDates）
-function toggleDoneOn(id, dateStr){
-  if(!requireAuth()) return;
-  const r=state.records[id]; if(!r) return;
-  if(r.isLog) return;                                  // 純紀錄無完成
-  if(!hasRepeat(r) || r.category==="shopping"){        // 非重複 或 採購 → 整筆完成
-    return toggleDoneWhole(id);
-  }
-  // 非採購的重複記事 → 只切換 dateStr 這一次（存在 doneDates，不生成資料）
-  const d = dateStr || r.dateStart;
-  const dd = Array.isArray(r.doneDates) ? r.doneDates.slice() : [];
-  const i = dd.indexOf(d);
-  if(i>=0) dd.splice(i,1); else dd.push(d);
-  if(LOCAL_MODE){ state.records[id].doneDates = dd; lsSaveRecords(); renderAll(); return; }
-  db.ref("records/"+id+"/doneDates").set(dd).catch(e=>{ console.error(e); toast("更新失敗"); });
-}
-// 整筆完成（非重複記事、採購）；採購重複仍生成下一筆
-function toggleDoneWhole(id){
-  if(!requireAuth()) return;
-  const r=state.records[id]; if(!r) return;
-  const patch={};
-  if(isDone(r)){
-    // 取消完成 → 乾淨還原（清掉完成日）
-    patch.kind = r.dateStart ? "scheduled" : "todo";
-    patch.status="pending";
-    patch.doneDate=null;
-  } else {
-    // 完成 → 記下完成日（今天），排定日保持不變
-    patch.kind="done"; patch.status="done";
-    patch.doneDate=ymd(new Date());
-    // 採購重複 → 以完成日往後推，生成下一筆（只生一次）
-    if(hasRepeat(r) && r.category==="shopping" && !r.spawned){
-      patch.spawned=true;
-      const base = r.dateStart || patch.doneDate;
-      const next=buildNextRecord(Object.assign({id},r), base);
-      writeRecord(next);
-    }
-  }
-  if(LOCAL_MODE){
-    Object.assign(state.records[id], patch);
-    if(patch.doneDate===null) delete state.records[id].doneDate;
-    lsSaveRecords(); renderAll(); return;
-  }
-  db.ref("records/"+id).update(patch).catch(e=>{ console.error(e); toast("更新失敗"); });
-}
-
-
-/* ============================================================
-   7. 待購清單（購物類未完成，依子分類分組）
-   ============================================================ */
-$("addItemBtn").addEventListener("click", ()=>openRecordForm(null, { category:"shopping", dateStart:"" }));
-
-function renderShop(){
-  const wrap=$("shopList");
-  const groups={}; SUBCAT_ORDER.forEach(s=>groups[s]=[]);
-  curEntries().forEach(([id,r])=>{
-    if(r && r.category==="shopping" && !isDone(r)){
-      const sc=groups[r.subcategory]?r.subcategory:"other";
-      groups[sc].push(Object.assign({id},r));
-    }
-  });
-  let total=0; SUBCAT_ORDER.forEach(s=>total+=groups[s].length);
-  if(total===0){ wrap.innerHTML='<div class="empty-state">目前沒有待購項目。點「新增待購」加入。</div>'; return; }
-
-  wrap.innerHTML="";
-  SUBCAT_ORDER.forEach(sc=>{
-    const arr=groups[sc];
-    if(arr.length===0) return;
-    arr.sort((a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0) return u; return (b.createdAt||0)-(a.createdAt||0); });
-    const head=document.createElement("div");
-    head.className="group-head";
-    head.innerHTML='<i class="dot" style="background:'+catColor("shopping")+'"></i>'+subcatIcon(sc)+' '+SUBCAT_LABEL[sc]+'<span class="gcount">'+arr.length+'</span>';
-    wrap.appendChild(head);
-    arr.forEach(r=>{
-      const card=document.createElement("div");
-      card.className="card item"+(r.urgent?" urgent-card":"");
-      card.innerHTML=
-        '<button class="check" data-check>'+'</button>'+
-        '<div class="body">'+
-          '<div class="row1">'+(r.urgent?'<span class="urg-badge">❗️</span>':'')+'<span class="name">'+esc(r.title)+'</span></div>'+
-          '<div class="meta"><span class="qty">數量 '+esc(r.qty||1)+'</span>'+
-            (r.amount!=null&&r.amount!==""?' <span>💰 '+esc(r.amount)+'</span>':'')+
-            (r.dateStart?' <span>📅 '+esc(r.dateStart)+'</span>':'')+
-            (hasRepeat(r)?' <span>'+repeatText(r.repeat)+'</span>':'')+
-          '</div>'+
-          (r.note?'<div class="note">'+esc(r.note)+'</div>':'')+
-        '</div>'+
-        '<div class="acts">'+
-          '<button class="icon-btn" data-edit>✏️</button>'+
-          '<button class="icon-btn" data-del>🗑</button>'+
-        '</div>';
-      card.querySelector("[data-check]").addEventListener("click", ()=>toggleShopDone(r.id));
-      card.querySelector("[data-edit]").addEventListener("click", ()=>openEditor(r));
-      card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title));
-      wrap.appendChild(card);
-    });
-  });
-}
-function toggleShopDone(id){
-  if(!requireAuth()) return;
-  const r=state.records[id]; if(!r) return;
-  const patch={ kind:"done", status:"done", doneDate:ymd(new Date()) };
-  let next=null;
-  // 重複採購（onDone）→ 以購買日往後推，生成下一筆
-  if(hasRepeat(r) && (r.repeat.mode||"onDone")==="onDone" && !r.spawned){
-    patch.spawned=true;
-    next=buildNextRecord(Object.assign({id},r), patch.doneDate);
-  }
-  if(LOCAL_MODE){
-    if(state.records[id]){ Object.assign(state.records[id], patch); }
-    if(next) writeRecord(next);
-    lsSaveRecords(); renderAll(); return;
-  }
-  db.ref("records/"+id).update(patch).then(()=>{ if(next) writeRecord(next); }).catch(e=>{ console.error(e); toast("更新失敗"); });
-}
-
-/* ============================================================
-   8. 新增/編輯記事（統一表單）
-   ============================================================ */
-/* 依記事類型開對應表單：採購→完整(購物)、無日期→百寶袋極簡、有日期→行程完整 */
-function openEditor(r){
-  if(!r) return;
-  if(r.category==="shopping") return openRecordForm(r);
-  if(!r.dateStart) return openPocketForm(r);     // 無排定日 → 百寶袋極簡
-  return openRecordForm(r);
-}
-
-/* 🎒 百寶袋極簡編輯：標題＋分類(選填)＋日期(選填,填了升級)＋急迫＋已完成＋備註 */
-function openPocketForm(rec){
-  const isEdit=!!rec; const r=rec||{};
-  const done=!!r.doneDate || recKind(r)==="done";
-  const cat=r.category||"other";
-  const html=
-    '<p style="font-size:12px;color:var(--muted);margin:-2px 2px 12px;line-height:1.5">🎒 百寶袋：無日期暫存。<b>填上日期就升級成行程</b>、上月曆。</p>'+
-    '<div class="field"><label>標題</label><input id="pk_title" autocomplete="off" value="'+esc(r.title||"")+'" placeholder="標題"></div>'+
-    '<div class="field"><label>分類（選填）</label>'+
-      iconPicker("pk_category", CAT_ORDER.filter(c=>c!=="shopping"), CAT_LABEL, CAT_ICON, cat)+'</div>'+
-    '<div class="field"><label>日期（填了就升級成行程）</label><input id="pk_date" type="date" value="'+(r.dateStart||"")+'"></div>'+
-    '<div class="toggle-row"><span>✅ 已完成</span><label class="switch"><input type="checkbox" id="pk_done"'+(done?" checked":"")+'><span class="slider"></span></label></div>'+
-    '<div class="field"><label>備註（可選）</label><textarea id="pk_note" placeholder="補充說明">'+esc(r.note||"")+'</textarea></div>';
-  openSheet(isEdit?"編輯百寶袋":"百寶袋", html,
-    function(){ savePocket(isEdit?r.id:null, r); },
-    isEdit?function(){ deleteRecord(r.id, r.title); }:null);
-  wireIconPicker("pk_category");
-}
-function savePocket(id, prev){
-  if(!requireAuth()) return;
-  const title=$("pk_title").value.trim();
-  if(!title){ toast("請輸入標題"); return; }
-  const done=$("pk_done").checked;
-  const dateStart=$("pk_date").value||"";
-  const kind = done ? "done" : (dateStart ? "scheduled" : "todo");
-  // 只動百寶袋表單控制的欄位，其餘沿用既有（不清掉）
-  const patch={
-    kind, title, category:$("pk_category").value||"other",
-    dateStart, urgent:(prev&&prev.urgent)||false, note:$("pk_note").value.trim(),
-    status: done?"done":"pending",
-    createdAt:(prev&&prev.createdAt)?prev.createdAt:Date.now()
-  };
-  patch.cal=(prev&&prev.cal)||state.currentCal;
-  patch.doneDate = done ? ((prev&&prev.doneDate)?prev.doneDate:ymd(new Date())) : null;
-
-  if(LOCAL_MODE){
-    const key=id||genId();
-    const merged=Object.assign({}, state.records[key]||{}, patch);
-    if(patch.doneDate===null) delete merged.doneDate;
-    state.records[key]=merged;
-    lsSaveRecords();
-    if(dateStart) state.selected=dateStart;
-    closeSheet(); renderAll(); toast(id?"已更新":"已新增");
-    return;
-  }
-  (async()=>{
-    try{
-      const key=id||db.ref("records").push().key;
-      await db.ref("records/"+key).update(patch);
-      if(dateStart) state.selected=dateStart;
-      closeSheet(); toast(id?"已更新":"已新增");
-    }catch(err){ console.error(err); toast("儲存失敗"); }
-  })();
-}
-
-function openRecordForm(rec, presets){
-  presets=presets||{};
-  const isEdit=!!rec; const r=rec||{};
-  const cat =r.category || presets.category || "life";
-  const ds  =(r.dateStart!==undefined ? r.dateStart : (presets.dateStart!==undefined ? presets.dateStart : state.selected));
-  const isShop=cat==="shopping";
-  formAssignees=new Set(r.assignees||[]);
-  const rep=r.repeat||{}; const repUnit=rep.unit||"none"; const repEvery=rep.every||1;
-
-  const html=
-    '<div class="field"><label>標題 <span style="color:var(--faint);font-weight:400">🕐 可選用過的</span></label>'+
-      '<input id="rec_title" list="rec_title_hist" autocomplete="off" value="'+esc(r.title||"")+'" placeholder="標題">'+
-      '<datalist id="rec_title_hist">'+titleHistoryOptions()+'</datalist></div>'+
-    '<div class="field" id="rec_catbox"'+(isShop?' style="display:none"':'')+'><label>分類</label>'+
-      iconPicker("rec_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
-    '<div id="rec_shopbox"'+(isShop?"":' style="display:none"')+'>'+
-      '<div class="field"><label>購物子分類</label>'+
-        iconPicker("rec_subcategory", SUBCAT_ORDER, SUBCAT_LABEL, SUBCAT_ICON, (r.subcategory||"food"))+'</div>'+
-      '<div class="two">'+
-        '<div class="field"><label>數量</label><input id="rec_qty" type="number" min="1" value="'+(r.qty||1)+'"></div>'+
-        '<div class="field"><label>價格（選填）</label><input id="rec_price" type="number" inputmode="numeric" value="'+(isShop&&r.amount!=null?r.amount:"")+'" placeholder="例如 3990"></div>'+
-      '</div>'+
-    '</div>'+
-    '<div class="field"><label>日期（可空，填了就上月曆）</label><input id="rec_dateStart" type="date" value="'+(ds||"")+'"></div>'+
-    '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><label>結束日期（可空）</label><input id="rec_dateEnd" type="date" value="'+(r.dateEnd||"")+'"></div>'+
-    '<div class="two" id="rec_timebox"'+(isShop?' style="display:none"':'')+'>'+
-      '<div class="field"><label>開始時間</label><input id="rec_start" type="time" value="'+(r.start||"")+'"></div>'+
-      '<div class="field"><label>結束時間</label><input id="rec_end" type="time" value="'+(r.end||"")+'"></div>'+
-    '</div>'+
-    '<div class="field"><label>重複</label>'+
-      '<div class="two">'+
-        '<select id="rec_repeatUnit">'+
-          ['none|不重複','day|每…天','week|每…週','month|每…月','year|每…年'].map(o=>{const v=o.split("|")[0],t=o.split("|")[1];return '<option value="'+v+'"'+(repUnit===v?" selected":"")+'>'+t+'</option>';}).join("")+
-        '</select>'+
-        '<input id="rec_repeatEvery" type="number" min="1" value="'+repEvery+'" placeholder="間隔數">'+
-      '</div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">勾「重複」：這筆會自動出現在每個重複日（每天／每週／每月／每年），不用每次重建。</div>'+
-    '</div>'+
-    '<div id="rec_amountbox"'+(isShop?' style="display:none"':'')+'><div class="field"><label>金額（選填）</label>'+
-      '<input id="rec_amount" type="number" inputmode="numeric" value="'+(r.amount!=null?r.amount:"")+'" placeholder="例如 1200"></div></div>'+
-    '<div class="field"><div class="label-row"><label>執行人（可複選）</label><span class="manage-link" id="rec_manage">管理人員</span></div>'+
-      '<div class="chips" id="rec_assignees"></div>'+
-      '<div class="chip-add"><input id="rec_newperson" autocomplete="off" placeholder="新增人員名稱"><button id="rec_addperson" type="button">＋ 新增</button></div>'+
-    '</div>'+
-    '<div class="toggle-row"><span>❗️ 急迫（排在最上面）</span><label class="switch"><input type="checkbox" id="rec_urgent"'+(r.urgent?" checked":"")+'><span class="slider"></span></label></div>'+
-    '<div class="toggle-row" id="rec_cdbox"'+(isShop?' style="display:none"':'')+'><span>⏳ 顯示倒數天數</span><label class="switch"><input type="checkbox" id="rec_countdown"'+(r.countdown?" checked":"")+'><span class="slider"></span></label></div>'+
-    '<div class="toggle-row" id="rec_logbox"'+(isShop?' style="display:none"':'')+'><span>📌 純紀錄（已發生／要記的事，免打勾）</span><label class="switch"><input type="checkbox" id="rec_isLog"'+(r.isLog?" checked":"")+'><span class="slider"></span></label></div>'+
-    '<div class="field"><label>備註（可選）</label><textarea id="rec_note" placeholder="補充說明">'+esc(r.note||"")+'</textarea></div>';
-
-  openSheet(isShop?(isEdit?"編輯採購":"新增採購"):(isEdit?"編輯記事":"新增記事"), html,
-    function(){ saveRecord(isEdit?r.id:null, r); },
-    isEdit?function(){ deleteRecord(r.id, r.title); }:null);
-
-  renderAssigneeChips();
-  wireIconPicker("rec_category", function(v){
-    const shop=v==="shopping";
-    $("rec_shopbox").style.display=shop?"":"none";
-    $("rec_amountbox").style.display=shop?"none":"";
-    $("rec_cdbox").style.display=shop?"none":"";
-    $("rec_logbox").style.display=shop?"none":"";
-    $("rec_endbox").style.display=shop?"none":"";
-    $("rec_timebox").style.display=shop?"none":"";
-  });
-  wireIconPicker("rec_subcategory");
-  $("rec_manage").addEventListener("click", openPeopleManager);
-  $("rec_addperson").addEventListener("click", async function(){
-    const nm=$("rec_newperson").value.trim();
-    if(!nm){ toast("請輸入名稱"); return; }
-    const id=await savePerson(nm);
-    if(id){ formAssignees.add(id); $("rec_newperson").value=""; renderAssigneeChips(); }
-  });
-}
-function renderAssigneeChips(){
-  const box=$("rec_assignees"); if(!box) return;
-  const ppl=Object.entries(state.people);
-  if(ppl.length===0){ box.innerHTML='<span style="font-size:12px;color:var(--faint)">尚無人員，請於下方新增</span>'; return; }
-  box.innerHTML=ppl.map(([id,p])=>'<button type="button" class="chip'+(formAssignees.has(id)?" on":"")+'" data-id="'+id+'">'+esc(p.name)+'</button>').join("");
-  box.querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click", ()=>{
-    const id=ch.getAttribute("data-id");
-    if(formAssignees.has(id)){ formAssignees.delete(id); ch.classList.remove("on"); }
-    else { formAssignees.add(id); ch.classList.add("on"); }
-  }));
-}
-function saveRecord(id, prev){
-  if(!requireAuth()) return;
-  const title=$("rec_title").value.trim();
-  if(!title){ toast("請輸入標題"); return; }
-  const category=$("rec_category").value;
-  const isShop=category==="shopping";
-  const dateStart=$("rec_dateStart").value||"";
-  const dateEnd=$("rec_dateEnd").value||"";
-  if(dateStart && dateEnd && dateEnd<dateStart){ toast("結束日期不能早於開始日期"); return; }
-  const isLog = !isShop && $("rec_isLog").checked;
-  if(isLog && !dateStart){ toast("純紀錄要有日期（會列入行事曆）"); return; }
-  const ru = $("rec_repeatUnit").value;
-  const repeating = !!(ru && ru!=="none");
-  const isRepTask = repeating && !isLog && !isShop;     // 重複的一般記事 → 完成改逐次(doneDates)
-  const done = isLog ? false : (isRepTask ? false : !!(prev && (prev.status==="done" || prev.doneDate)));
-  // 狀態由「有無日期 + 是否完成」自動推得；純紀錄為 log；重複的一般記事保持 scheduled，完成逐次記
-  const kind = isLog ? "log" : (done ? "done" : (dateStart ? "scheduled" : "todo"));
-
-  const data={
-    kind, title, category,
-    isLog,
-    dateStart, dateEnd,
-    start: $("rec_start").value||"",
-    end:   $("rec_end").value||"",
-    assignees: Array.from(formAssignees),
-    urgent:    $("rec_urgent").checked,
-    countdown: $("rec_category").value==="shopping" ? false : $("rec_countdown").checked,
-    note:      $("rec_note").value.trim(),
-    status:    done ? "done" : "pending",
-    createdAt: (prev&&prev.createdAt) ? prev.createdAt : Date.now()
-  };
-  if(isShop){
-    data.subcategory=$("rec_subcategory").value||"other";
-    data.qty=Math.max(1, Number($("rec_qty").value)||1);
-    const pv=$("rec_price").value;
-    data.amount = (pv!=="" && !isNaN(Number(pv))) ? Number(pv) : null;
-  } else {
-    data.subcategory=null; data.qty=null;
-    const av=$("rec_amount").value;
-    data.amount = (av!=="" && !isNaN(Number(av))) ? Number(av) : null;
-  }
-  // 完成日：完成則保留原本或補今天；非完成則清掉
-  data.doneDate = done ? ((prev&&prev.doneDate) ? prev.doneDate : ymd(new Date())) : null;
-
-  // 重複（3b）
-  if(repeating){
-    data.repeat={ unit:ru, every:Math.max(1, Number($("rec_repeatEvery").value)||1), mode:"onDone" };
-  } else {
-    data.repeat=null;
-  }
-  if(isRepTask){ data.doneDates = (prev && Array.isArray(prev.doneDates)) ? prev.doneDates : []; }
-  data.spawned = !!(prev && prev.spawned);   // 沿用，避免重複生成
-  data.cal = (prev && prev.cal) || state.currentCal;   // 歸到目前行事曆
-
-  if(LOCAL_MODE){
-    const key=id||genId();
-    const merged=Object.assign({}, state.records[key]||{}, data);
-    if(data.subcategory===null) delete merged.subcategory;
-    if(data.qty===null) delete merged.qty;
-    if(data.amount===null) delete merged.amount;
-    if(data.doneDate===null) delete merged.doneDate;
-    if(data.repeat===null) delete merged.repeat;
-    state.records[key]=merged;
-    lsSaveRecords();
-    if(dateStart) state.selected=dateStart;
-    closeSheet(); renderAll(); toast(id?"已更新":"已新增");
-    return;
-  }
-  (async()=>{
-    try{
-      const key=id||db.ref("records").push().key;
-      await db.ref("records/"+key).update(data);
-      if(!id) pushActivity(title, kind);
-      if(dateStart) state.selected=dateStart;
-      closeSheet(); toast(id?"已更新":"已新增");
-    }catch(err){ console.error(err); toast("儲存失敗"); }
-  })();
-}
-function dayBefore(ds){ const d=new Date(ds+"T00:00:00"); d.setDate(d.getDate()-1); return ymd(d); }
-function deleteRecord(id, title, occDate){
-  if(!requireAuth()) return;
-  if(!id){ toast("缺少資料 ID"); return; }
-  const r=state.records[id];
-  const isRep = r && hasRepeat(r) && r.category!=="shopping" && r.dateStart;
-  const doFull = function(){
-    if(!LOCAL_MODE){ db.ref("records/"+id).remove().catch(e=>{ console.error(e); toast("雲端刪除失敗"); }); }
-    delete state.records[id];
-    if(LOCAL_MODE) lsSaveRecords();
-    closeSheet(); renderAll(); toast("已刪除");
-  };
-  // 重複記事，刪「後面某一筆」→ 刪此筆及之後、保留之前
-  if(isRep && occDate && occDate > r.dateStart){
-    openConfirm("刪除重複記事",
-      "「<b>"+esc(title||"此記事")+"</b>」是重複記事。<br>將刪除 <b>"+esc(occDate)+"</b> 及之後的重複，<b>先前的紀錄會保留</b>。",
-      function(){
-        const until=dayBefore(occDate);
-        if(LOCAL_MODE){ state.records[id].repeatUntil=until; lsSaveRecords(); closeSheet(); renderAll(); toast("已停止此筆之後的重複"); return; }
-        db.ref("records/"+id+"/repeatUntil").set(until).then(()=>{ closeSheet(); toast("已停止此筆之後的重複"); }).catch(e=>{ console.error(e); toast("更新失敗"); });
-      }, "確定刪除");
-    return;
-  }
-  // 重複記事，刪「原始那筆」或整筆刪 → 移除整個重複
-  if(isRep){
-    openConfirm("刪除整個重複",
-      "「<b>"+esc(title||"此記事")+"</b>」是重複記事的第一筆。<br>刪除會移除<b>整個重複（所有日期，包含未來）</b>，確定嗎？",
-      doFull, "確定刪除");
-    return;
-  }
-  // 非重複 / 採購 → 一般刪除
-  openConfirm("刪除記事", "確定刪除「<b>"+esc(title||"此記事")+"</b>」嗎？", doFull, "確定刪除");
-}
-
-/* ============================================================
-   8.5 年度目標（3c）
-   ============================================================ */
-$("addGoalBtn").addEventListener("click", ()=>openGoalForm(null));
-if($("activityBtn")) $("activityBtn").addEventListener("click", openActivityPanel);
-if($("goalYearFilter")) $("goalYearFilter").addEventListener("change", renderGoals);
-
-function daysToYearEnd(year){
-  const end=new Date(year,11,31); const today=new Date(); today.setHours(0,0,0,0);
-  return Math.max(0, Math.ceil((end-today)/86400000));
-}
-function goalProgress(g){
-  if(g.type==="simple"){
-    return g.done ? { done:0, total:0, pct:100, complete:true } : { done:0, total:0, pct:0, simple:true };
-  }
-  if(g.type==="milestone"){
-    const ms=g.milestones||[]; const done=ms.filter(m=>m.done).length;
-    return { done, total:ms.length, pct: ms.length? Math.round(done/ms.length*100):0 };
-  }
-  const tgt=Number(g.target)||0, cur=Number(g.current)||0, st=(g.start!=null)?Number(g.start):0;
-  let pct;
-  if(tgt===st) pct = (cur===tgt?100:0);
-  else pct = Math.max(0, Math.min(100, Math.round((cur-st)/(tgt-st)*100)));
-  return { done:cur, total:tgt, pct, complete: pct>=100 };
-}
-// 數值型分段間隔：依起始→目標、每 step 一階，回傳階段點與是否已達到
-function goalSegments(g){
-  if(g.type!=="number") return [];
-  const step=Math.abs(Number(g.step)||0); if(step<=0) return [];
-  const st=(g.start!=null)?Number(g.start):0, tgt=Number(g.target)||0, cur=Number(g.current)||0;
-  if(tgt===st) return [];
-  const up = tgt>st;
-  const n=Math.floor(Math.abs(tgt-st)/step);
-  const segs=[];
-  for(let i=1;i<=n;i++){
-    const v = up ? st+step*i : st-step*i;
-    if(up ? v>=tgt : v<=tgt) break;
-    segs.push({ val:v, done: up? cur>=v : cur<=v });
-  }
-  segs.push({ val:tgt, done: up? cur>=tgt : cur<=tgt });
-  return segs;
-}
-function renderGoals(){
-  const wrap=$("goalList"); if(!wrap) return;
-  const yr=new Date().getFullYear();
-  const ye=$("goalYearEnd"); if(ye) ye.textContent="距離 "+yr+" 年底還有 "+daysToYearEnd(yr)+" 天";
-  let arr=Object.entries(state.goals||{}).map(([id,g])=>Object.assign({id},g));
-  // 年度篩選下拉：列出有資料的年份＋今年，預設今年
-  const sel=$("goalYearFilter");
-  let yf=String(yr);
-  if(sel){
-    const prev=sel.value;
-    const years=Array.from(new Set(arr.map(g=>String(g.year||yr)).concat([String(yr)]))).sort((a,b)=>Number(b)-Number(a));
-    sel.innerHTML=years.map(y=>'<option value="'+y+'">'+y+' 年</option>').join("")+'<option value="all">全部</option>';
-    sel.value=(prev && (years.includes(prev)||prev==="all"))?prev:String(yr);
-    yf=sel.value;
-  }
-  if(yf && yf!=="all") arr=arr.filter(g=>String(g.year||yr)===yf);
-  arr.sort((a,b)=>((b.year||0)-(a.year||0)) || ((a.createdAt||0)-(b.createdAt||0)));
-  if(arr.length===0){ wrap.innerHTML='<div class="empty-state">'+((yf&&yf!=="all")?(yf+' 年還沒有目標。'):'還沒有目標，點「＋ 新增目標」開始。')+'</div>'; return; }
-  wrap.innerHTML=""; arr.forEach(g=>wrap.appendChild(goalCard(g)));
-}
-function goalCard(g){
-  const card=document.createElement("div");
-  card.className="card goal-card";
-  const p=goalProgress(g); const col=catColor(g.category);
-  let h='<div class="stripe" style="background:'+col+'"></div><div class="body">';
-  h+='<div class="row1"><span class="name">'+esc(g.title)+'</span></div>';
-  h+='<div class="meta">'+pillHtml(g.category)+' <span>'+esc(g.year||"")+'</span></div>';
-  if(g.type==="simple"){
-    h+='<div class="goal-status'+(p.complete?' is-done':'')+'">'+(p.complete?"已完成 🎉":"進行中")+'</div>';
-  } else {
-    h+='<div class="goal-prog"><div class="goal-bar"><div class="goal-fill" style="width:'+p.pct+'%;background:'+col+'"></div></div><div class="goal-pct">'+p.pct+'%</div></div>';
-    if(g.type==="milestone"){
-      h+='<div class="goal-sub">完成 '+p.done+' / '+p.total+' 項</div><div class="goal-ms">';
-      const msList=(g.milestones||[]).map((m,i)=>({m,i}));
-      msList.sort((a,b)=>{ const da=a.m.date||"9999-99", db_=b.m.date||"9999-99"; return da<db_?-1:da>db_?1:a.i-b.i; });
-      msList.forEach(({m,i})=>{ h+='<label class="ms-row"><input type="checkbox" data-ms="'+i+'"'+(m.done?" checked":"")+'><span'+(m.done?' class="ms-done"':'')+'>'+esc(m.text)+(m.date?' <span style="color:var(--faint);font-size:12px">📅 '+esc(m.date.slice(5))+'</span>':'')+'</span></label>'; });
-      h+='</div>';
-    } else {
-      h+='<div class="goal-sub">'+esc(p.done)+' / '+esc(p.total)+' '+esc(g.unit||"")+(p.complete?'　已完成 🎉':'')+'</div>';
-      const segs=goalSegments(g);
-      if(segs.length){ h+='<div class="goal-segs">'+segs.map(s=>'<span class="seg'+(s.done?' seg-done':'')+'">'+esc(s.val)+(s.done?' ✓':'')+'</span>').join("")+'</div>'; }
-    }
-  }
-  h+='</div><div class="acts">';
-  if(g.type==="number") h+='<button class="icon-btn" data-prog>＋進度</button><button class="icon-btn" data-fin>✓ 標記完成</button>';
-  if(g.type==="simple") h+='<button class="icon-btn" data-done>'+(g.done?"↩︎ 取消完成":"✓ 標記完成")+'</button>';
-  h+='<button class="icon-btn" data-next title="複製到明年">📋 明年繼續</button>';
-  h+='<button class="icon-btn" data-edit>✏️</button><button class="icon-btn" data-del>🗑</button></div>';
-  card.innerHTML=h;
-  card.querySelector("[data-edit]").addEventListener("click", ()=>openGoalForm(g));
-  card.querySelector("[data-del]").addEventListener("click", ()=>deleteGoal(g.id, g.title));
-  const nb=card.querySelector("[data-next]"); if(nb) nb.addEventListener("click", ()=>copyGoalToNextYear(g));
-  const pb=card.querySelector("[data-prog]"); if(pb) pb.addEventListener("click", ()=>updateGoalProgress(g));
-  const fb=card.querySelector("[data-fin]"); if(fb) fb.addEventListener("click", ()=>markGoalDone(g.id));
-  const dn=card.querySelector("[data-done]"); if(dn) dn.addEventListener("click", ()=>toggleGoalDone(g.id));
-  card.querySelectorAll("[data-ms]").forEach(cb=>cb.addEventListener("change", function(){ toggleMilestone(g.id, Number(this.getAttribute("data-ms"))); }));
-  return card;
-}
-function markGoalDone(id){
-  const g=state.goals[id]; if(!g) return;
-  const tgt=Number(g.target)||0;
-  saveGoalPatch(id, { current: tgt });   // 目前值＝目標值 → 100%、區間全達成
-}
-function toggleGoalDone(id){
-  const g=state.goals[id]; if(!g) return;
-  saveGoalPatch(id, { done: !g.done });
-}
-function updateGoalProgress(g){
-  const cur=prompt("更新「"+g.title+"」目前進度"+(g.unit?("（"+g.unit+"）"):""), g.current!=null?g.current:0);
-  if(cur===null) return;
-  const v=Number(cur); if(isNaN(v)){ toast("請輸入數字"); return; }
-  saveGoalPatch(g.id, { current:v });
-}
-function toggleMilestone(id, idx){
-  const g=state.goals[id]; if(!g) return;
-  const ms=(g.milestones||[]).slice(); if(!ms[idx]) return;
-  ms[idx]={ text:ms[idx].text, done:!ms[idx].done, date:ms[idx].date||null };
-  saveGoalPatch(id, { milestones:ms });
-}
-function saveGoalPatch(id, patch){
-  if(!requireAuth()) return;
-  if(LOCAL_MODE){ Object.assign(state.goals[id], patch); lsSaveGoals(); renderGoals(); return; }
-  db.ref("goals/"+id).update(patch).catch(e=>{ console.error(e); toast("更新失敗"); });
-}
-function copyGoalToNextYear(g){
-  if(!requireAuth()) return;
-  const ny=(Number(g.year)||new Date().getFullYear())+1;
-  const copy=Object.assign({}, g); delete copy.id;
-  copy.year=ny; copy.createdAt=Date.now(); copy.done=false;
-  if(copy.type==="milestone" && Array.isArray(copy.milestones)) copy.milestones=copy.milestones.map(m=>({text:m.text,done:false,date:m.date||null}));
-  if(copy.type==="number") copy.current=(copy.start!=null?copy.start:0);
-  const after=function(){ const sel=$("goalYearFilter"); if(sel){ sel.value=String(ny); } renderGoals(); toast("已複製到 "+ny+" 年"); };
-  if(LOCAL_MODE){ const key=genId(); state.goals[key]=copy; lsSaveGoals(); after(); return; }
-  const key=db.ref("goals").push().key;
-  db.ref("goals/"+key).update(copy).then(after).catch(e=>{ console.error(e); toast("複製失敗"); });
-}
-function deleteGoal(id, title){
-  if(!requireAuth()) return;
-  if(!confirm("確定刪除目標「"+(title||"")+"」？")) return;
-  if(LOCAL_MODE){ delete state.goals[id]; lsSaveGoals(); closeSheet(); renderGoals(); toast("已刪除"); return; }
-  db.ref("goals/"+id).remove().then(()=>{ closeSheet(); toast("已刪除"); }).catch(e=>{ console.error(e); toast("刪除失敗"); });
-}
-
-let goalMilestones=[];   // 編輯時暫存里程碑
-function openGoalForm(goal){
-  const isEdit=!!goal; const g=goal||{};
-  const type=g.type||"number"; const cat=g.category||"life"; const yr=g.year||new Date().getFullYear();
-  const dir=g.dir||((g.target!=null&&g.start!=null&&Number(g.target)<Number(g.start))?"down":"up");
-  goalMilestones=(g.milestones||[]).map(m=>({text:m.text,done:!!m.done,date:m.date||""}));
-  const html=
-    '<div class="field"><label>目標名稱</label><input id="g_title" autocomplete="off" value="'+esc(g.title||"")+'" placeholder="例如：存到 30 萬"></div>'+
-    '<div class="two">'+
-      '<div class="field"><label>年度</label><input id="g_year" type="number" value="'+yr+'"></div>'+
-      '<div class="field"><label>類型</label><select id="g_type">'+
-        '<option value="number"'+(type==="number"?" selected":"")+'>數值型（進度條）</option>'+
-        '<option value="milestone"'+(type==="milestone"?" selected":"")+'>里程碑型（清單）</option>'+
-        '<option value="simple"'+(type==="simple"?" selected":"")+'>簡單型（進行中／已完成）</option>'+
-      '</select></div>'+
-    '</div>'+
-    '<div class="field"><label>分類</label>'+iconPicker("g_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
-    '<div id="g_numbox"'+(type==="number"?"":' style="display:none"')+'>'+
-      '<div class="two">'+
-        '<div class="field"><label>方向</label><select id="g_dir">'+
-          '<option value="up"'+(dir==="up"?" selected":"")+'>遞增（往上加）</option>'+
-          '<option value="down"'+(dir==="down"?" selected":"")+'>遞減（往下減，如減重）</option>'+
-        '</select></div>'+
-        '<div class="field"><label>間隔（選填）</label><input id="g_step" type="number" value="'+(g.step!=null?g.step:"")+'" placeholder="每階，如 50000"></div>'+
-      '</div>'+
-      '<div class="two">'+
-        '<div class="field"><label>目標值</label><input id="g_target" type="number" value="'+(g.target!=null?g.target:"")+'" placeholder="300000"></div>'+
-        '<div class="field"><label>目前</label><input id="g_current" type="number" value="'+(g.current!=null?g.current:0)+'"></div>'+
-      '</div>'+
-      '<div class="field"><label>單位（選填）</label><input id="g_unit" autocomplete="off" value="'+esc(g.unit||"")+'" placeholder="元 / 本 / 次"></div>'+
-    '</div>'+
-    '<div id="g_msbox"'+(type==="milestone"?"":' style="display:none"')+'>'+
-      '<div class="label-row"><label>里程碑清單</label><span class="manage-link" id="g_addms">＋ 加一項</span></div>'+
-      '<div id="g_mslist"></div>'+
-    '</div>'+
-    '<div class="field"><label>備註（可選）</label><textarea id="g_note" placeholder="補充說明">'+esc(g.note||"")+'</textarea></div>';
-  openSheet(isEdit?"編輯目標":"新增目標", html,
-    function(){ saveGoal(isEdit?g.id:null, g); },
-    isEdit?function(){ deleteGoal(g.id, g.title); }:null);
-  wireIconPicker("g_category");
-  $("g_type").addEventListener("change", function(){
-    $("g_numbox").style.display=this.value==="number"?"":"none";
-    $("g_msbox").style.display=this.value==="milestone"?"":"none";
-  });
-  $("g_addms").addEventListener("click", function(){ goalMilestones.push({text:"",done:false,date:""}); renderMsEditor(); });
-  renderMsEditor();
-}
-function renderMsEditor(){
-  const box=$("g_mslist"); if(!box) return;
-  box.innerHTML=goalMilestones.map((m,i)=>'<div class="ms-edit"><input data-mi="'+i+'" autocomplete="off" value="'+esc(m.text)+'" placeholder="里程碑 '+(i+1)+'"><input type="date" data-mdate="'+i+'" value="'+(m.date||"")+'" style="flex:none;width:140px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px"><button type="button" class="ms-del" data-md="'+i+'">✕</button></div>').join("")
-    || '<div style="font-size:12px;color:var(--faint);padding:4px 2px">點上方「＋ 加一項」新增里程碑（日期選填，填了會出現在行事曆）</div>';
-  box.querySelectorAll("[data-mi]").forEach(inp=>inp.addEventListener("input", function(){ goalMilestones[Number(this.getAttribute("data-mi"))].text=this.value; }));
-  box.querySelectorAll("[data-mdate]").forEach(inp=>inp.addEventListener("change", function(){ goalMilestones[Number(this.getAttribute("data-mdate"))].date=this.value; }));
-  box.querySelectorAll("[data-md]").forEach(b=>b.addEventListener("click", function(){ goalMilestones.splice(Number(this.getAttribute("data-md")),1); renderMsEditor(); }));
-}
-function saveGoal(id, prev){
-  if(!requireAuth()) return;
-  const title=$("g_title").value.trim(); if(!title){ toast("請輸入目標名稱"); return; }
-  const type=$("g_type").value;
-  const data={
-    title, year:Number($("g_year").value)||new Date().getFullYear(),
-    type, category:$("g_category").value||"life",
-    note:$("g_note").value.trim(),
-    createdAt:(prev&&prev.createdAt)?prev.createdAt:Date.now()
-  };
-  if(type==="number"){
-    data.target=Number($("g_target").value)||0;
-    data.current=Number($("g_current").value)||0;
-    data.dir=($("g_dir").value==="down")?"down":"up";
-    const stp=$("g_step").value;
-    data.step=(stp!=="")?(Math.abs(Number(stp))||null):null;
-    // 起始值自動：同方向編輯保留原值；新建（不分方向）都用目前值當起點
-    if(id && prev && prev.start!=null && (prev.dir||"up")===data.dir) data.start=Number(prev.start)||0;
-    else data.start=data.current;
-    data.unit=$("g_unit").value.trim();
-    data.milestones=null; data.progress=null; data.done=null;
-  } else if(type==="milestone"){
-    data.milestones=goalMilestones.filter(m=>(m.text||"").trim()).map(m=>({text:m.text.trim(),done:!!m.done,date:m.date||null}));
-    data.target=null; data.current=null; data.unit=null; data.progress=null; data.start=null; data.step=null; data.dir=null; data.done=null;
-  } else {   // simple（進行中／已完成）
-    data.done=!!(prev&&prev.done);
-    data.target=null; data.current=null; data.unit=null; data.milestones=null; data.progress=null; data.start=null; data.step=null; data.dir=null;
-  }
-  if(LOCAL_MODE){
-    const key=id||genId();
-    const merged=Object.assign({}, state.goals[key]||{}, data);
-    ["target","current","unit","milestones","progress","start","step","dir","done"].forEach(k=>{ if(data[k]===null) delete merged[k]; });
-    state.goals[key]=merged; lsSaveGoals(); closeSheet(); renderGoals(); toast(id?"已更新":"已新增"); return;
-  }
-  const key=id||db.ref("goals").push().key;
-  db.ref("goals/"+key).update(data).then(()=>{ closeSheet(); toast(id?"已更新":"已新增"); }).catch(e=>{ console.error(e); toast("儲存失敗"); });
-}
-
-/* ============================================================
-   9. 執行人（人員）
-   ============================================================ */
-async function savePerson(name){
-  if(!requireAuth()) return null;
-  name=(name||"").trim(); if(!name) return null;
-  if(LOCAL_MODE){ const id=genId(); state.people[id]={ name, createdAt:Date.now() }; lsSavePeople(); return id; }
-  try{
-    const id=db.ref("people").push().key;
-    await db.ref("people/"+id).update({ name, createdAt:Date.now() });
-    state.people[id]={ name, createdAt:Date.now() };  // 樂觀更新，listener 之後同步
-    return id;
-  }catch(e){ console.error(e); toast("新增人員失敗"); return null; }
-}
-async function removePerson(id){
-  if(LOCAL_MODE){ delete state.people[id]; lsSavePeople(); renderAll(); return; }
-  try{ await db.ref("people/"+id).remove(); }catch(e){ console.error(e); toast("刪除失敗"); }
-}
-function openPeopleManager(){
-  const ppl=Object.entries(state.people);
-  const list= ppl.length
-    ? '<div id="pm_list">'+ppl.map(([id,p])=>'<div class="person-row"><span>'+esc(p.name)+'</span><button class="del" data-id="'+id+'" type="button">刪除</button></div>').join("")+'</div>'
-    : '<div id="pm_list"><p style="color:var(--faint);font-size:13px">尚無人員</p></div>';
-  openSheet("管理執行人",
-    list+'<div class="chip-add" style="margin-top:12px"><input id="pm_new" autocomplete="off" placeholder="新增人員名稱"><button id="pm_add" type="button">＋ 新增</button></div>',
-    closeSheet, null, "完成");
-  $("pm_add").addEventListener("click", async ()=>{
-    const nm=$("pm_new").value.trim(); if(!nm){ toast("請輸入名稱"); return; }
-    await savePerson(nm); openPeopleManager();
-  });
-  document.querySelectorAll("#pm_list .del").forEach(b=>b.addEventListener("click", async ()=>{
-    if(!confirm("刪除此人員？（既有記事的指派會略過此人）")) return;
-    await removePerson(b.getAttribute("data-id")); openPeopleManager();
-  }));
-}
-
-/* ============================================================
-   10. 通用 Modal
-   ============================================================ */
-function openSheet(title, innerHTML, onSave, onDelete, saveLabel){
-  const root=$("modalRoot");
-  root.innerHTML=
-    '<div class="overlay" id="ovl"><div class="sheet" id="sheet">'+
-      '<h3>'+esc(title)+'</h3>'+innerHTML+
-      '<div class="sheet-acts"><button class="btn-ghost" id="sheetCancel">取消</button>'+
-      '<button class="btn-primary" id="sheetSave">'+(saveLabel||"儲存")+'</button></div>'+
-      (onDelete?'<button class="btn-danger" id="sheetDelete">刪除</button>':'')+
-    '</div></div>';
-  $("sheetCancel").addEventListener("click", closeSheet);
-  $("sheetSave").addEventListener("click", onSave||closeSheet);
-  if(onDelete) $("sheetDelete").addEventListener("click", onDelete);
-  $("ovl").addEventListener("click", e=>{ if(e.target.id==="ovl") closeSheet(); });
-}
-function closeSheet(){ $("modalRoot").innerHTML=""; }
-
-/* 自製確認視窗（疊在最上層，手機一定會跳） */
-function openConfirm(title, messageHtml, onConfirm, confirmLabel){
-  let root=$("confirmRoot");
-  if(!root){ root=document.createElement("div"); root.id="confirmRoot"; document.body.appendChild(root); }
-  root.innerHTML=
-    '<div class="overlay" id="cfmOvl" style="z-index:80"><div class="sheet" id="cfmSheet">'+
-      '<h3>'+esc(title)+'</h3>'+
-      '<p style="font-size:14px;color:var(--ink);line-height:1.6;margin:0 0 18px">'+messageHtml+'</p>'+
-      '<div class="sheet-acts"><button class="btn-ghost" id="cfmCancel">取消</button>'+
-      '<button class="btn-danger" id="cfmOk">'+esc(confirmLabel||"確定")+'</button></div>'+
-    '</div></div>';
-  const close=()=>{ root.innerHTML=""; };
-  $("cfmCancel").addEventListener("click", close);
-  $("cfmOvl").addEventListener("click", e=>{ if(e.target.id==="cfmOvl") close(); });
-  $("cfmOk").addEventListener("click", ()=>{ close(); if(onConfirm) onConfirm(); });
-}
-
-/* ============================================================
-   11. 啟動
-   ============================================================ */
-(async ()=>{ try{ if(await checkAuth()){ state.isAdmin=true; enterApp(); } }catch(err){ console.error(err); } })();
-if(!_firebaseReady){
-  loginMsg.textContent="（離線測試模式：輸入預設密碼即可進入，資料存在本機）";
+/* ---------- 小工具 ---------- */
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+let toastTimer;
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),1800);
 }
 </script>
 </body>
