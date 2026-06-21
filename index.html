@@ -336,6 +336,7 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="logout" id="activityBtn" style="position:relative">🔔<span id="activityBadge" class="act-badge" style="display:none"></span></button>
+      <button class="logout" id="fridgeBtn" title="開啟冰箱管理 App">🧊</button>
       <button class="logout" id="calBtn">📂 行事曆</button>
       <button class="logout" id="logoutBtn">登出</button>
     </div>
@@ -951,6 +952,13 @@ document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState=
    5.5 多行事曆（3d）
    ============================================================ */
 $("calBtn").addEventListener("click", openCalManager);
+if($("fridgeBtn")) $("fridgeBtn").addEventListener("click", openFridgeApp);
+function openFridgeApp(){
+  const store="https://play.google.com/store/apps/details?id=com.meolly.fridge";
+  const intent="intent://#Intent;package=com.meolly.fridge;S.browser_fallback_url="+encodeURIComponent(store)+";end";
+  try{ window.location.href=intent; }
+  catch(e){ window.open(store,"_blank"); }
+}
 
 function ensureDefaultCalendar(){
   if(!state.calendars || Object.keys(state.calendars).length===0){
