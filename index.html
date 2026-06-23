@@ -521,6 +521,7 @@ let formAssignees = new Set();   // 編輯記事時暫存已選執行人
 const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
 const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
 const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
+const APP_VER = "v42";
 const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
 const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
 // 庫存 16 小類 → 行事曆 6 大類（衣物／旅遊備品庫存沒有，只能手動）
@@ -886,6 +887,16 @@ function pushInvDone(itemId, qty){
     localStorage.setItem("inv_done_callbacks", JSON.stringify(q));
   }catch(e){}
 }
+// 監聽庫存 App 的「更新成功」回報 → 跳 ✅（庫存端需在更新後寫入 inv_update_ack 陣列）
+function pollInvAck(){
+  let raw; try{ raw=localStorage.getItem("inv_update_ack"); }catch(e){ return; }
+  if(!raw) return;
+  let arr; try{ arr=JSON.parse(raw); }catch(e){ try{localStorage.removeItem("inv_update_ack");}catch(_){} return; }
+  try{ localStorage.removeItem("inv_update_ack"); }catch(e){}
+  if(!Array.isArray(arr)) return;
+  arr.forEach(a=>{ if(a && a.item_name) toast("✅ 回傳成功："+a.item_name+" +"+(a.qty_added||1)); });
+}
+setInterval(pollInvAck, 3000);
 function invAllItems(){
   let items; try{ items=JSON.parse(localStorage.getItem("inv_v7")||localStorage.getItem("inv_v6")||"[]"); }catch(e){ items=[]; }
   if(!Array.isArray(items)) items=[];
@@ -1078,6 +1089,7 @@ function openCalManager(){
     +'<button id="backupExport" type="button" class="logout" style="flex:1;padding:9px">⬇️ 匯出備份</button>'
     +'<label class="logout" style="flex:1;padding:9px;text-align:center;cursor:pointer">⬆️ 匯入還原<input id="backupImport" type="file" accept="application/json,.json" style="display:none"></label>'
     +'</div></div>';
+  html+='<div style="margin-top:14px;text-align:center;color:var(--faint);font-size:12px">目前版本 '+APP_VER+'</div>';
   openSheet("行事曆", html, null, null);
   const sv=$("sheetSave"); if(sv) sv.style.display="none";
   $("calList").querySelectorAll(".cal-name").forEach(s=>s.addEventListener("click", ()=>setCurrentCal(s.getAttribute("data-cal"))));
@@ -1573,16 +1585,7 @@ function toggleDoneWhole(id){
     // 完成 → 記下完成日（今天），排定日保持不變
     patch.kind="done"; patch.status="done";
     patch.doneDate=ymd(new Date());
-    if(r.category==="shopping"){
-      if(r.invId && r.needStock!==false){
-        pushInvDone(r.invId, r.qty);
-        toast("📦 已回傳庫存："+(r.title||"商品")+" ×"+Math.max(1,Number(r.qty)||1)+"（請開庫存App確認）");
-      } else if(!r.invId){
-        toast("ℹ️ 手動項目、未連庫存 → 不回傳");
-      } else {
-        toast("ℹ️ 需入庫已關 → 不回傳");
-      }
-    }
+    if(r.category==="shopping" && r.invId && r.needStock!==false){ pushInvDone(r.invId, r.qty); }   // 靜默回傳，成功由庫存回報後再跳
     // 採購重複 → 以完成日往後推，生成下一筆（只生一次）
     if(hasRepeat(r) && r.category==="shopping" && !r.spawned){
       patch.spawned=true;
