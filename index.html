@@ -254,6 +254,8 @@
   .pocket-add button:active{background:var(--primary-d)}
 
   /* 分類圖示點選器 */
+  select:disabled{background:var(--bg);color:var(--muted);opacity:1;cursor:not-allowed;border-style:dashed}
+  #rec_subcatlock{color:var(--muted);font-weight:400;font-size:12px}
   .prodresults{margin-top:6px;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
   .prod-row{padding:11px 13px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
   .prod-row:last-child{border-bottom:none}
@@ -1752,7 +1754,7 @@ function openRecordForm(rec, presets){
         '<input id="rec_prodsearch" type="text" autocomplete="off" placeholder="🔍 搜尋商品…" value="'+esc(r.title||"")+'">'+
         '<div id="rec_prodresults" class="prodresults" style="display:none"></div></div>'+
       '<input type="hidden" id="rec_invId" value="'+esc(r.invId||"")+'">'+
-      '<div class="field"><label>大分類'+(r.invId?'（已依商品自動帶入）':'（手動商品才需選）')+'</label>'+
+      '<div class="field"><label>大分類 <span id="rec_subcatlock"></span></label>'+
         '<select id="rec_subcategory">'+SUBCAT_ORDER.map(c=>'<option value="'+c+'"'+(((r.subcategory||"food")===c)?" selected":"")+'>'+SUBCAT_ICON[c]+' '+SUBCAT_LABEL[c]+'</option>').join("")+'</select></div>'+
       '<div class="toggle-row" id="rec_needstockbox"><span>📦 需入庫管理（完成→更新庫存）</span><label class="switch"><input type="checkbox" id="rec_needstock"'+((r.needStock!==undefined?r.needStock:!!r.invId)?" checked":"")+(r.fromInv?" disabled":"")+'><span class="slider"></span></label></div>'+
       '<div class="two">'+
@@ -1803,7 +1805,10 @@ function openRecordForm(rec, presets){
   });
   function _lockSubcat(){
     const sc=$("rec_subcategory"); if(!sc) return;
-    sc.disabled = !!($("rec_invId") && $("rec_invId").value);   // 選到庫存品項→鎖住大分類
+    const locked=!!($("rec_invId") && $("rec_invId").value);
+    sc.disabled = locked;   // 選到庫存品項→鎖住大分類
+    const hint=$("rec_subcatlock");
+    if(hint) hint.textContent = locked ? "🔒 已依商品自動分類" : "（手動商品才需選）";
   }
   function _syncNeedStock(){
     const ns=$("rec_needstock");
