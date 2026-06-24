@@ -518,7 +518,7 @@ let formAssignees = new Set();   // 編輯記事時暫存已選執行人
 const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
 const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
 const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
-const APP_VER = "v52";
+const APP_VER = "v53";
 const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
 const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
 // 庫存 16 小類 → 行事曆 6 大類（衣物／旅遊備品庫存沒有，只能手動）
@@ -875,12 +875,12 @@ function importPendingPurchase(){
   toast("已從庫存帶入："+String(p.item_name)+" ×"+qty);
   if(typeof switchTab==="function") switchTab("shop");
 }
-function pushInvDone(itemId, qty){
+function pushInvDone(itemId, qty, name){
   if(!itemId) return;
   try{
     let q; try{ q=JSON.parse(localStorage.getItem("inv_done_callbacks")||"[]"); }catch(e){ q=[]; }
     if(!Array.isArray(q)) q=[];
-    q.push({ item_id:itemId, qty_added:Math.max(1,Number(qty)||1), done_date:ymd(new Date()) });
+    q.push({ item_id:itemId, qty_added:Math.max(1,Number(qty)||1), done_date:ymd(new Date()), item_name:(name||"") });
     localStorage.setItem("inv_done_callbacks", JSON.stringify(q));
   }catch(e){}
 }
@@ -1590,7 +1590,7 @@ function toggleDoneWhole(id){
     patch.kind="done"; patch.status="done";
     patch.doneDate=ymd(new Date());
     if(r.category==="shopping" && r.invId && r.needStock!==false){
-      pushInvDone(r.invId, r.qty);   // 回傳庫存（月曆/總覽完成）
+      pushInvDone(r.invId, r.qty, r.title);   // 回傳庫存（月曆/總覽完成）
     }
     /* 〔設計備註：回傳成功訊息〕
        目前回傳正常運作，故「完成時」不跳任何訊息（保持安靜）。
@@ -1672,7 +1672,7 @@ function toggleShopDone(id){
   if(!requireAuth()) return;
   const r=state.records[id]; if(!r) return;
   const patch={ kind:"done", status:"done", doneDate:ymd(new Date()) };
-  if(r.invId && r.needStock!==false){ pushInvDone(r.invId, r.qty); }   // 回傳庫存（待購勾完成）
+  if(r.invId && r.needStock!==false){ pushInvDone(r.invId, r.qty, r.title); }   // 回傳庫存（待購勾完成）
   let next=null;
   // 重複採購（onDone）→ 以購買日往後推，生成下一筆
   if(hasRepeat(r) && (r.repeat.mode||"onDone")==="onDone" && !r.spawned){
