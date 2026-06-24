@@ -521,7 +521,7 @@ let formAssignees = new Set();   // 編輯記事時暫存已選執行人
 const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
 const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
 const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
-const APP_VER = "v47";
+const APP_VER = "v50";
 const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
 const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
 // 庫存 16 小類 → 行事曆 6 大類（衣物／旅遊備品庫存沒有，只能手動）
@@ -580,7 +580,7 @@ function countdownText(dateStr){
 function $(id){ return document.getElementById(id); }
 function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
-function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
+function toast(msg, ms){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"), ms||1800); }
 function requireAuth(){ if(!state.user){ toast("尚未登入"); return false; } return true; }
 function genId(){ return "id_"+Date.now()+"_"+Math.floor(Math.random()*100000); }
 function catColor(c){ return CAT_COLOR[c] || "#64748B"; }
@@ -894,9 +894,12 @@ function pollInvAck(){
   let arr; try{ arr=JSON.parse(raw); }catch(e){ try{localStorage.removeItem("inv_update_ack");}catch(_){} return; }
   try{ localStorage.removeItem("inv_update_ack"); }catch(e){}
   if(!Array.isArray(arr)) return;
-  arr.forEach(a=>{ if(a && a.item_name) toast("✅ 回傳成功："+a.item_name+" +"+(a.qty_added||1)); });
+  arr.forEach(a=>{ if(a && a.item_name) toast("✅ 回傳成功："+a.item_name+" +"+(a.qty_added||1), 5000); });
 }
 setInterval(pollInvAck, 3000);
+// 只在「分頁回到前景」時處理，確保「✅ 回傳成功」是在你正看著的分頁跳出（不在背景被吃掉）
+window.addEventListener("focus", pollInvAck);
+document.addEventListener("visibilitychange", function(){ if(!document.hidden) pollInvAck(); });
 function invAllItems(){
   let items; try{ items=JSON.parse(localStorage.getItem("inv_v7")||localStorage.getItem("inv_v6")||"[]"); }catch(e){ items=[]; }
   if(!Array.isArray(items)) items=[];
