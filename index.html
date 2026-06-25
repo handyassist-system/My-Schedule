@@ -102,7 +102,7 @@
   .cal-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:10px 10px 9px;touch-action:pan-y}
   .weekrow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
   .weekrow span{text-align:center;font-size:12px;color:var(--faint);font-weight:600}
-  .weekrow span.sun{color:#EF4444}.weekrow span.sat{color:#3B82F6}
+  .weekrow span.sun{color:#EF4444}.weekrow span.sat{color:#EF4444}
   .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
   .cell{
     aspect-ratio:1/1.1;min-height:46px;border-radius:10px;display:flex;flex-direction:column;
@@ -518,7 +518,7 @@ let formAssignees = new Set();   // 編輯記事時暫存已選執行人
 const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
 const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
 const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
-const APP_VER = "v56";
+const APP_VER = "v58";
 const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
 const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
 // 庫存 16 小類 → 行事曆 6 大類（衣物／旅遊備品庫存沒有，只能手動）
@@ -576,6 +576,15 @@ function countdownText(dateStr){
 /* ---------- 2. 小工具 ---------- */
 function $(id){ return document.getElementById(id); }
 function ymd(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+const _WD=["日","一","二","三","四","五","六"];
+function _wdOf(ds){ if(!ds) return null; const p=String(ds).split("-"); return new Date(Number(p[0]),Number(p[1])-1,Number(p[2])).getDay(); }
+// 「6/25（三）」週末紅字（回傳 HTML，內容皆系統產生、安全）
+function mdWk(ds){
+  if(!ds) return "";
+  const p=String(ds).split("-"); const mo=Number(p[1]), da=Number(p[2]); const g=_wdOf(ds);
+  const txt=mo+"/"+da+"（"+_WD[g]+"）";
+  return (g===0||g===6) ? '<span style="color:#dc2626">'+txt+'</span>' : txt;
+}
 function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
 function toast(msg, ms){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"), ms||1800); }
 function requireAuth(){ if(!state.user){ toast("尚未登入"); return false; } return true; }
@@ -1250,6 +1259,7 @@ function renderCalendar(){
     if(dateStr===state.selected) c.classList.add("sel");
     const hol=holidayName(dateStr);
     if(hol){ c.classList.add("holiday"); c.title=hol; }
+    else { const _wd=new Date(y,m,d).getDay(); if(_wd===0||_wd===6) c.classList.add("holiday"); }
     const info=dotsForDay(dateStr);
     const catCap = info.log ? 3 : 4;
     let dots=info.cats.slice(0,catCap).map(cat=>'<i class="dot" style="background:'+catColor(cat)+'"></i>').join("");
@@ -1270,7 +1280,7 @@ function renderDayEvents(){
     .sort((a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0) return u; return (a.start||"").localeCompare(b.start||""); });
 
   const sel=new Date(state.selected+"T00:00:00");
-  $("dayHeading").textContent = (sel.getMonth()+1)+"/"+sel.getDate()+" 記事";
+  $("dayHeading").innerHTML = mdWk(ymd(sel))+" 記事";
   const hol=holidayName(state.selected);
   const holBanner = hol ? '<div class="hol-banner">🇹🇼 '+esc(hol)+'</div>' : '';
   const msDay=goalMsForDay(state.selected);
@@ -1544,11 +1554,11 @@ function overviewCard(r, k){
   const who=assigneeNames(r.assignees);
   const timeTxt=(r.start||"")+(r.end?(" – "+r.end):"");
   let dateTxt="", datePrefix="";
-  if(r.dateStart){ dateTxt=r.dateStart.slice(5)+(r.dateEnd&&r.dateEnd!==r.dateStart?("~"+r.dateEnd.slice(5)):""); if(k==="todo") datePrefix="預期 "; }
-  else if(k==="done" && r.doneDate){ dateTxt=r.doneDate.slice(5); datePrefix="完成 "; }
+  if(r.dateStart){ dateTxt=mdWk(r.dateStart)+(r.dateEnd&&r.dateEnd!==r.dateStart?("~"+mdWk(r.dateEnd)):""); if(k==="todo") datePrefix="預期 "; }
+  else if(k==="done" && r.doneDate){ dateTxt=mdWk(r.doneDate); datePrefix="完成 "; }
   else if(k==="todo"){ dateTxt="無日期"; }
   const meta=[];
-  if(dateTxt) meta.push(datePrefix+esc(dateTxt));
+  if(dateTxt) meta.push(datePrefix+dateTxt);
   if(timeTxt) meta.push('🕒 '+esc(timeTxt));
   if(r.category==="shopping" && r.qty) meta.push('數量 '+esc(r.qty));
   if(r.amount!=null && r.amount!=="") meta.push('💰 '+esc(r.amount));
@@ -1806,6 +1816,7 @@ function openRecordForm(rec, presets, asCopy){
         '<button type="button" class="btn-ghost" id="rec_dp1" style="padding:5px 11px;font-size:12px">＋1天</button>'+
         '<button type="button" class="btn-ghost" id="rec_dp7" style="padding:5px 11px;font-size:12px">＋7天</button>'+
         ((!!rec&&!asCopy)?'<button type="button" class="btn-ghost" id="rec_dup" style="padding:5px 11px;font-size:12px">📋 複製</button>':'')+
+        '<span id="rec_datewk" style="align-self:center;font-size:13px;font-weight:700;margin-left:4px"></span>'+
       '</div></div>'+
     '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><label>結束日期（可空）</label><input id="rec_dateEnd" type="date" value="'+(r.dateEnd||"")+'"></div>'+
     '<div class="two" id="rec_timebox"'+(isShop?' style="display:none"':'')+'>'+
@@ -1837,7 +1848,10 @@ function openRecordForm(rec, presets, asCopy){
     isEdit?function(){ deleteRecord(r.id, r.title); }:null);
 
   (function(){
-    function _shift(n){ var el=$("rec_dateStart"); if(!el) return; var base=el.value?_ymdToDate(el.value):new Date(); base.setDate(base.getDate()+n); el.value=ymd(base); }
+    function _wkLbl(){ var el=$("rec_dateStart"), lab=$("rec_datewk"); if(!lab) return; lab.innerHTML = (el&&el.value)? mdWk(el.value) : ""; }
+    function _shift(n){ var el=$("rec_dateStart"); if(!el) return; var base=el.value?_ymdToDate(el.value):new Date(); base.setDate(base.getDate()+n); el.value=ymd(base); _wkLbl(); }
+    if($("rec_dateStart")) $("rec_dateStart").addEventListener("change", _wkLbl);
+    _wkLbl();
     if($("rec_dm1")) $("rec_dm1").addEventListener("click", function(){ _shift(-1); });
     if($("rec_dp1")) $("rec_dp1").addEventListener("click", function(){ _shift(1); });
     if($("rec_dp7")) $("rec_dp7").addEventListener("click", function(){ _shift(7); });
