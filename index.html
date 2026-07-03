@@ -540,7 +540,7 @@ let formAssignees = new Set();   // 編輯記事時暫存已選執行人
 const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
 const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
 const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
-const APP_VER = "v72";
+const APP_VER = "v73";
 const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
 const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
 // 庫存 16 小類 → 行事曆 6 大類（衣物／旅遊備品庫存沒有，只能手動）
@@ -909,7 +909,7 @@ function bindData(){
 }
 function renderAll(){ processRecurrences(); refreshOverviewFilterOptions(); renderCalendar(); renderDayEvents(); renderPocket(); renderOverview(); renderShop(); renderGoals(); }
 
-/* ===== 庫存 App 整合（兩個 App 同源 mp65p.github.io，共用 localStorage） ===== */
+/* ===== 庫存 App 整合（兩個 App 同源 handyassist-system.github.io，共用 localStorage） ===== */
 function importPendingPurchase(){
   let raw; try{ raw=localStorage.getItem("inv_pending_purchase"); }catch(e){ return; }
   if(!raw) return;
@@ -1113,11 +1113,11 @@ $("calBtn").addEventListener("click", openCalManager);
 if($("myAppsBtn")) $("myAppsBtn").addEventListener("click", openMyApps);
 function openMyApps(){
   const apps=[
-    {ico:"📦", name:"庫存管理", url:"https://mp65p.github.io/My-Inventory/"},
-    {ico:"✈️", name:"日本旅遊計畫", url:"https://mp65p.github.io/My-Japan-travel/"},
-    {ico:"🍽️", name:"食光地圖", url:"https://mp65p.github.io/My-Food-Map/"},
-    {ico:"🏠", name:"居家服務 CRM", url:"https://mp65p.github.io/MY-CRM/"},
-    {ico:"🌍", name:"造訪足跡", url:"https://mp65p.github.io/My-Visited-Country/"}
+    {ico:"📦", name:"庫存管理", url:"https://handyassist-system.github.io/My-Inventory/"},
+    {ico:"✈️", name:"日本旅遊計畫", url:"https://handyassist-system.github.io/My-Japan-travel/"},
+    {ico:"🍽️", name:"食光地圖", url:"https://handyassist-system.github.io/My-Food-Map/"},
+    {ico:"🏠", name:"居家服務 CRM", url:"https://handyassist-system.github.io/MY-CRM/"},
+    {ico:"🌍", name:"造訪足跡", url:"https://handyassist-system.github.io/My-Visited-Country/"}
   ];
   const html='<div class="app-list">'+apps.map(a=>
     '<a class="app-row" href="'+a.url+'" rel="noopener"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">↗</span></a>'
