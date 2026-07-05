@@ -540,7 +540,7 @@ let formAssignees = new Set();   // 編輯記事時暫存已選執行人
 const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
 const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
 const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
-const APP_VER = "v73";
+const APP_VER = "v75";
 const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
 const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
 // 庫存 16 小類 → 行事曆 6 大類（衣物／旅遊備品庫存沒有，只能手動）
@@ -918,8 +918,14 @@ function importPendingPurchase(){
   if(!p || !p.item_name) return;
   const sub=(p.subcategory && SUBCAT_LABEL[p.subcategory])?p.subcategory:"food";
   const qty=Math.max(1,Number(p.quantity)||1);
+  const _title=String(p.item_name).slice(0,60);
+  // 防重：8秒內已建立同名同來源採購 → 跳過（擋 visibilitychange/pageshow 同時觸發造成的重複）
+  var _dup=Object.values(state.records).some(function(r){
+    return r && r.category==="shopping" && r.title===_title && ((r.invId||"")===(p.item_id||"")) && r.createdAt && (Date.now()-r.createdAt<8000);
+  });
+  if(_dup){ return; }
   writeRecord({
-    category:"shopping", title:String(p.item_name).slice(0,60),
+    category:"shopping", title:_title,
     subcategory:sub, qty:qty, unit:p.unit||"", invId:p.item_id||"", amount:null,
     needStock:true, fromInv:true,
     dateStart:"", status:"pending", createdAt:Date.now(), cal:state.currentCal||"main"
@@ -967,12 +973,6 @@ function invDict(){
     seen.add(k); out.push({name:nm, cat:c.id||""});
   }); });
   return out;
-}
-function setIconPicker(inputId, val){
-  const pick=$(inputId+"_pick"), inp=$(inputId);
-  if(!pick||!inp) return;
-  inp.value=val;
-  pick.querySelectorAll(".iconchip").forEach(x=>x.classList.toggle("on", x.getAttribute("data-v")===val));
 }
 
 /* ===== ⑤ App 內通知（動態）===== */
@@ -1532,6 +1532,30 @@ function buildOverviewRows(){
   return out;
 }
 
+function _purchaseDupKey(r){ return (r.title||'')+'|'+(r.qty||'')+'|'+(r.doneDate||r.dateStart||''); }
+function findDuplicatePurchases(){
+  var groups={};
+  Object.entries(state.records).forEach(function(pair){
+    var r=pair[1]; if(!r || r.category!=='shopping') return;
+    var k=_purchaseDupKey(r); (groups[k]=groups[k]||[]).push({id:pair[0], r:r});
+  });
+  var toDel=[];
+  Object.keys(groups).forEach(function(k){
+    var g=groups[k]; if(g.length<2) return;
+    g.sort(function(a,b){ return (a.r.createdAt||0)-(b.r.createdAt||0); });
+    for(var i=1;i<g.length;i++) toDel.push(g[i].id);   // 保留最早一筆，其餘刪
+  });
+  return toDel;
+}
+function cleanDuplicatePurchases(){
+  var ids=findDuplicatePurchases();
+  if(!ids.length){ toast('沒有發現重複的採購'); return; }
+  if(!confirm('發現 '+ids.length+' 筆重複採購，各保留一筆、刪除多餘，確定？')) return;
+  ids.forEach(function(id){ if(LOCAL_MODE){ delete state.records[id]; } else { db.ref('records/'+id).remove(); } });
+  if(LOCAL_MODE) lsSaveRecords();
+  toast('已清除 '+ids.length+' 筆重複');
+  if(typeof renderAll==='function') renderAll();
+}
 function renderOverview(){
   const wrap=$("ovList");
   const todo = (ovMode==="todo");
@@ -1577,7 +1601,9 @@ function renderOverview(){
 
   const order = statusF==="done" ? ["done","log"] : (statusF==="pending" ? ["scheduled","todo","log"] : ["scheduled","todo","done","log"]);
   let total=order.reduce((n,k)=>n+buckets[k].length,0);
-  const hint = todo ? '<div class="ov-hint">📋 當月未完成 ＋ 逾期（用上方年／月／日可查其他期間）</div>' : '';
+  var _dupN=findDuplicatePurchases().length;
+  var _dupBtn=_dupN>0 ? '<button onclick="cleanDuplicatePurchases()" style="width:100%;margin-bottom:8px;padding:9px;border:none;border-radius:8px;background:#E377C2;color:#fff;font-size:14px;font-weight:600">🧹 清除重複採購（'+_dupN+' 筆）</button>' : '';
+  const hint = _dupBtn + (todo ? '<div class="ov-hint">📋 當月未完成 ＋ 逾期（用上方年／月／日可查其他期間）</div>' : '');
   if(total===0){ wrap.innerHTML=hint+'<div class="empty-state">'+(todo?'目前沒有當月或逾期未完成的事 🎉':'沒有符合的記事，試著調整上方篩選。')+'</div>'; return; }
 
   wrap.innerHTML=hint;
