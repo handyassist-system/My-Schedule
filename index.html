@@ -362,11 +362,30 @@
   <div class="login-card">
     <div class="logo" id="logo">🔐</div>
     <h1>智能行事曆</h1>
-    <p>請輸入授權碼登入</p>
-    <input id="codeInput" class="code-input" type="text" inputmode="text" autocomplete="off" placeholder="請輸入密碼" maxlength="40">
-    <div class="code-hint">輸入登入密碼（英文會自動轉大寫）</div>
+    <p>請輸入 Email 登入</p>
+    <input id="codeInput" class="code-input" type="email" inputmode="email" autocomplete="email" placeholder="請輸入 Email" maxlength="60">
+    <div class="code-hint">首次登入將自動開始 14 天試用</div>
     <button id="loginBtn" class="btn-primary">登入</button>
     <div id="loginMsg" class="login-msg"></div>
+  </div>
+</div>
+
+<!-- ===== 管理員入口選擇（只有 admin 會看到）===== -->
+<div id="adminChoice" class="hidden" style="position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#f5f7fa;padding:24px">
+  <div style="font-size:20px;font-weight:700;color:#333">👋 歡迎回來</div>
+  <div style="font-size:13px;color:#888;margin-top:-8px">請選擇要進入的地方</div>
+  <button id="goCalBtn" style="width:100%;max-width:320px;padding:18px;border:none;border-radius:14px;background:#4a90d9;color:#fff;font-size:17px;font-weight:600">📅 進入行事曆</button>
+  <button id="goAdminBtn" style="width:100%;max-width:320px;padding:18px;border:none;border-radius:14px;background:#2f9e6e;color:#fff;font-size:17px;font-weight:600">🔧 管理後台</button>
+</div>
+
+<!-- ===== 管理後台（空框架，之後填內容）===== -->
+<div id="adminPanel" class="hidden" style="position:fixed;inset:0;z-index:50;background:#fff;overflow:auto">
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #eee;position:sticky;top:0;background:#fff">
+    <button id="adminBackBtn" style="border:none;background:#eee;border-radius:8px;padding:8px 12px;font-size:14px">← 返回</button>
+    <div style="font-size:17px;font-weight:700">🔧 訂閱管理後台</div>
+  </div>
+  <div style="padding:20px;color:#888;text-align:center;margin-top:40px">
+    （後台功能開發中）<br><br>接下來會加入：新增客戶、客戶清單、續約、停用、快到期提醒。
   </div>
 </div>
 
@@ -540,7 +559,7 @@ let formAssignees = new Set();   // 編輯記事時暫存已選執行人
 const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
 const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
 const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
-const APP_VER = "v75";
+const APP_VER = "v79";
 const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
 const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
 // 庫存 16 小類 → 行事曆 6 大類（衣物／旅遊備品庫存沒有，只能手動）
@@ -750,7 +769,7 @@ function buildNextRecord(r, baseDate){
 }
 function writeRecord(rec){
   if(LOCAL_MODE){ const key=genId(); state.records[key]=rec; lsSaveRecords(); }
-  else { const key=db.ref("records").push().key; db.ref("records/"+key).set(rec); }
+  else { const key=uref("records").push().key; uref("records/"+key).set(rec); }
 }
 // 純紀錄(log)+重複：日期過了 → 生下一筆未來的，舊的留著當歷史（生日）
 function processRecurrences(){
@@ -762,7 +781,7 @@ function processRecurrences(){
     // 非純紀錄重複：未來日期卻被標完成 → 清回未完成（保險）
     if(isDone(r) && r.dateStart && r.dateStart > today){
       if(LOCAL_MODE){ const rr=state.records[id]; rr.status="pending"; rr.kind="scheduled"; delete rr.doneDate; changed=true; }
-      else { db.ref("records/"+id).update({ status:"pending", kind:"scheduled", doneDate:null }); }
+      else { uref("records/"+id).update({ status:"pending", kind:"scheduled", doneDate:null }); }
     }
   });
   if(changed && LOCAL_MODE){ lsSaveRecords(); }
@@ -841,36 +860,61 @@ async function fbMigrateIfNeeded(){
 const AUTH_KEY    = "cal_auth";
 const AUTH_FB_KEY = "cal_v1_auth";
 const DEFAULT_CODE = "0430";
+const ADMIN_EMAIL = "mp65p@hotmail.com";
 
 const codeInput=$("codeInput"), loginBtn=$("loginBtn"), loginMsg=$("loginMsg");
 loginBtn.addEventListener("click", doLogin);
-codeInput.addEventListener("input", ()=>{ const p=codeInput.selectionStart; codeInput.value=codeInput.value.toUpperCase(); try{ codeInput.setSelectionRange(p,p); }catch(e){} });
 codeInput.addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
 
-async function resolveCode(){
-  return DEFAULT_CODE;   /* 固定密碼，不可在 App 內變更 */
+function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+// ===== 使用者資料隔離：每個 email 一個空間；0430後門用共用根空間 =====
+function emailKey(e){ return String(e||"").toLowerCase().replace(/[.#$\[\]]/g,"_"); }
+function userBase(){
+  var u=state.user||"";
+  if(u===DEFAULT_CODE) return "";                    // 0430 後門 → 共用根空間(維持舊行為)
+  if(isEmail(u)) return "users/"+emailKey(u)+"/";     // email → 各自空間
+  return "";
 }
-async function checkAuth(){
-  const saved=localStorage.getItem(AUTH_KEY);
-  if(!saved) return false;
-  return saved === await resolveCode();
-}
-async function verifyAuthCode(input){
-  const correct=await resolveCode();
-  if(input===correct){ localStorage.setItem(AUTH_KEY, input); return true; }
-  return false;
-}
+function uref(p){ return db.ref(userBase()+p); }
 
 async function doLogin(){
   loginMsg.textContent="";
-  const code=codeInput.value.trim();
-  if(!code){ loginMsg.textContent="請輸入密碼"; return; }
-  loginBtn.disabled=true; loginBtn.textContent="驗證中…";
-  const ok=await verifyAuthCode(code);
-  loginBtn.disabled=false; loginBtn.textContent="登入";
-  if(ok){ state.isAdmin=true; enterApp(); }
-  else { loginMsg.textContent="密碼錯誤，請重試"; codeInput.value=""; }
+  const input=codeInput.value.trim();
+  if(!input){ loginMsg.textContent="請輸入 Email"; return; }
+  // 後門：0430 → 當管理員
+  if(input===DEFAULT_CODE){ state.isAdmin=true; state.user=DEFAULT_CODE; localStorage.setItem(AUTH_KEY,DEFAULT_CODE); if(hasPendingPurchase()) enterApp(); else showAdminChoice(); return; }
+  if(!isEmail(input)){ loginMsg.textContent="Email 格式不正確"; return; }
+  // 管理員 email → 選擇畫面（但有待帶入採購時直接進行事曆，不打斷）
+  if(input.toLowerCase()===ADMIN_EMAIL){ state.isAdmin=true; state.user=input; localStorage.setItem(AUTH_KEY,input); if(hasPendingPurchase()) enterApp(); else showAdminChoice(); return; }
+  // 一般客戶（第1步：先直接進入，客戶驗證下一步做）
+  state.isAdmin=false; state.user=input; localStorage.setItem(AUTH_KEY,input);
+  enterApp();
 }
+function showAdminChoice(){
+  $("login").classList.add("hidden");
+  $("adminChoice").classList.remove("hidden");
+}
+function openAdminPanel(){
+  $("adminChoice").classList.add("hidden");
+  $("adminPanel").classList.remove("hidden");
+}
+$("goCalBtn").addEventListener("click", ()=>{ $("adminChoice").classList.add("hidden"); enterApp(); });
+$("goAdminBtn").addEventListener("click", openAdminPanel);
+$("adminBackBtn").addEventListener("click", ()=>{ $("adminPanel").classList.add("hidden"); showAdminChoice(); });
+
+function hasPendingPurchase(){ try{ return !!localStorage.getItem("inv_pending_purchase"); }catch(e){ return false; } }
+function autoLogin(){
+  var saved; try{ saved=localStorage.getItem(AUTH_KEY); }catch(e){ saved=null; }
+  if(!saved) return false;                                   // 沒記住 → 顯示登入頁
+  state.user=saved;
+  var isAdmin=(saved===DEFAULT_CODE)||(String(saved).toLowerCase()===ADMIN_EMAIL);
+  state.isAdmin=isAdmin;
+  // 管理員平常到選擇畫面；但採購跳轉(有待帶入採購)時直接進行事曆，不打斷
+  if(isAdmin && !hasPendingPurchase()){ showAdminChoice(); }
+  else { enterApp(); }
+  return true;
+}
+
 function enterApp(){
   state.user = localStorage.getItem(AUTH_KEY) || DEFAULT_CODE;
   $("login").classList.add("hidden");
@@ -881,13 +925,20 @@ function enterApp(){
   renderAll();
 }
 $("logoutBtn").addEventListener("click", ()=>{
-  if(state.recordsBound){ db.ref("records").off(); state.recordsBound=false; }
-  if(state.peopleBound){ db.ref("people").off(); state.peopleBound=false; }
-  state.user=null; state.records={}; state.people={}; state.goals={}; state.isAdmin=false;
+  // 斷開目前使用者的所有綁定（趁 state.user 還在，uref 才指對空間）
+  try{ uref("records").off(); }catch(e){}
+  try{ uref("people").off(); }catch(e){}
+  try{ uref("calendars").off(); }catch(e){}
+  try{ uref("goals").off(); }catch(e){}
+  try{ uref("activity").off(); }catch(e){}
+  state.recordsBound=false; state.peopleBound=false; state.calendarsBound=false; state.goalsBound=false; state.activityBound=false;
+  state.user=null; state.records={}; state.people={}; state.goals={}; state.calendars={}; state.isAdmin=false;
   state.activity=[];
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem("cal_admin_on");
   $("app").classList.add("hidden");
+  var _ac=$("adminChoice"); if(_ac) _ac.classList.add("hidden");
+  var _ap=$("adminPanel"); if(_ap) _ap.classList.add("hidden");
   $("login").classList.remove("hidden");
   codeInput.value=""; loginMsg.textContent="";
 });
@@ -896,13 +947,31 @@ $("logoutBtn").addEventListener("click", ()=>{
 /* ============================================================
    4. 資料綁定
    ============================================================ */
+async function migrateAdminDataIfNeeded(){
+  if(state.user !== ADMIN_EMAIL) return;               // 只搬 admin 自己的
+  var base="users/"+emailKey(ADMIN_EMAIL)+"/";
+  try{
+    var flag=await db.ref(base+"_migrated").once("value");
+    if(flag.val()) return;                             // 已搬過，不重複
+    var mine=await db.ref(base+"records").once("value");
+    if(mine.val() && Object.keys(mine.val()).length){ await db.ref(base+"_migrated").set(true); return; }
+    var updates={};
+    for(const key of ["records","goals","calendars","people"]){
+      var snap=await db.ref(key).once("value");
+      var val=snap.val();
+      if(val && Object.keys(val).length) updates[key]=val;   // 複製共用空間資料
+    }
+    if(Object.keys(updates).length){ await db.ref(base.slice(0,-1)).update(updates); }
+    await db.ref(base+"_migrated").set(true);           // 標記已搬（舊資料不刪，保留當備份）
+  }catch(e){ console.warn("admin 資料搬移略過", e); }
+}
 function bindData(){
   if(LOCAL_MODE){ localMigrateIfNeeded(); lsLoad(); ensureDefaultCalendar(); renderCalBar(); renderAll(); importPendingPurchase(); return; }
-  fbMigrateIfNeeded().then(()=>{
-    if(!state.calendarsBound){ db.ref("calendars").on("value", s=>{ state.calendars=s.val()||{}; ensureDefaultCalendar(); renderCalBar(); renderAll(); }); state.calendarsBound=true; }
-    if(!state.recordsBound){ db.ref("records").on("value", s=>{ state.records=s.val()||{}; renderAll(); }); state.recordsBound=true; }
-    if(!state.peopleBound){ db.ref("people").on("value", s=>{ state.people=s.val()||{}; renderAll(); }); state.peopleBound=true; }
-    if(!state.goalsBound){ db.ref("goals").on("value", s=>{ state.goals=s.val()||{}; renderGoals(); }); state.goalsBound=true; }
+  fbMigrateIfNeeded().then(migrateAdminDataIfNeeded).then(()=>{
+    if(!state.calendarsBound){ uref("calendars").on("value", s=>{ state.calendars=s.val()||{}; ensureDefaultCalendar(); renderCalBar(); renderAll(); }); state.calendarsBound=true; }
+    if(!state.recordsBound){ uref("records").on("value", s=>{ state.records=s.val()||{}; renderAll(); }); state.recordsBound=true; }
+    if(!state.peopleBound){ uref("people").on("value", s=>{ state.people=s.val()||{}; renderAll(); }); state.peopleBound=true; }
+    if(!state.goalsBound){ uref("goals").on("value", s=>{ state.goals=s.val()||{}; renderGoals(); }); state.goalsBound=true; }
     bindActivity();
     setTimeout(importPendingPurchase, 800);
   });
@@ -987,12 +1056,12 @@ function activityLastSeen(){ try{ return Number(localStorage.getItem("cal_actsee
 function setActivityLastSeen(ts){ try{ localStorage.setItem("cal_actseen", String(ts||0)); }catch(e){} }
 function pushActivity(title, kind){
   if(LOCAL_MODE) return;                       // 本機模式無共享對象
-  try{ db.ref("activity").push({ title:(title||"").slice(0,60), kind:kind||"", actor:deviceName()||"有人", ts:Date.now() }); }catch(e){}
+  try{ uref("activity").push({ title:(title||"").slice(0,60), kind:kind||"", actor:deviceName()||"有人", ts:Date.now() }); }catch(e){}
 }
 function bindActivity(){
   if(LOCAL_MODE || state.activityBound) return;
   try{
-    db.ref("activity").limitToLast(40).on("value", s=>{
+    uref("activity").limitToLast(40).on("value", s=>{
       const v=s.val()||{};
       state.activity=Object.entries(v).map(([k,a])=>Object.assign({key:k},a)).sort((x,y)=>(y.ts||0)-(x.ts||0));
       renderActivityBadge();
@@ -1005,11 +1074,11 @@ function pruneActivity(){
   if(LOCAL_MODE) return;
   const cutoff=Date.now()-60*24*60*60*1000;   // 60 天
   try{
-    db.ref("activity").once("value", s=>{
+    uref("activity").once("value", s=>{
       const v=s.val(); if(!v) return;
       const updates={};
       Object.entries(v).forEach(([k,a])=>{ if(((a&&a.ts)||0)<cutoff) updates[k]=null; });
-      if(Object.keys(updates).length) db.ref("activity").update(updates);
+      if(Object.keys(updates).length) uref("activity").update(updates);
     });
   }catch(e){}
 }
@@ -1054,7 +1123,7 @@ function clearActivity(){
   if(!confirm("確定清除動態與殘留回傳？此動作無法復原。")) return;
   try{ localStorage.removeItem("inv_done_callbacks"); localStorage.removeItem("inv_update_ack"); }catch(e){}
   if(LOCAL_MODE){ closeSheet(); toast("已清除殘留回傳"); return; }
-  db.ref("activity").remove().then(()=>{ state.activity=[]; renderActivityBadge(); closeSheet(); toast("已清除動態與殘留回傳"); }).catch(e=>{ console.error(e); toast("清除失敗"); });
+  uref("activity").remove().then(()=>{ state.activity=[]; renderActivityBadge(); closeSheet(); toast("已清除動態與殘留回傳"); }).catch(e=>{ console.error(e); toast("清除失敗"); });
 }
 
 /* 🎒 行事曆頁的百寶袋清單：無日期、未完成、非採購 */
@@ -1127,7 +1196,7 @@ function openMyApps(){
 function ensureDefaultCalendar(){
   if(!state.calendars || Object.keys(state.calendars).length===0){
     state.calendars={ main:{ name:"我的行事曆", createdAt:Date.now() } };
-    if(LOCAL_MODE) lsSaveCalendars(); else db.ref("calendars/main").set(state.calendars.main);
+    if(LOCAL_MODE) lsSaveCalendars(); else uref("calendars/main").set(state.calendars.main);
   }
   if(!state.currentCal || !state.calendars[state.currentCal]){
     state.currentCal = state.calendars["main"] ? "main" : Object.keys(state.calendars)[0];
@@ -1208,7 +1277,7 @@ function doImport(data){
       Object.entries(data.records||{}).forEach(([k,v])=>{ u["records/"+k]=v; });
       Object.entries(data.goals||{}).forEach(([k,v])=>{ u["goals/"+k]=v; });
       Object.entries(data.calendars||{}).forEach(([k,v])=>{ u["calendars/"+k]=v; });
-      db.ref().update(u).then(()=>{ closeSheet(); toast("已還原備份"); }).catch(e=>{ console.error(e); toast("還原失敗"); });
+      db.ref(userBase()).update(u).then(()=>{ closeSheet(); toast("已還原備份"); }).catch(e=>{ console.error(e); toast("還原失敗"); });
     }
   }catch(e){ console.error(e); toast("還原失敗"); }
 }
@@ -1217,7 +1286,7 @@ function addCalendar(name){
   const id=genId();
   const c={ name, createdAt:Date.now() };
   if(LOCAL_MODE){ state.calendars[id]=c; lsSaveCalendars(); }
-  else db.ref("calendars/"+id).set(c);
+  else uref("calendars/"+id).set(c);
   state.calendars[id]=c;
   setCurrentCal(id);
 }
@@ -1242,7 +1311,7 @@ function doDeleteCalendar(id, recs){
     lsSaveRecords(); lsSaveCalendars();
   } else {
     const updates={}; recs.forEach(([rid])=>updates["records/"+rid]=null); updates["calendars/"+id]=null;
-    db.ref().update(updates);
+    db.ref(userBase()).update(updates);
     recs.forEach(([rid])=>delete state.records[rid]); delete state.calendars[id];
   }
   if(state.currentCal===id){ state.currentCal=Object.keys(state.calendars)[0]; try{ localStorage.setItem("cal_current", state.currentCal); }catch(e){} }
@@ -1435,8 +1504,8 @@ function quickAddPocket(){
     start:"", end:"", assignees:[], urgent:false, countdown:false, note:"",
     status:"pending", createdAt:Date.now(), cal:state.currentCal };
   if(LOCAL_MODE){ const key=genId(); state.records[key]=data; lsSaveRecords(); inp.value=""; renderAll(); return; }
-  const key=db.ref("records").push().key;
-  db.ref("records/"+key).update(data).then(()=>{ inp.value=""; pushActivity(title, "todo"); }).catch(e=>{ console.error(e); toast("儲存失敗"); });
+  const key=uref("records").push().key;
+  uref("records/"+key).update(data).then(()=>{ inp.value=""; pushActivity(title, "todo"); }).catch(e=>{ console.error(e); toast("儲存失敗"); });
 }
 function showCalPane(which){
   const day = which!=="pocket";
@@ -1551,7 +1620,7 @@ function cleanDuplicatePurchases(){
   var ids=findDuplicatePurchases();
   if(!ids.length){ toast('沒有發現重複的採購'); return; }
   if(!confirm('發現 '+ids.length+' 筆重複採購，各保留一筆、刪除多餘，確定？')) return;
-  ids.forEach(function(id){ if(LOCAL_MODE){ delete state.records[id]; } else { db.ref('records/'+id).remove(); } });
+  ids.forEach(function(id){ if(LOCAL_MODE){ delete state.records[id]; } else { uref('records/'+id).remove(); } });
   if(LOCAL_MODE) lsSaveRecords();
   toast('已清除 '+ids.length+' 筆重複');
   if(typeof renderAll==='function') renderAll();
@@ -1667,7 +1736,7 @@ function toggleDoneOn(id, dateStr){
   const i = dd.indexOf(d);
   if(i>=0) dd.splice(i,1); else dd.push(d);
   if(LOCAL_MODE){ state.records[id].doneDates = dd; lsSaveRecords(); renderAll(); return; }
-  db.ref("records/"+id+"/doneDates").set(dd).catch(e=>{ console.error(e); toast("更新失敗"); });
+  uref("records/"+id+"/doneDates").set(dd).catch(e=>{ console.error(e); toast("更新失敗"); });
 }
 // 整筆完成（非重複記事、採購）；採購重複仍生成下一筆
 function toggleDoneWhole(id){
@@ -1708,7 +1777,7 @@ function toggleDoneWhole(id){
     if(patch.doneDate===null) delete state.records[id].doneDate;
     lsSaveRecords(); renderAll(); return;
   }
-  db.ref("records/"+id).update(patch).catch(e=>{ console.error(e); toast("更新失敗"); });
+  uref("records/"+id).update(patch).catch(e=>{ console.error(e); toast("更新失敗"); });
 }
 
 
@@ -1782,7 +1851,7 @@ function toggleShopDone(id){
     if(next) writeRecord(next);
     lsSaveRecords(); renderAll(); return;
   }
-  db.ref("records/"+id).update(patch).then(()=>{ if(next) writeRecord(next); }).catch(e=>{ console.error(e); toast("更新失敗"); });
+  uref("records/"+id).update(patch).then(()=>{ if(next) writeRecord(next); }).catch(e=>{ console.error(e); toast("更新失敗"); });
 }
 
 /* ============================================================
@@ -1843,8 +1912,8 @@ function savePocket(id, prev){
   }
   (async()=>{
     try{
-      const key=id||db.ref("records").push().key;
-      await db.ref("records/"+key).update(patch);
+      const key=id||uref("records").push().key;
+      await uref("records/"+key).update(patch);
       if(dateStart) state.selected=dateStart;
       closeSheet(); toast(id?"已更新":"已新增");
     }catch(err){ console.error(err); toast("儲存失敗"); }
@@ -2097,8 +2166,8 @@ function saveRecord(id, prev){
   }
   (async()=>{
     try{
-      const key=id||db.ref("records").push().key;
-      await db.ref("records/"+key).update(data);
+      const key=id||uref("records").push().key;
+      await uref("records/"+key).update(data);
       if(!id) pushActivity(title, kind);
       if(dateStart) state.selected=dateStart;
       closeSheet(); toast(id?"已更新":"已新增");
@@ -2112,7 +2181,7 @@ function deleteRecord(id, title, occDate){
   const r=state.records[id];
   const isRep = r && hasRepeat(r) && r.category!=="shopping" && r.dateStart;
   const doFull = function(){
-    if(!LOCAL_MODE){ db.ref("records/"+id).remove().catch(e=>{ console.error(e); toast("雲端刪除失敗"); }); }
+    if(!LOCAL_MODE){ uref("records/"+id).remove().catch(e=>{ console.error(e); toast("雲端刪除失敗"); }); }
     delete state.records[id];
     if(LOCAL_MODE) lsSaveRecords();
     closeSheet(); renderAll(); toast("已刪除");
@@ -2124,7 +2193,7 @@ function deleteRecord(id, title, occDate){
       function(){
         const until=dayBefore(occDate);
         if(LOCAL_MODE){ state.records[id].repeatUntil=until; lsSaveRecords(); closeSheet(); renderAll(); toast("已停止此筆之後的重複"); return; }
-        db.ref("records/"+id+"/repeatUntil").set(until).then(()=>{ closeSheet(); toast("已停止此筆之後的重複"); }).catch(e=>{ console.error(e); toast("更新失敗"); });
+        uref("records/"+id+"/repeatUntil").set(until).then(()=>{ closeSheet(); toast("已停止此筆之後的重複"); }).catch(e=>{ console.error(e); toast("更新失敗"); });
       }, "確定刪除");
     return;
   }
@@ -2411,7 +2480,7 @@ function toggleMilestone(id, idx){
 function saveGoalPatch(id, patch){
   if(!requireAuth()) return;
   if(LOCAL_MODE){ Object.assign(state.goals[id], patch); lsSaveGoals(); renderGoals(); return; }
-  db.ref("goals/"+id).update(patch).catch(e=>{ console.error(e); toast("更新失敗"); });
+  uref("goals/"+id).update(patch).catch(e=>{ console.error(e); toast("更新失敗"); });
 }
 function copyGoalToNextYear(g){
   if(!requireAuth()) return;
@@ -2424,14 +2493,14 @@ function copyGoalToNextYear(g){
   if(copy.type==="freq") copy.freqLog=[];
   const after=function(){ renderGoals(); toast("已複製目標"); };
   if(LOCAL_MODE){ const key=genId(); state.goals[key]=copy; lsSaveGoals(); after(); return; }
-  const key=db.ref("goals").push().key;
-  db.ref("goals/"+key).update(copy).then(after).catch(e=>{ console.error(e); toast("複製失敗"); });
+  const key=uref("goals").push().key;
+  uref("goals/"+key).update(copy).then(after).catch(e=>{ console.error(e); toast("複製失敗"); });
 }
 function deleteGoal(id, title){
   if(!requireAuth()) return;
   if(!confirm("確定刪除目標「"+(title||"")+"」？")) return;
   if(LOCAL_MODE){ delete state.goals[id]; lsSaveGoals(); closeSheet(); renderGoals(); toast("已刪除"); return; }
-  db.ref("goals/"+id).remove().then(()=>{ closeSheet(); toast("已刪除"); }).catch(e=>{ console.error(e); toast("刪除失敗"); });
+  uref("goals/"+id).remove().then(()=>{ closeSheet(); toast("已刪除"); }).catch(e=>{ console.error(e); toast("刪除失敗"); });
 }
 
 let goalMilestones=[];   // 編輯時暫存里程碑
@@ -2581,8 +2650,8 @@ function saveGoal(id, prev){
     ["target","current","unit","milestones","progress","start","step","dir","done"].forEach(k=>{ if(data[k]===null) delete merged[k]; });
     state.goals[key]=merged; lsSaveGoals(); closeSheet(); renderGoals(); toast(id?"已更新":"已新增"); return;
   }
-  const key=id||db.ref("goals").push().key;
-  db.ref("goals/"+key).update(data).then(()=>{ closeSheet(); toast(id?"已更新":"已新增"); }).catch(e=>{ console.error(e); toast("儲存失敗"); });
+  const key=id||uref("goals").push().key;
+  uref("goals/"+key).update(data).then(()=>{ closeSheet(); toast(id?"已更新":"已新增"); }).catch(e=>{ console.error(e); toast("儲存失敗"); });
 }
 
 /* ============================================================
@@ -2593,15 +2662,15 @@ async function savePerson(name){
   name=(name||"").trim(); if(!name) return null;
   if(LOCAL_MODE){ const id=genId(); state.people[id]={ name, createdAt:Date.now() }; lsSavePeople(); return id; }
   try{
-    const id=db.ref("people").push().key;
-    await db.ref("people/"+id).update({ name, createdAt:Date.now() });
+    const id=uref("people").push().key;
+    await uref("people/"+id).update({ name, createdAt:Date.now() });
     state.people[id]={ name, createdAt:Date.now() };  // 樂觀更新，listener 之後同步
     return id;
   }catch(e){ console.error(e); toast("新增人員失敗"); return null; }
 }
 async function removePerson(id){
   if(LOCAL_MODE){ delete state.people[id]; lsSavePeople(); renderAll(); return; }
-  try{ await db.ref("people/"+id).remove(); }catch(e){ console.error(e); toast("刪除失敗"); }
+  try{ await uref("people/"+id).remove(); }catch(e){ console.error(e); toast("刪除失敗"); }
 }
 function openPeopleManager(){
   const ppl=Object.entries(state.people);
@@ -2660,7 +2729,7 @@ function openConfirm(title, messageHtml, onConfirm, confirmLabel){
 /* ============================================================
    11. 啟動
    ============================================================ */
-(async ()=>{ try{ if(await checkAuth()){ state.isAdmin=true; enterApp(); } }catch(err){ console.error(err); } })();
+autoLogin();
 if(!_firebaseReady){
   loginMsg.textContent="（離線測試模式：輸入預設密碼即可進入，資料存在本機）";
 }
