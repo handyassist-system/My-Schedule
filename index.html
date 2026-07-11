@@ -364,7 +364,7 @@
     <h1>智能行事曆</h1>
     <p>請輸入 Email 登入</p>
     <input id="codeInput" class="code-input" type="email" inputmode="email" autocomplete="email" placeholder="請輸入 Email" maxlength="60">
-    <div class="code-hint">首次登入將自動開始 14 天試用</div>
+    <div class="code-hint">🎁 首次登入即享 14 天「完整版」全功能免費試用</div>
     <button id="loginBtn" class="btn-primary">登入</button>
     <div id="loginMsg" class="login-msg"></div>
   </div>
@@ -384,22 +384,59 @@
     <button id="adminBackBtn" style="border:none;background:#eee;border-radius:8px;padding:8px 12px;font-size:14px">← 返回</button>
     <div style="font-size:17px;font-weight:700">🔧 訂閱管理後台</div>
   </div>
-  <div style="padding:20px;color:#888;text-align:center;margin-top:40px">
-    （後台功能開發中）<br><br>接下來會加入：新增客戶、客戶清單、續約、停用、快到期提醒。
+  <div style="padding:14px 16px">
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button onclick="adminAddCustomer()" style="border:none;background:#2f9e6e;color:#fff;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:600">➕ 新增客戶</button>
+      <button onclick="window._adminOnlyExpiring=!window._adminOnlyExpiring;loadAdminList()" style="border:none;background:#f0ad4e;color:#fff;border-radius:8px;padding:10px 14px;font-size:14px">⚠️ 快到期</button>
+    </div>
+    <input id="adminSearch" oninput="loadAdminList()" placeholder="🔍 搜尋 Email" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:12px;font-size:14px">
+    <div id="adminList"></div>
+    <hr style="margin:20px 0;border:none;border-top:1px solid #eee">
+    <button onclick="previewFree()" style="border:none;background:#E377C2;color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600">🧪 模擬 free 版預覽</button>
+    <button onclick="previewBasic()" style="border:none;background:#5b8def;color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;margin-left:6px">🧪 模擬 進階版</button>
+    <div style="font-size:12px;color:#aaa;margin-top:6px">（測試用）</div>
+  </div>
+</div>
+
+<!-- 🧪 free 預覽橫幅（測試用）-->
+<div id="previewBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:60;background:#E377C2;color:#fff;text-align:center;padding:8px;font-size:13px;font-weight:600">
+  🧪 免費版預覽中　<span onclick="endPreview()" style="text-decoration:underline;cursor:pointer">結束預覽</span>
+</div>
+
+<!-- 後台：改方案 / LINE備註 彈窗 -->
+<div id="adminEdit" class="hidden" style="position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:24px">
+  <div style="background:#fff;border-radius:14px;padding:20px;width:100%;max-width:340px">
+    <div style="font-weight:700;font-size:16px;margin-bottom:14px">✏️ 編輯客戶</div>
+    <div id="adminEditEmail" style="font-size:13px;color:#666;margin-bottom:12px;word-break:break-all"></div>
+    <label style="font-size:13px;color:#444">方案</label>
+    <select id="adminEditPlan" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin:4px 0 12px;font-size:14px">
+      <option value="basic">進階版（原價$799 / 早鳥$599）</option>
+      <option value="full">完整版（原價$1299 / 早鳥$999）</option>
+      <option value="trial">試用（14天）</option>
+      <option value="free">免費(過期)</option>
+    </select>
+    <label style="font-size:13px;color:#444">LINE 備註（自己記對方是誰）</label>
+    <input id="adminEditLine" placeholder="例如：小美 / LINE暱稱" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:8px;margin:4px 0 16px;font-size:14px">
+    <div style="display:flex;gap:8px">
+      <button onclick="adminEditSave()" style="flex:1;border:none;background:#2f9e6e;color:#fff;border-radius:8px;padding:11px;font-size:14px;font-weight:600">儲存</button>
+      <button onclick="$('adminEdit').classList.add('hidden')" style="flex:1;border:none;background:#eee;color:#333;border-radius:8px;padding:11px;font-size:14px">取消</button>
+    </div>
   </div>
 </div>
 
 <!-- ===================== APP ===================== -->
 <div id="app" class="hidden">
   <header class="bar">
-    <div>
+    <div style="display:flex;align-items:baseline;gap:6px;white-space:nowrap">
       <div class="title" id="barTitle">📅 行事曆</div>
+      <span style="font-size:10px;color:#aaa;font-weight:normal;white-space:nowrap">v1.0版(2026)</span>
     </div>
     <div style="display:flex;gap:7px;align-items:center">
       <button class="logout" id="activityBtn" style="position:relative">🔔<span id="activityBadge" class="act-badge" style="display:none"></span></button>
       
       <button class="logout" id="myAppsBtn" title="我的 App">📱</button>
       <button class="logout" id="calBtn" title="切換／管理行事曆">📂</button>
+      <button class="logout" id="upgradeBtn" style="display:none;background:#E377C2;color:#fff">⭐升級</button>
       <button class="logout" id="logoutBtn">登出</button>
     </div>
   </header>
@@ -559,7 +596,7 @@ let formAssignees = new Set();   // 編輯記事時暫存已選執行人
 const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
 const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
 const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
-const APP_VER = "v79";
+const APP_VER = "v1.0(2026)";
 const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
 const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
 // 庫存 16 小類 → 行事曆 6 大類（衣物／旅遊備品庫存沒有，只能手動）
@@ -876,18 +913,232 @@ function userBase(){
   return "";
 }
 function uref(p){ return db.ref(userBase()+p); }
+// ===== 客戶驗證 / 試用（伺服器時間，防改手機時間）=====
+async function getServerTime(){
+  try{ var s=await db.ref(".info/serverTimeOffset").once("value"); return Date.now()+(s.val()||0); }
+  catch(e){ return Date.now(); }
+}
+function _ymdTs(ts){ var d=new Date(ts); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+async function verifyCustomer(email){
+  var key=emailKey(email);
+  var now=await getServerTime();
+  var snap;
+  try{ snap=await db.ref("subscribers/"+key).once("value"); }
+  catch(e){ // 連不上雲端 → 用本機快取的方案寬容放行(離線可用)
+    return { ok:true, plan: (localStorage.getItem("cal_plan")||"free") };
+  }
+  var sub=snap.val();
+  if(!sub){                                   // 新客戶 → 自動開 14 天試用
+    var expTs=now+14*86400000;
+    var rec={ email:email, plan:"trial", expiry:_ymdTs(expTs), status:"active", deviceLimit:3, createdAt:now, lastSeen:now, devices:{} };
+    try{ await db.ref("subscribers/"+key).set(rec); }catch(e){}
+    return { ok:true, plan:"trial", expiry:rec.expiry, newTrial:true };
+  }
+  if(sub.status==="disabled") return { ok:false, msg:"此帳號已停用，請聯繫客服升級" };
+  try{ db.ref("subscribers/"+key+"/lastSeen").set(now); }catch(e){}   // 記錄最後登入
+  var expMs = sub.expiry ? Date.parse(sub.expiry+"T23:59:59") : 0;
+  var expired = expMs && now>expMs;
+  var effPlan = expired ? "free" : (sub.plan||"free");   // 過期→陽春free；否則照方案
+  return { ok:true, plan:effPlan, expiry:sub.expiry, expired:!!expired };
+}
+function showTrialWelcome(expiry){
+  try{ alert("🎉 歡迎！\n\n已為你開啟 14 天「完整版」免費試用\n到期日："+expiry+"\n\n試用期間全功能開放，到期後仍可使用基本行事曆，想保留完整功能可隨時升級 😊"); }catch(e){}
+}
+function checkExpiryReminder(res){
+  if(!res || res.newTrial || !res.expiry || res.plan==="free") return;   // 新試用/免費/無到期 → 不提醒
+  var exp=Date.parse(res.expiry+"T23:59:59"); if(!exp) return;
+  var days=Math.ceil((exp-Date.now())/86400000);
+  if(days<0 || days>3) return;                                           // 只在剩 0~3 天提醒
+  var today=new Date().toISOString().slice(0,10);                        // 一天只提醒一次
+  try{ if(localStorage.getItem("cal_expReminded")===today) return; localStorage.setItem("cal_expReminded",today); }catch(e){}
+  var isTrial=res.plan==="trial";
+  var planName=isTrial?"試用":(res.plan==="full"?"完整版":(res.plan==="basic"?"進階版":"方案"));
+  setTimeout(function(){
+    if(confirm("⏰ 提醒：你的"+planName+"還有 "+days+" 天到期（"+res.expiry+"）\n\n"+(isTrial?"升級可保留完整功能":"記得續約以繼續使用")+"\n\n要現在前往嗎？（可稍後）")){
+      openUpgradeSheet();
+    }
+  }, 800);
+}
+// ===== 方案權限：只有 free(試用到期) 被鎖；trial/admin/paid/share 全開 =====
+var LINE_URL="https://line.me/R/ti/p/@373pfdee";
+function isFree(){ return state.plan==="free"; }
+// 方案分級：0=免費  1=進階版(basic)  2=完整版(full/trial/admin)
+function planRank(){
+  var p=state.plan;
+  if(p==="admin"||p==="trial"||p==="full"||p==="family") return 2;
+  if(p==="basic") return 1;
+  return 0;
+}
+function canAdvanced(){ return planRank()>=1; }   // 總覽 / 目標 / 進階記事
+function canFull(){ return planRank()>=2; }        // 採購 / 庫存連動 / 任務指派
+function openUpgradeSheet(feat){
+  var rows=[
+    ["月曆・記事・重複・提醒","✓","✓","✓"],
+    ["🏷️ 10大智能分類整理","✓","✓","✓"],
+    ["👨‍👩‍👧 多人共用同一行事曆","✓","✓","✓"],
+    ["📋 總覽回顧","—","✓","✓"],
+    ["🎯 個人目標設定與追蹤","—","✓","✓"],
+    ["⏳ 進階記事(急迫/倒數/純記事)","—","✓","✓"],
+    ["🛒 採購清單","—","—","✓"],
+    ["📦 家中庫存管理","—","—","✓"],
+    ["🔄 採購×庫存自動連動","—","—","✓"],
+    ["👥 任務指派家人","—","—","✓"],
+    ["🏆 多人目標(家人各自進度)","—","—","✓"],
+    ["🗂️ 多本行事曆","—","✓","✓"],
+    ["💾 資料備份匯出/還原","—","✓","✓"]
+  ];
+  var tbl='<table style="width:100%;border-collapse:collapse;font-size:11px">'
+    +'<tr style="background:#f7f7f9"><th style="text-align:left;padding:6px">功能</th><th style="padding:6px;width:56px;color:#999">免費<br>(試用後)</th><th style="padding:6px;width:46px;color:#2980b9">進階</th><th style="padding:6px;width:46px;color:#8e44ad">完整</th></tr>'
+    +rows.map(function(r){return '<tr style="border-top:1px solid #eee"><td style="padding:6px">'+r[0]+'</td>'
+      +'<td style="text-align:center;padding:6px;color:'+(r[1]==="✓"?"#27ae60":"#ccc")+';font-weight:700">'+r[1]+'</td>'
+      +'<td style="text-align:center;padding:6px;color:'+(r[2]==="✓"?"#2980b9":"#ccc")+';font-weight:700">'+r[2]+'</td>'
+      +'<td style="text-align:center;padding:6px;color:'+(r[3]==="✓"?"#8e44ad":"#ccc")+';font-weight:700">'+r[3]+'</td></tr>';}).join('')
+    +'</table>';
+  var note='<div style="text-align:center;background:#fff8e1;color:#b8860b;font-size:13px;padding:8px;border-radius:8px;margin:12px 0">✨ 一次升級，整包解鎖，無需逐項購買</div>';
+  // 依目前方案智能顯示按鈕：目前方案→續約；其他→升級
+  function planBtn(key,color){
+    var cur=state.plan;
+    if(cur===key){ return '<button onclick="renewPlan(\''+key+'\')" style="border:2px solid '+color+';background:#fff;color:'+color+';border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700">✓目前·續約</button>'; }
+    if(cur==="full" && key==="basic"){ return '<span style="color:#bbb;font-size:12px">已是完整版</span>'; }
+    return '<button onclick="chooseUpgrade(\''+key+'\')" style="border:none;background:'+color+';color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700">選這個</button>';
+  }
+  // 進階版卡（早鳥）
+  var c1='<div style="border:2px solid #2980b9;border-radius:12px;padding:12px;margin-top:10px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center">'
+    +'<div><div style="font-weight:700;font-size:15px">🔵 行事曆進階版</div>'
+    +'<div style="font-size:15px"><span style="text-decoration:line-through;color:#bbb">$799</span> <span style="color:#e74c3c;font-weight:700">NT$599</span></div><div style="font-size:11px;color:#e74c3c">🔥 早鳥限量優惠中</div></div>'
+    +planBtn("basic","#2980b9")
+    +'</div><div style="font-size:12px;color:#888;margin-top:6px">解鎖：總覽回顧、個人目標、進階記事、多本行事曆、資料備份</div></div>';
+  // 完整版卡（早鳥）
+  var c2='<div style="border:2px solid #8e44ad;border-radius:12px;padding:12px;margin-top:10px;background:#faf5ff">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center">'
+    +'<div><div style="font-weight:700;font-size:15px">🟣 智在生活完整版</div>'
+    +'<div style="font-size:15px"><span style="text-decoration:line-through;color:#bbb">$1299</span> <span style="color:#e74c3c;font-weight:700">NT$999</span></div><div style="font-size:11px;color:#e74c3c">🔥 早鳥限量優惠中</div></div>'
+    +planBtn("full","#8e44ad")
+    +'</div><div style="font-size:12px;color:#8e44ad;margin-top:6px">🏆 涵蓋進階版全部功能，再加：採購×庫存連動、任務指派、多人目標</div></div>';
+  var intro=feat?('<div style="text-align:center;color:#E377C2;font-weight:600;margin-bottom:10px">🔒 '+feat+' 為付費功能，升級即可解鎖</div>'):'';
+  openSheet("⭐ 升級方案", intro+tbl+note+c1+c2, null, null, "關閉");
+}
+function _copyText(t){
+  var ok=false;
+  try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t); ok=true; } }catch(e){}
+  try{                                            // 備援：execCommand（相容舊瀏覽器/手機）
+    var ta=document.createElement("textarea");
+    ta.value=t; ta.setAttribute("readonly","");
+    ta.style.position="fixed"; ta.style.top="0"; ta.style.left="0"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ ta.setSelectionRange(0, t.length); }catch(e){}
+    try{ document.execCommand("copy"); ok=true; }catch(e){}
+    document.body.removeChild(ta);
+  }catch(e){}
+  return ok;
+}
+function _upgradePopup(title, msg, planName, email, srcApp){
+  var root=$("modalRoot");
+  root.innerHTML=
+    '<div class="overlay" id="ovl"><div class="sheet" id="sheet" style="position:relative;padding-top:16px">'+
+      '<button id="upX" aria-label="關閉" style="position:absolute;top:12px;right:14px;border:none;background:#f0f0f3;color:#888;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;z-index:2">✕</button>'+
+      '<div style="text-align:center;margin-bottom:14px">'+
+        '<div style="font-size:22px;font-weight:800;color:#8e44ad">⭐ '+esc(title)+'</div>'+
+        '<div style="font-size:13px;color:#999;margin-top:2px">完成升級只要 4 步驟</div>'+
+      '</div>'+
+      // 直向流程圖
+      '<div style="margin:0 auto 16px;max-width:260px">'+
+        _flowStep("📋","複製升級方案")+_flowArrow()+
+        _flowStep("💬","貼到 LINE 傳送")+_flowArrow()+
+        _flowStep("💳","完成付款")+_flowArrow()+
+        _flowStep("✅","24小時內開通")+
+      '</div>'+
+      // 資料卡片
+      '<div style="border:1px solid #eee;border-radius:14px;overflow:hidden;margin-bottom:14px">'+
+        '<div style="background:#faf5ff;padding:8px 14px;font-size:12px;color:#8e44ad;font-weight:700">您的升級方案</div>'+
+        _row("方案", planName)+
+        _row("帳號", email)+
+        _row("來源", srcApp)+
+      '</div>'+
+      '<button id="upCopy" style="width:100%;border:1px solid #8e44ad;background:#faf5ff;color:#8e44ad;border-radius:12px;padding:12px;font-size:15px;font-weight:700;margin-bottom:8px">📋 複製升級方案</button>'+
+      '<button id="upGo" style="width:100%;border:none;background:#06C755;color:#fff;border-radius:12px;padding:14px;font-size:16px;font-weight:800;box-shadow:0 3px 10px rgba(6,199,85,.3)">💬 前往 LINE 貼上</button>'+
+      '<div style="text-align:center;margin-top:12px;font-size:12px;color:#999">🔒 資料安全</div>'+
+    '</div></div>';
+  $("upCopy").addEventListener("click", function(){
+    var ok=_copyText(msg); var b=$("upCopy");
+    if(ok){ b.textContent="✅ 已複製，請前往 LINE"; b.style.background="#eef7f0"; b.style.color="#2f9e6e"; b.style.borderColor="#2f9e6e"; }
+    else{ toast("複製失敗，請長按上方資料手動複製"); }
+  });
+  $("upGo").addEventListener("click", function(){ _copyText(msg); setTimeout(function(){ try{ location.href=LINE_URL; }catch(e){} }, 150); });
+  $("upX").addEventListener("click", closeSheet);
+  $("ovl").addEventListener("click", function(e){ if(e.target.id==="ovl") closeSheet(); });
+}
+function _flowStep(ico,label){
+  return '<div style="display:flex;align-items:center;gap:10px;background:#faf5ff;border:1px solid #ecdcf7;border-radius:10px;padding:11px 14px">'+
+    '<span style="font-size:18px">'+ico+'</span>'+
+    '<span style="font-size:14px;color:#5b3a70;font-weight:600">'+label+'</span></div>';
+}
+function _flowArrow(){ return '<div style="text-align:center;color:#c9a8de;font-size:14px;line-height:1;margin:3px 0">↓</div>'; }
+function _row(k,v){
+  return '<div style="display:flex;padding:10px 14px;border-top:1px solid #f2f2f2">'+
+    '<div style="width:52px;color:#999;font-size:13px">'+k+'</div>'+
+    '<div style="flex:1;font-size:13px;color:#333;font-weight:600;word-break:break-all">'+esc(v||"")+'</div></div>';
+}
+function chooseUpgrade(key){
+  var map={ basic:["行事曆進階版（早鳥）",599], full:["智在生活完整版（早鳥）",999] };
+  var p=map[key]; if(!p) return;
+  var email=state.user||"";
+  var msg="【升級申請】\n來源：智能行事曆\n方案："+p[0]+"（年費 $"+p[1]+"）\n帳號："+email;
+  _upgradePopup("升級申請", msg, p[0]+"　$"+p[1]+"/年", email, "智能行事曆");
+}
+function renewPlan(key){
+  var map={ basic:["行事曆進階版",599], full:["智在生活完整版",999] };
+  var p=map[key]; if(!p) return;
+  var email=state.user||"";
+  var msg="【續約申請】\n來源：智能行事曆\n方案："+p[0]+"（年費 $"+p[1]+"）\n帳號："+email;
+  _upgradePopup("續約申請", msg, p[0]+"　$"+p[1]+"/年", email, "智能行事曆");
+}
+function showUpgrade(feat){ openUpgradeSheet(feat); }
+function previewFree(){                    // 測試用：模擬 free 版
+  state.plan="free"; state.isAdmin=false;   // 模擬真實客戶(關管理員權限)
+  var ap=$("adminPanel"); if(ap) ap.classList.add("hidden");
+  var b=document.getElementById("previewBanner"); if(b){ b.textContent="🧪 免費版預覽中"; b.style.display="block"; _addEndPreview(b); }
+  var app=$("app"); if(app) app.style.paddingTop="34px";
+  enterApp();
+}
+function previewBasic(){                   // 測試用：模擬 進階版
+  state.plan="basic"; state.isAdmin=false;  // 模擬真實客戶
+  var ap=$("adminPanel"); if(ap) ap.classList.add("hidden");
+  var b=document.getElementById("previewBanner"); if(b){ b.textContent="🧪 進階版預覽中"; b.style.display="block"; _addEndPreview(b); }
+  var app=$("app"); if(app) app.style.paddingTop="34px";
+  enterApp();
+}
+function _addEndPreview(b){
+  b.innerHTML=b.textContent+'　<span onclick="endPreview()" style="text-decoration:underline;cursor:pointer">結束預覽</span>';
+}
+function endPreview(){                      // 結束預覽，回管理員
+  state.plan="full"; state.isAdmin=true;    // 恢復管理員
+  var b=document.getElementById("previewBanner"); if(b) b.style.display="none";
+  var app=$("app"); if(app) app.style.paddingTop="";
+  var ap=$("adminPanel"); if(ap) ap.classList.add("hidden");
+  showAdminChoice();
+}
 
 async function doLogin(){
   loginMsg.textContent="";
   const input=codeInput.value.trim();
   if(!input){ loginMsg.textContent="請輸入 Email"; return; }
   // 後門：0430 → 當管理員
-  if(input===DEFAULT_CODE){ state.isAdmin=true; state.user=DEFAULT_CODE; localStorage.setItem(AUTH_KEY,DEFAULT_CODE); if(hasPendingPurchase()) enterApp(); else showAdminChoice(); return; }
+  if(input===DEFAULT_CODE){ state.isAdmin=true; state.user=DEFAULT_CODE; state.plan="full"; localStorage.setItem(AUTH_KEY,DEFAULT_CODE); if(hasPendingPurchase()) enterApp(); else showAdminChoice(); return; }
   if(!isEmail(input)){ loginMsg.textContent="Email 格式不正確"; return; }
   // 管理員 email → 選擇畫面（但有待帶入採購時直接進行事曆，不打斷）
-  if(input.toLowerCase()===ADMIN_EMAIL){ state.isAdmin=true; state.user=input; localStorage.setItem(AUTH_KEY,input); if(hasPendingPurchase()) enterApp(); else showAdminChoice(); return; }
-  // 一般客戶（第1步：先直接進入，客戶驗證下一步做）
-  state.isAdmin=false; state.user=input; localStorage.setItem(AUTH_KEY,input);
+  if(input.toLowerCase()===ADMIN_EMAIL){ state.isAdmin=true; state.user=input; state.plan="full"; localStorage.setItem(AUTH_KEY,input); if(hasPendingPurchase()) enterApp(); else showAdminChoice(); return; }
+  // 一般客戶 → 驗證 / 自動開試用
+  loginBtn.disabled=true; loginBtn.textContent="驗證中…";
+  var res;
+  try{ res=await verifyCustomer(input); }catch(e){ res={ok:true,plan:"free"}; }
+  loginBtn.disabled=false; loginBtn.textContent="登入";
+  if(!res.ok){ loginMsg.textContent=res.msg||"無法登入，請聯繫客服"; return; }
+  state.isAdmin=false; state.user=input; state.plan=res.plan;
+  localStorage.setItem(AUTH_KEY,input);
+  try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
+  if(res.newTrial){ showTrialWelcome(res.expiry); } else { checkExpiryReminder(res); }
   enterApp();
 }
 function showAdminChoice(){
@@ -897,21 +1148,137 @@ function showAdminChoice(){
 function openAdminPanel(){
   $("adminChoice").classList.add("hidden");
   $("adminPanel").classList.remove("hidden");
+  loadAdminList();
+}
+var PLAN_LABEL={ trial:"試用", free:"免費(過期)", basic:"進階版", full:"完整版", family:"完整版" };
+function _daysAgo(ts){
+  if(!ts) return "—";
+  var d=Math.floor((Date.now()-ts)/86400000);
+  if(d<=0) return "今天"; if(d===1) return "昨天"; return d+" 天前";
+}
+function _subStatusTag(sub){
+  if(sub.status==="disabled") return '<span style="color:#e74c3c">⏸️ 停用</span>';
+  var expMs=sub.expiry?Date.parse(sub.expiry+"T23:59:59"):0;
+  var now=Date.now();
+  if(expMs && now>expMs) return '<span style="color:#e74c3c">🔴 已過期</span>';
+  if(expMs && (expMs-now)<30*86400000) return '<span style="color:#e67e22">⚠️ 快到期</span>';
+  return '<span style="color:#27ae60">🟢 啟用</span>';
+}
+function loadAdminList(){
+  var box=$("adminList"); if(!box) return;
+  box.innerHTML='<div style="text-align:center;color:#999;padding:20px">載入中…</div>';
+  db.ref("subscribers").once("value").then(function(snap){
+    var v=snap.val()||{};
+    var arr=Object.keys(v).map(function(k){ return Object.assign({_key:k}, v[k]); });
+    // 依到期日排序(近的在前)
+    arr.sort(function(a,b){ return (Date.parse(a.expiry||"2099-01-01"))-(Date.parse(b.expiry||"2099-01-01")); });
+    var kw=(($("adminSearch")||{}).value||"").trim().toLowerCase();
+    var onlyExp=window._adminOnlyExpiring;
+    var now=Date.now();
+    var rows=arr.filter(function(s){
+      if(kw && (s.email||"").toLowerCase().indexOf(kw)<0) return false;
+      if(onlyExp){ var e=s.expiry?Date.parse(s.expiry+"T23:59:59"):0; if(!(e && (e-now)<30*86400000)) return false; }
+      return true;
+    }).map(function(s){
+      var k=s._key, em=(s.email||k).replace(/'/g,"");
+      return '<div style="border:1px solid #eee;border-radius:10px;padding:12px;margin-bottom:10px">'
+        +'<div style="font-weight:600;word-break:break-all">'+esc(s.email||s._key)+'</div>'
+        +(s.lineNote?'<div style="font-size:12px;color:#06C755;margin:2px 0">💬 LINE：'+esc(s.lineNote)+'</div>':'')
+        +'<div style="font-size:13px;color:#666;margin:4px 0">'+(PLAN_LABEL[s.plan]||s.plan||"—")+'　·　到期 '+(s.expiry||"—")+'　·　'+_subStatusTag(s)+'</div>'
+        +'<div style="font-size:12px;color:#999;margin-bottom:8px">最後登入：'+_daysAgo(s.lastSeen)+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:6px">'
+        +'<button onclick="adminRenew(\''+k+'\',\''+(s.expiry||"")+'\')" style="border:none;background:#eaf5ff;color:#2980b9;border-radius:6px;padding:6px 10px;font-size:12px">🔄 續約</button>'
+        +'<button onclick="adminChangePlan(\''+k+'\')" style="border:none;background:#f0eafd;color:#8e44ad;border-radius:6px;padding:6px 10px;font-size:12px">✏️ 改方案</button>'
+        +'<button onclick="adminToggleStatus(\''+k+'\',\''+(s.status||"active")+'\')" style="border:none;background:#fff4e5;color:#e67e22;border-radius:6px;padding:6px 10px;font-size:12px">'+(s.status==="disabled"?"▶️ 啟用":"⏸️ 停用")+'</button>'
+        +'<button onclick="adminDelete(\''+k+'\',\''+esc(em)+'\')" style="border:none;background:#fdecea;color:#e74c3c;border-radius:6px;padding:6px 10px;font-size:12px">🗑️ 刪除</button>'
+        +'</div>'
+        +'</div>';
+    }).join("");
+    box.innerHTML='<div style="font-size:13px;color:#888;margin-bottom:8px">共 '+arr.length+' 位客戶</div>'+(rows||'<div style="text-align:center;color:#999;padding:20px">沒有符合的客戶</div>');
+  }).catch(function(e){ box.innerHTML='<div style="text-align:center;color:#e74c3c;padding:20px">載入失敗</div>'; });
+}
+function adminAddCustomer(){
+  var email=prompt("客戶 Email："); if(!email) return;
+  email=email.trim().toLowerCase();
+  if(!isEmail(email)){ alert("Email 格式不正確"); return; }
+  var plan=prompt("方案代號：\nbasic=進階版(原$799/早鳥$599)\nfull=完整版(原$1299/早鳥$999)","full");
+  if(!plan) return; plan=plan.trim();
+  if(["basic","full","family","trial","free"].indexOf(plan)<0){ alert("方案代號不正確"); return; }
+  var months=prompt("有效月數（12=一年）","12"); if(months===null) return;
+  var m=Number(months)||12;
+  var exp=new Date(Date.now()+m*30.44*86400000);
+  var expiry=exp.getFullYear()+"-"+String(exp.getMonth()+1).padStart(2,"0")+"-"+String(exp.getDate()).padStart(2,"0");
+  var key=emailKey(email);
+  var rec={ email:email, plan:plan, expiry:expiry, status:"active", deviceLimit:3, createdAt:Date.now(), lastSeen:0, devices:{} };
+  db.ref("subscribers/"+key).update(rec).then(function(){ alert("已建立/更新：\n"+email+"\n"+(PLAN_LABEL[plan]||plan)+"\n到期 "+expiry); loadAdminList(); }).catch(function(e){ alert("建立失敗"); });
+}
+function _addMonths(baseYmd, months){
+  var base = baseYmd ? new Date(baseYmd+"T00:00:00") : new Date();
+  if(isNaN(base.getTime()) || base.getTime()<Date.now()) base=new Date();   // 已過期則從今天算
+  var t=new Date(base.getTime()+months*30.44*86400000);
+  return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
+}
+function adminRenew(key, curExpiry){
+  var mm=prompt("續約月數（12=一年）","12"); if(mm===null) return;
+  var expiry=_addMonths(curExpiry, Number(mm)||12);
+  db.ref("subscribers/"+key).update({ expiry:expiry, status:"active" }).then(function(){ alert("已續約到 "+expiry); loadAdminList(); });
+}
+var _adminEditKey=null;
+function adminChangePlan(key){
+  _adminEditKey=key;
+  db.ref("subscribers/"+key).once("value").then(function(snap){
+    var s=snap.val()||{};
+    $("adminEditEmail").textContent=s.email||key;
+    var sel=$("adminEditPlan"); if(sel) sel.value=s.plan||"full";
+    var ln=$("adminEditLine"); if(ln) ln.value=s.lineNote||"";
+    $("adminEdit").classList.remove("hidden");
+  });
+}
+function adminEditSave(){
+  if(!_adminEditKey) return;
+  var plan=$("adminEditPlan").value;
+  var lineNote=($("adminEditLine").value||"").trim().slice(0,40);
+  db.ref("subscribers/"+_adminEditKey).update({ plan:plan, lineNote:lineNote }).then(function(){
+    $("adminEdit").classList.add("hidden"); _adminEditKey=null; loadAdminList();
+  });
+}
+function adminToggleStatus(key, cur){
+  var next=(cur==="disabled")?"active":"disabled";
+  if(!confirm(next==="disabled"?"確定停用此客戶？(將擋登入)":"確定啟用此客戶？")) return;
+  db.ref("subscribers/"+key).update({ status:next }).then(function(){ loadAdminList(); });
+}
+function adminDelete(key, email){
+  if(!confirm("確定刪除客戶「"+email+"」？\n此動作無法復原。")) return;
+  db.ref("subscribers/"+key).remove().then(function(){ alert("已刪除"); loadAdminList(); });
 }
 $("goCalBtn").addEventListener("click", ()=>{ $("adminChoice").classList.add("hidden"); enterApp(); });
 $("goAdminBtn").addEventListener("click", openAdminPanel);
 $("adminBackBtn").addEventListener("click", ()=>{ $("adminPanel").classList.add("hidden"); showAdminChoice(); });
 
 function hasPendingPurchase(){ try{ return !!localStorage.getItem("inv_pending_purchase"); }catch(e){ return false; } }
-function autoLogin(){
+async function autoLogin(){
   var saved; try{ saved=localStorage.getItem(AUTH_KEY); }catch(e){ saved=null; }
   if(!saved) return false;                                   // 沒記住 → 顯示登入頁
   state.user=saved;
   var isAdmin=(saved===DEFAULT_CODE)||(String(saved).toLowerCase()===ADMIN_EMAIL);
   state.isAdmin=isAdmin;
-  // 管理員平常到選擇畫面；但採購跳轉(有待帶入採購)時直接進行事曆，不打斷
-  if(isAdmin && !hasPendingPurchase()){ showAdminChoice(); }
-  else { enterApp(); }
+  if(isAdmin){
+    state.plan="full";
+    if(!hasPendingPurchase()){ showAdminChoice(); } else { enterApp(); }
+    return true;
+  }
+  // 客戶 → 重新驗證(每次開啟抓到期，伺服器時間)
+  var res;
+  try{ res=await verifyCustomer(saved); }catch(e){ res={ok:true, plan:(localStorage.getItem("cal_plan")||"free")}; }
+  if(!res.ok){                                               // 被停用 → 回登入頁
+    try{ localStorage.removeItem(AUTH_KEY); }catch(e){}
+    if(loginMsg) loginMsg.textContent=res.msg||"";
+    return false;
+  }
+  state.plan=res.plan;
+  try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
+  checkExpiryReminder(res);
+  enterApp();
   return true;
 }
 
@@ -920,9 +1287,23 @@ function enterApp(){
   $("login").classList.add("hidden");
   $("app").classList.remove("hidden");
   const ab=$("adminPanelBtn"); if(ab) ab.style.display = state.isAdmin ? "" : "none";
+  applyPlanLocks();
   renderLegend();
   bindData();
+  restoreDeviceName();
   renderAll();
+}
+function applyPlanLocks(){
+  var adv=canAdvanced(), full=canFull();
+  var ov=$("navOverview");                              // 總覽：進階版以上
+  if(ov){ ov.innerHTML='<span class="ic">📋</span>總覽'+(adv?'':' 🔒'); ov.style.opacity=adv?"":"0.5"; }
+  var sh=$("navShop");                                  // 待購可看→不放🔒
+  if(sh){ sh.innerHTML='<span class="ic">🛒</span>待購'; sh.style.opacity=""; }
+  var ai=$("addItemBtn");                               // 新增待購：完整版
+  if(ai){ ai.textContent=full?"＋ 新增待購":"🔒 完整版解鎖新增待購"; }
+  var ag=$("addGoalBtn");                               // 新增目標：進階版以上
+  if(ag){ ag.textContent=adv?"＋ 新增目標":"🔒 升級解鎖新增目標"; }
+  var ub=$("upgradeBtn"); if(ub) ub.style.display=(state.plan!=="full"&&state.plan!=="admin")?"":"none";  // 完整版/admin外都顯示升級(含試用)
 }
 $("logoutBtn").addEventListener("click", ()=>{
   // 斷開目前使用者的所有綁定（趁 state.user 還在，uref 才指對空間）
@@ -976,7 +1357,7 @@ function bindData(){
     setTimeout(importPendingPurchase, 800);
   });
 }
-function renderAll(){ processRecurrences(); refreshOverviewFilterOptions(); renderCalendar(); renderDayEvents(); renderPocket(); renderOverview(); renderShop(); renderGoals(); }
+function renderAll(){ processRecurrences(); refreshOverviewFilterOptions(); renderCalendar(); renderDayEvents(); renderPocket(); renderOverview(); renderShop(); renderGoals(); if(typeof applyPlanLocks==="function") applyPlanLocks(); }
 
 /* ===== 庫存 App 整合（兩個 App 同源 handyassist-system.github.io，共用 localStorage） ===== */
 function importPendingPurchase(){
@@ -1003,6 +1384,7 @@ function importPendingPurchase(){
   if(typeof switchTab==="function") switchTab("shop");
 }
 function pushInvDone(itemId, qty, name, opts){
+  if(!canFull()) return;               // 完整版才與庫存連動
   opts=opts||{};
   if(!itemId && !opts.create) return;
   try{
@@ -1049,8 +1431,18 @@ function deviceName(){ try{ return localStorage.getItem("cal_devname")||""; }cat
 function setDeviceNamePrompt(){
   const v=prompt("設定你的暱稱（讓家人知道是誰新增的）", deviceName());
   if(v===null) return;
-  try{ localStorage.setItem("cal_devname",(v||"").trim()); }catch(e){}
+  const nm=(v||"").trim();
+  try{ localStorage.setItem("cal_devname",nm); }catch(e){}
+  try{ if(_firebaseReady && !LOCAL_MODE) uref("_devname").set(nm); }catch(e){}   // 同步雲端(清快取可還原)
   renderActivityBadge(); toast("已設定暱稱");
+}
+function restoreDeviceName(){                     // 本機暱稱空 → 從雲端還原
+  try{
+    if(deviceName() || LOCAL_MODE || !_firebaseReady) return;
+    uref("_devname").once("value").then(function(s){
+      var nm=s.val(); if(nm && !deviceName()){ try{ localStorage.setItem("cal_devname",nm); }catch(e){} renderActivityBadge(); }
+    }).catch(function(){});
+  }catch(e){}
 }
 function activityLastSeen(){ try{ return Number(localStorage.getItem("cal_actseen")||0); }catch(e){ return 0; } }
 function setActivityLastSeen(ts){ try{ localStorage.setItem("cal_actseen", String(ts||0)); }catch(e){} }
@@ -1141,7 +1533,7 @@ function renderPocket(){
    5. Tab 切換（行事曆 / 總覽 / 待購）
    ============================================================ */
 $("navCal").addEventListener("click", ()=>switchTab("cal"));
-$("navOverview").addEventListener("click", ()=>switchTab("overview"));
+$("navOverview").addEventListener("click", ()=>{ if(!canAdvanced()){ showUpgrade("總覽回顧"); return; } switchTab("overview"); });
 $("navShop").addEventListener("click", ()=>switchTab("shop"));
 $("navGoals").addEventListener("click", ()=>switchTab("goals"));
 function switchTab(t){
@@ -1180,17 +1572,27 @@ document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState=
    ============================================================ */
 $("calBtn").addEventListener("click", openCalManager);
 if($("myAppsBtn")) $("myAppsBtn").addEventListener("click", openMyApps);
+if($("upgradeBtn")) $("upgradeBtn").addEventListener("click", ()=>openUpgradeSheet(""));
 function openMyApps(){
   const apps=[
-    {ico:"📦", name:"庫存管理", url:"https://handyassist-system.github.io/My-Inventory/"},
-    {ico:"✈️", name:"日本旅遊計畫", url:"https://handyassist-system.github.io/My-Japan-travel/"},
-    {ico:"🍽️", name:"食光地圖", url:"https://handyassist-system.github.io/My-Food-Map/"},
-    {ico:"🏠", name:"居家服務 CRM", url:"https://handyassist-system.github.io/MY-CRM/"},
-    {ico:"🌍", name:"造訪足跡", url:"https://handyassist-system.github.io/My-Visited-Country/"}
+    {ico:"📦", name:"庫存管理", url:"https://handyassist-system.github.io/My-Inventory/", dev:false},
+    {ico:"✈️", name:"日本旅遊計畫", url:"https://handyassist-system.github.io/My-Japan-travel/", dev:true},
+    {ico:"🍽️", name:"食光地圖", url:"https://handyassist-system.github.io/My-Food-Map/", dev:true},
+    {ico:"🏠", name:"居家服務 CRM", url:"https://handyassist-system.github.io/MY-CRM/", dev:true},
+    {ico:"🌍", name:"造訪足跡", url:"https://handyassist-system.github.io/My-Visited-Country/", dev:true}
   ];
-  const html='<div class="app-list">'+apps.map(a=>
-    '<a class="app-row" href="'+a.url+'" rel="noopener"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">↗</span></a>'
-  ).join("")+'</div>';
+  var _isAdminNow = state.isAdmin!==false && !!(state.user && (String(state.user).toLowerCase()===ADMIN_EMAIL || state.user===DEFAULT_CODE));
+  const html='<div class="app-list">'+apps.map(function(a){
+    if(a.dev && !_isAdminNow){              // 開發中 → 非管理員鎖住
+      return '<a class="app-row" href="javascript:void(0)" style="opacity:.45" onclick="alert(\'開發中，敬請期待 🙏\')"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">開發中</span></a>';
+    }
+    if(_isAdminNow){                        // 管理員：全部可切換
+      return '<a class="app-row" href="'+a.url+'" rel="noopener"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">↗</span></a>';
+    }
+    return !canFull()                           // 庫存：完整版才可切換
+      ? '<a class="app-row" href="javascript:void(0)" onclick="showUpgrade(\''+esc(a.name)+'\')"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">🔒</span></a>'
+      : '<a class="app-row" href="'+a.url+'" rel="noopener"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">↗</span></a>';
+  }).join("")+'</div>';
   openSheet("📱 我的 App", html, null, null, "關閉");
 }
 function ensureDefaultCalendar(){
@@ -1229,7 +1631,6 @@ function openCalManager(){
     +'<button id="backupExport" type="button" class="logout" style="flex:1;padding:9px">⬇️ 匯出備份</button>'
     +'<label class="logout" style="flex:1;padding:9px;text-align:center;cursor:pointer">⬆️ 匯入還原<input id="backupImport" type="file" accept="application/json,.json" style="display:none"></label>'
     +'</div></div>';
-  html+='<div style="margin-top:14px;text-align:center;color:var(--faint);font-size:12px">目前版本 '+APP_VER+'</div>';
   openSheet("行事曆", html, null, null);
   const sv=$("sheetSave"); if(sv) sv.style.display="none";
   $("calList").querySelectorAll(".cal-name").forEach(s=>s.addEventListener("click", ()=>setCurrentCal(s.getAttribute("data-cal"))));
@@ -1239,8 +1640,9 @@ function openCalManager(){
   if($("backupImport")) $("backupImport").addEventListener("change", function(){ if(this.files&&this.files[0]) importBackup(this.files[0]); this.value=""; });
 }
 function exportBackup(){
-  const data={ type:"calendar-backup", version:1, exportedAt:new Date().toISOString(),
-    calendars:state.calendars||{}, records:state.records||{}, goals:state.goals||{} };
+  if(!canAdvanced()){ showUpgrade("資料備份"); return; }   // 進階版以上才可備份
+  const data={ type:"calendar-backup", version:2, exportedAt:new Date().toISOString(),
+    calendars:state.calendars||{}, records:state.records||{}, goals:state.goals||{}, people:state.people||{} };
   try{
     const blob=new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
     const url=URL.createObjectURL(blob);
@@ -1270,18 +1672,21 @@ function doImport(data){
       state.records=Object.assign({}, state.records, data.records||{});
       state.goals=Object.assign({}, state.goals, data.goals||{});
       state.calendars=Object.assign({}, state.calendars, data.calendars||{});
-      lsSaveRecords(); lsSaveGoals(); if(typeof lsSaveCalendars==="function") lsSaveCalendars();
+      state.people=Object.assign({}, state.people, data.people||{});
+      lsSaveRecords(); lsSaveGoals(); if(typeof lsSaveCalendars==="function") lsSaveCalendars(); if(typeof lsSavePeople==="function") lsSavePeople();
       closeSheet(); renderAll(); toast("已還原備份");
     } else {
       const u={};
       Object.entries(data.records||{}).forEach(([k,v])=>{ u["records/"+k]=v; });
       Object.entries(data.goals||{}).forEach(([k,v])=>{ u["goals/"+k]=v; });
       Object.entries(data.calendars||{}).forEach(([k,v])=>{ u["calendars/"+k]=v; });
+      Object.entries(data.people||{}).forEach(([k,v])=>{ u["people/"+k]=v; });
       db.ref(userBase()).update(u).then(()=>{ closeSheet(); toast("已還原備份"); }).catch(e=>{ console.error(e); toast("還原失敗"); });
     }
   }catch(e){ console.error(e); toast("還原失敗"); }
 }
 function addCalendar(name){
+  if(!canAdvanced()){ showUpgrade("多本行事曆"); return; }   // 進階版以上才可多本
   if(!requireAuth()) return;
   const id=genId();
   const c={ name, createdAt:Date.now() };
@@ -1784,7 +2189,7 @@ function toggleDoneWhole(id){
 /* ============================================================
    7. 待購清單（購物類未完成，依子分類分組）
    ============================================================ */
-$("addItemBtn").addEventListener("click", ()=>openRecordForm(null, { category:"shopping", dateStart:"" }));
+$("addItemBtn").addEventListener("click", ()=>{ if(!canFull()){ showUpgrade("採購清單"); return; } openRecordForm(null, { category:"shopping", dateStart:"" }); });
 
 function renderShop(){
   const wrap=$("shopList");
@@ -1860,7 +2265,7 @@ function toggleShopDone(id){
 /* 依記事類型開對應表單：採購→完整(購物)、無日期→百寶袋極簡、有日期→行程完整 */
 function openEditor(r){
   if(!r) return;
-  if(r.category==="shopping") return openRecordForm(r);
+  if(r.category==="shopping"){ if(!canFull()){ showUpgrade("採購清單"); return; } return openRecordForm(r); }
   if(!r.dateStart) return openPocketForm(r);     // 無排定日 → 百寶袋極簡
   return openRecordForm(r);
 }
@@ -1974,13 +2379,19 @@ function openRecordForm(rec, presets, asCopy){
     '</div>'+
     '<div id="rec_amountbox"'+(isShop?' style="display:none"':'')+'><div class="field"><label>金額（選填）</label>'+
       '<input id="rec_amount" type="number" inputmode="numeric" value="'+(r.amount!=null?r.amount:"")+'" placeholder="例如 1200"></div></div>'+
-    '<div class="field"><div class="label-row"><label>執行人（可複選）</label><span class="manage-link" id="rec_manage">管理人員</span></div>'+
+    (!canFull()
+      ? '<div class="field" style="opacity:.55;cursor:pointer" onclick="showUpgrade(\'任務指派家人（完整版）\')"><div class="label-row"><label>執行人（可複選） 🔒</label></div><div style="font-size:12px;color:#888;padding:4px 0">升級完整版，可指派家人任務</div></div>'
+      : ('<div class="field"><div class="label-row"><label>執行人（可複選）</label><span class="manage-link" id="rec_manage">管理人員</span></div>'+
       '<div class="chips" id="rec_assignees"></div>'+
       '<div class="chip-add"><input id="rec_newperson" autocomplete="off" placeholder="新增人員名稱"><button id="rec_addperson" type="button">＋ 新增</button></div>'+
-    '</div>'+
-    '<div class="toggle-row"><span>❗️ 急迫（排在最上面）</span><label class="switch"><input type="checkbox" id="rec_urgent"'+(r.urgent?" checked":"")+'><span class="slider"></span></label></div>'+
+    '</div>')
+    )+
+    (!canAdvanced()
+      ? '<div class="toggle-row" style="opacity:.55;cursor:pointer" onclick="showUpgrade(\'進階記事（急迫・倒數・純記事）\')"><span>❗️⏳📌 急迫・倒數・純記事</span><span style="font-size:18px">🔒</span></div>'
+      : ('<div class="toggle-row"><span>❗️ 急迫（排在最上面）</span><label class="switch"><input type="checkbox" id="rec_urgent"'+(r.urgent?" checked":"")+'><span class="slider"></span></label></div>'+
     '<div class="toggle-row" id="rec_cdbox"'+(isShop?' style="display:none"':'')+'><span>⏳ 顯示倒數天數</span><label class="switch"><input type="checkbox" id="rec_countdown"'+(r.countdown?" checked":"")+'><span class="slider"></span></label></div>'+
-    '<div class="toggle-row" id="rec_logbox"'+(isShop?' style="display:none"':'')+'><span>📌 純紀錄（已發生／要記的事，免打勾）</span><label class="switch"><input type="checkbox" id="rec_isLog"'+(r.isLog?" checked":"")+'><span class="slider"></span></label></div>'+
+    '<div class="toggle-row" id="rec_logbox"'+(isShop?' style="display:none"':'')+'><span>📌 純紀錄（已發生／要記的事，免打勾）</span><label class="switch"><input type="checkbox" id="rec_isLog"'+(r.isLog?" checked":"")+'><span class="slider"></span></label></div>')
+    )+
     '<div class="field"><label>備註（可選）</label><textarea id="rec_note" placeholder="補充說明">'+esc(r.note||"")+'</textarea></div>';
 
   openSheet(isShop?(isEdit?"編輯採購":"新增採購"):(isEdit?"編輯記事":"新增記事"), html,
@@ -2072,8 +2483,8 @@ function openRecordForm(rec, presets, asCopy){
     _ps.addEventListener("focus", function(){ if(this.value.trim()) _renderProdResults(this.value); });
   }
   _lockSubcat();   // 開表單時：若已連到庫存品項就鎖住大分類
-  $("rec_manage").addEventListener("click", openPeopleManager);
-  $("rec_addperson").addEventListener("click", async function(){
+  if($("rec_manage")) $("rec_manage").addEventListener("click", openPeopleManager);
+  if($("rec_addperson")) $("rec_addperson").addEventListener("click", async function(){
     const nm=$("rec_newperson").value.trim();
     if(!nm){ toast("請輸入名稱"); return; }
     const id=await savePerson(nm);
@@ -2100,7 +2511,7 @@ function saveRecord(id, prev){
   const dateStart=$("rec_dateStart").value||"";
   const dateEnd=$("rec_dateEnd").value||"";
   if(dateStart && dateEnd && dateEnd<dateStart){ toast("結束日期不能早於開始日期"); return; }
-  const isLog = !isShop && $("rec_isLog").checked;
+  const isLog = !isShop && (($("rec_isLog")||{}).checked||false);
   if(isLog && !dateStart){ toast("純紀錄要有日期（會列入行事曆）"); return; }
   const ru = $("rec_repeatUnit").value;
   const repeating = !!(ru && ru!=="none");
@@ -2116,8 +2527,8 @@ function saveRecord(id, prev){
     start: $("rec_start").value||"",
     end:   $("rec_end").value||"",
     assignees: Array.from(formAssignees),
-    urgent:    $("rec_urgent").checked,
-    countdown: $("rec_category").value==="shopping" ? false : $("rec_countdown").checked,
+    urgent:    (($("rec_urgent")||{}).checked||false),
+    countdown: $("rec_category").value==="shopping" ? false : (($("rec_countdown")||{}).checked||false),
     note:      $("rec_note").value.trim(),
     status:    done ? "done" : "pending",
     createdAt: (prev&&prev.createdAt) ? prev.createdAt : Date.now()
@@ -2211,7 +2622,7 @@ function deleteRecord(id, title, occDate){
 /* ============================================================
    8.5 年度目標（3c）
    ============================================================ */
-$("addGoalBtn").addEventListener("click", ()=>openGoalForm(null));
+$("addGoalBtn").addEventListener("click", ()=>{ openGoalForm(null); });
 if($("activityBtn")) $("activityBtn").addEventListener("click", openActivityPanel);
 if($("goalYearFilter")) $("goalYearFilter").addEventListener("change", renderGoals);
 
@@ -2497,6 +2908,7 @@ function copyGoalToNextYear(g){
   uref("goals/"+key).update(copy).then(after).catch(e=>{ console.error(e); toast("複製失敗"); });
 }
 function deleteGoal(id, title){
+  if(!canAdvanced()){ showUpgrade("刪除目標"); return; }                 // 免費版：鎖刪除
   if(!requireAuth()) return;
   if(!confirm("確定刪除目標「"+(title||"")+"」？")) return;
   if(LOCAL_MODE){ delete state.goals[id]; lsSaveGoals(); closeSheet(); renderGoals(); toast("已刪除"); return; }
@@ -2506,6 +2918,7 @@ function deleteGoal(id, title){
 let goalMilestones=[];   // 編輯時暫存里程碑
 let goalMembers=[];      // 編輯時暫存多人成員
 function openGoalForm(goal){
+  if(!canAdvanced()){ showUpgrade(goal?"編輯目標":"新增目標"); return; }   // 免費版：鎖新增/編輯(可看、可更新進度)
   const isEdit=!!goal; const g=goal||{};
   const type=g.type||"number"; const cat=g.category||"life"; const yr=g.year||new Date().getFullYear();
   const dir=g.dir||((g.target!=null&&g.start!=null&&Number(g.target)<Number(g.start))?"down":"up");
@@ -2531,10 +2944,15 @@ function openGoalForm(goal){
         '</select></div>'+
         '<div class="field"><label>間隔（選填）</label><input id="g_step" type="number" value="'+(g.step!=null?g.step:"")+'" placeholder="每階，如 50000"></div>'+
       '</div>'+
-      '<div class="field"><label>對象</label><select id="g_personmode">'+
-        '<option value="single"'+(!(g.members&&g.members.length)?" selected":"")+'>單人</option>'+
-        '<option value="multi"'+((g.members&&g.members.length)?" selected":"")+'>多人（各自進度）</option>'+
-      '</select></div>'+
+      '<div class="field"><label>對象</label>'+
+      (canFull()
+        ? ('<select id="g_personmode">'+
+            '<option value="single"'+(!(g.members&&g.members.length)?" selected":"")+'>單人</option>'+
+            '<option value="multi"'+((g.members&&g.members.length)?" selected":"")+'>多人（各自進度）</option>'+
+          '</select>')
+        : ('<select id="g_personmode"><option value="single" selected>單人</option></select>'+
+           '<div onclick="showUpgrade(\'多人目標\')" style="font-size:12px;color:#8e44ad;margin-top:4px;cursor:pointer">🔒 多人目標（家人各自進度）為完整版功能，點此升級</div>')
+      )+'</div>'+
       '<div id="g_singlevals"'+((g.members&&g.members.length)?' style="display:none"':'')+'>'+
         '<div class="two">'+
           '<div class="field"><label>目標值</label><input id="g_target" type="number" value="'+(g.target!=null?g.target:"")+'" placeholder="300000"></div>'+
@@ -2697,11 +3115,13 @@ function openSheet(title, innerHTML, onSave, onDelete, saveLabel){
   const root=$("modalRoot");
   root.innerHTML=
     '<div class="overlay" id="ovl"><div class="sheet" id="sheet">'+
-      '<h3>'+esc(title)+'</h3>'+innerHTML+
+      '<button id="sheetX" aria-label="關閉" style="position:absolute;top:10px;right:12px;border:none;background:#f0f0f3;color:#666;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;line-height:1">✕</button>'+
+      '<h3 style="padding-right:34px">'+esc(title)+'</h3>'+innerHTML+
       '<div class="sheet-acts"><button class="btn-ghost" id="sheetCancel">取消</button>'+
       '<button class="btn-primary" id="sheetSave">'+(saveLabel||"儲存")+'</button></div>'+
       (onDelete?'<button class="btn-danger" id="sheetDelete">刪除</button>':'')+
     '</div></div>';
+  var _x=$("sheetX"); if(_x) _x.addEventListener("click", closeSheet);
   $("sheetCancel").addEventListener("click", closeSheet);
   $("sheetSave").addEventListener("click", onSave||closeSheet);
   if(onDelete) $("sheetDelete").addEventListener("click", onDelete);
