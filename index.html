@@ -415,6 +415,8 @@
       <option value="trial">試用（14天）</option>
       <option value="free">免費(過期)</option>
     </select>
+    <label style="font-size:13px;color:#444">到期日（可手動修改）</label>
+    <input id="adminEditExpiry" type="date" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:8px;margin:4px 0 12px;font-size:14px">
     <label style="font-size:13px;color:#444">LINE 備註（自己記對方是誰）</label>
     <input id="adminEditLine" placeholder="例如：小美 / LINE暱稱" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:8px;margin:4px 0 16px;font-size:14px">
     <div style="display:flex;gap:8px">
@@ -944,13 +946,15 @@ async function verifyCustomer(email){
 function showTrialWelcome(expiry){
   try{ alert("🎉 歡迎！\n\n已為你開啟 14 天「完整版」免費試用\n到期日："+expiry+"\n\n試用期間全功能開放，到期後仍可使用基本行事曆，想保留完整功能可隨時升級 😊"); }catch(e){}
 }
-function checkExpiryReminder(res){
+function checkExpiryReminder(res, force){
   if(!res || res.newTrial || !res.expiry || res.plan==="free") return;   // 新試用/免費/無到期 → 不提醒
   var exp=Date.parse(res.expiry+"T23:59:59"); if(!exp) return;
   var days=Math.ceil((exp-Date.now())/86400000);
   if(days<0 || days>3) return;                                           // 只在剩 0~3 天提醒
-  var today=new Date().toISOString().slice(0,10);                        // 一天只提醒一次
-  try{ if(localStorage.getItem("cal_expReminded")===today) return; localStorage.setItem("cal_expReminded",today); }catch(e){}
+  if(!force){                                                            // 自動登入：一天只提醒一次；手動登入(force)：一定提醒
+    var today=new Date().toISOString().slice(0,10);
+    try{ if(localStorage.getItem("cal_expReminded")===today) return; localStorage.setItem("cal_expReminded",today); }catch(e){}
+  }
   var isTrial=res.plan==="trial";
   var planName=isTrial?"試用":(res.plan==="full"?"完整版":(res.plan==="basic"?"進階版":"方案"));
   setTimeout(function(){
@@ -961,7 +965,6 @@ function checkExpiryReminder(res){
 }
 // ===== 方案權限：只有 free(試用到期) 被鎖；trial/admin/paid/share 全開 =====
 var LINE_URL="https://line.me/R/ti/p/@373pfdee";
-function isFree(){ return state.plan==="free"; }
 // 方案分級：0=免費  1=進階版(basic)  2=完整版(full/trial/admin)
 function planRank(){
   var p=state.plan;
@@ -1138,7 +1141,7 @@ async function doLogin(){
   state.isAdmin=false; state.user=input; state.plan=res.plan;
   localStorage.setItem(AUTH_KEY,input);
   try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
-  if(res.newTrial){ showTrialWelcome(res.expiry); } else { checkExpiryReminder(res); }
+  if(res.newTrial){ showTrialWelcome(res.expiry); } else { checkExpiryReminder(res, true); }
   enterApp();
 }
 function showAdminChoice(){
@@ -1219,9 +1222,9 @@ function _addMonths(baseYmd, months){
   return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
 }
 function adminRenew(key, curExpiry){
-  var mm=prompt("續約月數（12=一年）","12"); if(mm===null) return;
-  var expiry=_addMonths(curExpiry, Number(mm)||12);
-  db.ref("subscribers/"+key).update({ expiry:expiry, status:"active" }).then(function(){ alert("已續約到 "+expiry); loadAdminList(); });
+  var expiry=_addMonths(curExpiry, 12);           // 一鍵 +1 年
+  if(!confirm("確定為此客戶續約 1 年？\n新到期日："+expiry)) return;
+  db.ref("subscribers/"+key).update({ expiry:expiry, status:"active" }).then(function(){ alert("已續約 1 年，到期日："+expiry); loadAdminList(); });
 }
 var _adminEditKey=null;
 function adminChangePlan(key){
@@ -1230,6 +1233,7 @@ function adminChangePlan(key){
     var s=snap.val()||{};
     $("adminEditEmail").textContent=s.email||key;
     var sel=$("adminEditPlan"); if(sel) sel.value=s.plan||"full";
+    var ex=$("adminEditExpiry"); if(ex) ex.value=s.expiry||"";
     var ln=$("adminEditLine"); if(ln) ln.value=s.lineNote||"";
     $("adminEdit").classList.remove("hidden");
   });
@@ -1237,8 +1241,11 @@ function adminChangePlan(key){
 function adminEditSave(){
   if(!_adminEditKey) return;
   var plan=$("adminEditPlan").value;
+  var expiry=($("adminEditExpiry").value||"").trim();
   var lineNote=($("adminEditLine").value||"").trim().slice(0,40);
-  db.ref("subscribers/"+_adminEditKey).update({ plan:plan, lineNote:lineNote }).then(function(){
+  var upd={ plan:plan, lineNote:lineNote };
+  if(expiry) upd.expiry=expiry;                    // 有填才更新到期日
+  db.ref("subscribers/"+_adminEditKey).update(upd).then(function(){
     $("adminEdit").classList.add("hidden"); _adminEditKey=null; loadAdminList();
   });
 }
@@ -1283,7 +1290,14 @@ async function autoLogin(){
 }
 
 function enterApp(){
-  state.user = localStorage.getItem(AUTH_KEY) || DEFAULT_CODE;
+  var _newUser = localStorage.getItem(AUTH_KEY) || DEFAULT_CODE;
+  if(state._boundUser && state._boundUser !== _newUser && !LOCAL_MODE){   // 換帳號 → 斷開舊綁定、清狀態
+    var ob = (state._boundUser===DEFAULT_CODE) ? "" : (isEmail(state._boundUser) ? "users/"+emailKey(state._boundUser)+"/" : "");
+    try{ ["records","people","calendars","goals","activity"].forEach(function(p){ db.ref(ob+p).off(); }); }catch(e){}
+    state.recordsBound=false; state.peopleBound=false; state.calendarsBound=false; state.goalsBound=false; state.activityBound=false;
+    state.records={}; state.people={}; state.goals={}; state.calendars={}; state.activity=[];
+  }
+  state.user = _newUser;
   $("login").classList.add("hidden");
   $("app").classList.remove("hidden");
   const ab=$("adminPanelBtn"); if(ab) ab.style.display = state.isAdmin ? "" : "none";
@@ -1292,6 +1306,7 @@ function enterApp(){
   bindData();
   restoreDeviceName();
   renderAll();
+  state._boundUser = _newUser;
 }
 function applyPlanLocks(){
   var adv=canAdvanced(), full=canFull();
@@ -1315,13 +1330,13 @@ $("logoutBtn").addEventListener("click", ()=>{
   try{ uref("activity").off(); }catch(e){}
   state.recordsBound=false; state.peopleBound=false; state.calendarsBound=false; state.goalsBound=false; state.activityBound=false;
   state.user=null; state.records={}; state.people={}; state.goals={}; state.calendars={}; state.isAdmin=false;
-  state.activity=[];
+  state.activity=[]; state._boundUser=null;
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem("cal_admin_on");
   $("app").classList.add("hidden");
   var _ac=$("adminChoice"); if(_ac) _ac.classList.add("hidden");
   var _ap=$("adminPanel"); if(_ap) _ap.classList.add("hidden");
-  $("login").classList.remove("hidden");
+  var _lg=$("login"); if(_lg){ _lg.classList.remove("hidden"); _lg.style.display="flex"; }   // 明確顯示登入頁(蓋過防閃的inline none)
   codeInput.value=""; loginMsg.textContent="";
 });
 
