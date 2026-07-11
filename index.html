@@ -358,7 +358,7 @@
 <body>
 
 <!-- ===================== LOGIN ===================== -->
-<div id="login">
+<div id="login" style="display:none">
   <div class="login-card">
     <div class="logo" id="logo">🔐</div>
     <h1>智能行事曆</h1>
@@ -437,7 +437,7 @@
       <button class="logout" id="myAppsBtn" title="我的 App">📱</button>
       <button class="logout" id="calBtn" title="切換／管理行事曆">📂</button>
       <button class="logout" id="upgradeBtn" style="display:none;background:#E377C2;color:#fff">⭐升級</button>
-      <button class="logout" id="logoutBtn">登出</button>
+      <button class="logout" id="logoutBtn" style="margin-left:10px">登出</button>
     </div>
   </header>
 
@@ -1005,14 +1005,14 @@ function openUpgradeSheet(feat){
   // 進階版卡（早鳥）
   var c1='<div style="border:2px solid #2980b9;border-radius:12px;padding:12px;margin-top:10px">'
     +'<div style="display:flex;justify-content:space-between;align-items:center">'
-    +'<div><div style="font-weight:700;font-size:15px">🔵 行事曆進階版</div>'
+    +'<div><div style="font-weight:700;font-size:15px">🔵 進階版</div>'
     +'<div style="font-size:15px"><span style="text-decoration:line-through;color:#bbb">$799</span> <span style="color:#e74c3c;font-weight:700">NT$599</span></div><div style="font-size:11px;color:#e74c3c">🔥 早鳥限量優惠中</div></div>'
     +planBtn("basic","#2980b9")
     +'</div><div style="font-size:12px;color:#888;margin-top:6px">解鎖：總覽回顧、個人目標、進階記事、多本行事曆、資料備份</div></div>';
   // 完整版卡（早鳥）
   var c2='<div style="border:2px solid #8e44ad;border-radius:12px;padding:12px;margin-top:10px;background:#faf5ff">'
     +'<div style="display:flex;justify-content:space-between;align-items:center">'
-    +'<div><div style="font-weight:700;font-size:15px">🟣 智在生活完整版</div>'
+    +'<div><div style="font-weight:700;font-size:15px">🟣 完整版</div>'
     +'<div style="font-size:15px"><span style="text-decoration:line-through;color:#bbb">$1299</span> <span style="color:#e74c3c;font-weight:700">NT$999</span></div><div style="font-size:11px;color:#e74c3c">🔥 早鳥限量優惠中</div></div>'
     +planBtn("full","#8e44ad")
     +'</div><div style="font-size:12px;color:#8e44ad;margin-top:6px">🏆 涵蓋進階版全部功能，再加：採購×庫存連動、任務指派、多人目標</div></div>';
@@ -1052,13 +1052,13 @@ function _upgradePopup(title, msg, planName, email, srcApp){
       // 資料卡片
       '<div style="border:1px solid #eee;border-radius:14px;overflow:hidden;margin-bottom:14px">'+
         '<div style="background:#faf5ff;padding:8px 14px;font-size:12px;color:#8e44ad;font-weight:700">您的升級方案</div>'+
+        _row("App", srcApp)+
         _row("方案", planName)+
         _row("帳號", email)+
-        _row("來源", srcApp)+
       '</div>'+
       '<button id="upCopy" style="width:100%;border:1px solid #8e44ad;background:#faf5ff;color:#8e44ad;border-radius:12px;padding:12px;font-size:15px;font-weight:700;margin-bottom:8px">📋 複製升級方案</button>'+
       '<button id="upGo" style="width:100%;border:none;background:#06C755;color:#fff;border-radius:12px;padding:14px;font-size:16px;font-weight:800;box-shadow:0 3px 10px rgba(6,199,85,.3)">💬 前往 LINE 貼上</button>'+
-      '<div style="text-align:center;margin-top:12px;font-size:12px;color:#999">🔒 資料安全</div>'+
+      '<div style="text-align:center;margin-top:12px;font-size:12px;color:#999">🔒 由「智在生活」官方 LINE 為你服務</div>'+
     '</div></div>';
   $("upCopy").addEventListener("click", function(){
     var ok=_copyText(msg); var b=$("upCopy");
@@ -1081,18 +1081,18 @@ function _row(k,v){
     '<div style="flex:1;font-size:13px;color:#333;font-weight:600;word-break:break-all">'+esc(v||"")+'</div></div>';
 }
 function chooseUpgrade(key){
-  var map={ basic:["行事曆進階版（早鳥）",599], full:["智在生活完整版（早鳥）",999] };
+  var map={ basic:["進階版",599], full:["完整版",999] };
   var p=map[key]; if(!p) return;
   var email=state.user||"";
-  var msg="【升級申請】\n來源：智能行事曆\n方案："+p[0]+"（年費 $"+p[1]+"）\n帳號："+email;
-  _upgradePopup("升級申請", msg, p[0]+"　$"+p[1]+"/年", email, "智能行事曆");
+  var msg="【升級申請】\nApp：智能行事曆\n方案："+p[0]+"（早鳥 $"+p[1]+"）\n帳號："+email;
+  _upgradePopup("升級申請", msg, p[0]+"（早鳥 $"+p[1]+"）", email, "智能行事曆");
 }
 function renewPlan(key){
-  var map={ basic:["行事曆進階版",599], full:["智在生活完整版",999] };
+  var map={ basic:["進階版",599], full:["完整版",999] };
   var p=map[key]; if(!p) return;
   var email=state.user||"";
-  var msg="【續約申請】\n來源：智能行事曆\n方案："+p[0]+"（年費 $"+p[1]+"）\n帳號："+email;
-  _upgradePopup("續約申請", msg, p[0]+"　$"+p[1]+"/年", email, "智能行事曆");
+  var msg="【續約申請】\nApp：智能行事曆\n方案："+p[0]+"（$"+p[1]+"）\n帳號："+email;
+  _upgradePopup("續約申請", msg, p[0]+"（$"+p[1]+"）", email, "智能行事曆");
 }
 function showUpgrade(feat){ openUpgradeSheet(feat); }
 function previewFree(){                    // 測試用：模擬 free 版
@@ -1306,6 +1306,7 @@ function applyPlanLocks(){
   var ub=$("upgradeBtn"); if(ub) ub.style.display=(state.plan!=="full"&&state.plan!=="admin")?"":"none";  // 完整版/admin外都顯示升級(含試用)
 }
 $("logoutBtn").addEventListener("click", ()=>{
+  if(!confirm("確定要登出嗎？")) return;    // 防誤觸
   // 斷開目前使用者的所有綁定（趁 state.user 還在，uref 才指對空間）
   try{ uref("records").off(); }catch(e){}
   try{ uref("people").off(); }catch(e){}
@@ -3149,7 +3150,7 @@ function openConfirm(title, messageHtml, onConfirm, confirmLabel){
 /* ============================================================
    11. 啟動
    ============================================================ */
-autoLogin();
+autoLogin().then(function(ok){ if(!ok){ var l=document.getElementById("login"); if(l) l.style.display="flex"; } }).catch(function(){ var l=document.getElementById("login"); if(l) l.style.display="flex"; });
 if(!_firebaseReady){
   loginMsg.textContent="（離線測試模式：輸入預設密碼即可進入，資料存在本機）";
 }
