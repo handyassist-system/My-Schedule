@@ -378,6 +378,10 @@
     <div class="code-hint">🎁 首次登入即享 14 天「完整版」全功能免費試用</div>
     <button id="loginBtn" class="btn-primary">登入</button>
     <div id="loginMsg" class="login-msg"></div>
+    <div id="installHint" style="margin-top:16px;font-size:12px;color:var(--muted);line-height:1.7;background:var(--primary-soft);border-radius:12px;padding:11px 13px;text-align:left">
+      📲 <b style="color:var(--primary)">裝到手機桌面，像 App 一樣用</b><br>
+      點右上角 <b>⋮</b> 選單 → 點「加到主畫面」<br>→ 選 <b>「安裝」</b>（請勿選「建立捷徑」）
+    </div>
   </div>
 </div>
 
@@ -3216,6 +3220,11 @@ window.addEventListener('beforeinstallprompt', function(e){
   if(cls) cls.addEventListener('click', function(){ if(bar) bar.style.display='none'; try{ localStorage.setItem('installDismissed','1'); }catch(e){} });
 })();
 window.addEventListener('appinstalled', function(){ var b=document.getElementById('installBar'); if(b) b.style.display='none'; });
+// 已安裝成App(全螢幕模式) → 登入頁不再顯示安裝引導
+try{
+  var _standalone=(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone===true;
+  if(_standalone){ var _ih=document.getElementById('installHint'); if(_ih) _ih.style.display='none'; }
+}catch(e){}
 if(!_firebaseReady){
   loginMsg.textContent="（離線測試模式：輸入預設密碼即可進入，資料存在本機）";
 }
