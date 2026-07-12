@@ -378,10 +378,8 @@
     <div class="code-hint">🎁 首次登入即享 14 天「完整版」全功能免費試用</div>
     <button id="loginBtn" class="btn-primary">登入</button>
     <div id="loginMsg" class="login-msg"></div>
-    <div id="installHint" style="margin-top:16px;font-size:12px;color:var(--muted);line-height:1.7;background:var(--primary-soft);border-radius:12px;padding:11px 13px;text-align:left">
-      📲 <b style="color:var(--primary)">裝到手機桌面，像 App 一樣用</b><br>
-      點右上角 <b>⋮</b> 選單 → 點「加到主畫面」<br>→ 選 <b>「安裝」</b>（請勿選「建立捷徑」）
-    </div>
+    <button id="installHintBtn" type="button" style="display:none;margin-top:14px;width:100%;background:var(--primary-soft);color:var(--primary);font-weight:600;font-size:14px;padding:12px;border-radius:12px;border:1px solid var(--primary)">📲 安裝到手機桌面</button>
+    <div id="installHelp" style="display:none;margin-top:10px;font-size:12px;color:var(--muted);line-height:1.7;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 13px;text-align:left"></div>
   </div>
 </div>
 
@@ -3219,12 +3217,31 @@ window.addEventListener('beforeinstallprompt', function(e){
   });
   if(cls) cls.addEventListener('click', function(){ if(bar) bar.style.display='none'; try{ localStorage.setItem('installDismissed','1'); }catch(e){} });
 })();
-window.addEventListener('appinstalled', function(){ var b=document.getElementById('installBar'); if(b) b.style.display='none'; });
-// 已安裝成App(全螢幕模式) → 登入頁不再顯示安裝引導
-try{
-  var _standalone=(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone===true;
-  if(_standalone){ var _ih=document.getElementById('installHint'); if(_ih) _ih.style.display='none'; }
-}catch(e){}
+window.addEventListener('appinstalled', function(){ var b=document.getElementById('installBar'); if(b) b.style.display='none'; var hb=document.getElementById('installHintBtn'); if(hb) hb.style.display='none'; });
+// 登入頁「安裝到手機桌面」按鈕
+(function(){
+  var _standalone=false;
+  try{ _standalone=(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone===true; }catch(e){}
+  if(_standalone) return;                          // 已安裝成App → 不顯示按鈕
+  var hb=document.getElementById('installHintBtn');
+  var help=document.getElementById('installHelp');
+  if(hb) hb.style.display='block';                 // 在瀏覽器 → 顯示按鈕
+  // Android 可安裝時,beforeinstallprompt 會設定 _deferredPrompt(見上方)
+  if(hb) hb.addEventListener('click', function(){
+    if(_deferredPrompt){                           // Android 可一鍵安裝
+      _deferredPrompt.prompt();
+      _deferredPrompt.userChoice.then(function(){ _deferredPrompt=null; });
+    } else {                                       // iPhone / 尚未就緒 → 顯示教學
+      var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+      if(help){
+        help.innerHTML = isIOS
+          ? '📱 <b>iPhone 安裝：</b><br>1. 用 <b>Safari</b> 開啟本頁<br>2. 點下方「分享」鈕 <b>⬆️</b><br>3. 選「<b>加入主畫面</b>」'
+          : '📲 <b>安裝步驟：</b><br>1. 點右上角 <b>⋮</b> 選單<br>2. 點「加到主畫面」<br>3. 選「<b>安裝</b>」（請勿選「建立捷徑」）';
+        help.style.display='block';
+      }
+    }
+  });
+})();
 if(!_firebaseReady){
   loginMsg.textContent="（離線測試模式：輸入預設密碼即可進入，資料存在本機）";
 }
