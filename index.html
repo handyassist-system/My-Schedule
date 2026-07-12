@@ -455,6 +455,12 @@
   </header>
 
   <main>
+    <div id="installBar" style="display:none;align-items:center;gap:10px;background:var(--primary-soft);border:1px solid var(--primary);border-radius:14px;padding:10px 12px;margin-bottom:12px">
+      <span style="font-size:22px">📲</span>
+      <div style="flex:1;font-size:13px;line-height:1.4"><b>安裝到桌面</b><br><span style="color:var(--muted);font-size:12px">像 App 一樣開啟，更快更順</span></div>
+      <button id="installBtn" style="background:var(--primary);color:#fff;font-weight:600;font-size:13px;padding:8px 14px;border-radius:10px;border:none">安裝</button>
+      <button id="installClose" style="background:none;border:none;color:var(--muted);font-size:18px;padding:4px 6px">×</button>
+    </div>
     <!-- Calendar tab -->
     <section id="tabCal">
       <div class="cal-head">
@@ -1609,16 +1615,17 @@ function openMyApps(){
     {ico:"🌍", name:"造訪足跡", url:"https://handyassist-system.github.io/My-Visited-Country/", dev:true}
   ];
   var _isAdminNow = state.isAdmin!==false && !!(state.user && (String(state.user).toLowerCase()===ADMIN_EMAIL || state.user===DEFAULT_CODE));
+  var _authTok=''; try{ var _cu=localStorage.getItem(AUTH_KEY); if(_cu) _authTok='#u='+encodeURIComponent(_cu); }catch(e){}   // 帶登入身分,跨App免再登入
   const html='<div class="app-list">'+apps.map(function(a){
     if(a.dev && !_isAdminNow){              // 開發中 → 非管理員鎖住
       return '<a class="app-row" href="javascript:void(0)" style="opacity:.45" onclick="alert(\'開發中，敬請期待 🙏\')"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">開發中</span></a>';
     }
     if(_isAdminNow){                        // 管理員：全部可切換
-      return '<a class="app-row" href="'+a.url+'" rel="noopener"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">↗</span></a>';
+      return '<a class="app-row" href="'+a.url+_authTok+'" rel="noopener"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">↗</span></a>';
     }
     return !canFull()                           // 庫存：完整版才可切換
       ? '<a class="app-row" href="javascript:void(0)" onclick="showUpgrade(\''+esc(a.name)+'\')"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">🔒</span></a>'
-      : '<a class="app-row" href="'+a.url+'" rel="noopener"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">↗</span></a>';
+      : '<a class="app-row" href="'+a.url+_authTok+'" rel="noopener"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">↗</span></a>';
   }).join("")+'</div>';
   openSheet("📱 我的 App", html, null, null, "關閉");
 }
@@ -3192,6 +3199,23 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(function(){});
   });
 }
+
+// PWA: 安裝到桌面按鈕（可安裝時自動出現）
+var _deferredPrompt=null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault(); _deferredPrompt=e;
+  try{ if(!localStorage.getItem('installDismissed')){ var b=document.getElementById('installBar'); if(b) b.style.display='flex'; } }catch(err){ var b2=document.getElementById('installBar'); if(b2) b2.style.display='flex'; }
+});
+(function(){
+  var btn=document.getElementById('installBtn'), bar=document.getElementById('installBar'), cls=document.getElementById('installClose');
+  if(btn) btn.addEventListener('click', function(){
+    if(!_deferredPrompt){ alert('若沒出現安裝視窗：請用手機瀏覽器選單（⋮）選「安裝應用程式／加到主畫面」。iPhone 請用 Safari 的分享鈕 → 加入主畫面。'); return; }
+    _deferredPrompt.prompt();
+    _deferredPrompt.userChoice.then(function(){ _deferredPrompt=null; if(bar) bar.style.display='none'; });
+  });
+  if(cls) cls.addEventListener('click', function(){ if(bar) bar.style.display='none'; try{ localStorage.setItem('installDismissed','1'); }catch(e){} });
+})();
+window.addEventListener('appinstalled', function(){ var b=document.getElementById('installBar'); if(b) b.style.display='none'; });
 if(!_firebaseReady){
   loginMsg.textContent="（離線測試模式：輸入預設密碼即可進入，資料存在本機）";
 }
