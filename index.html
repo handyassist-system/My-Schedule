@@ -412,7 +412,7 @@
       <p><b>未成年人：</b>未滿十八歲者，應在法定代理人同意後使用。</p>
       <h3>準據法與管轄</h3>
       <p>本條款以中華民國（台灣）法律為準據法；因本服務所生爭議，以臺灣高雄地方法院為第一審管轄法院。</p>
-      <p style="color:var(--muted);font-size:12px;margin-top:14px">最後更新：2026 年 7 月 13 日　·　聯絡：智在生活 官方 LINE</p>
+      <p style="color:var(--muted);font-size:12px;margin-top:14px">最後更新：2026 年 7 月 13 日<br>聯絡：<span style="white-space:nowrap">「智在生活」官方 LINE</span></p>
     </div>
     <label class="consent-check" style="display:none"><input type="checkbox" id="consentChk"> <span>我已閱讀並同意上述服務條款與隱私權政策</span></label>
     <button id="consentCloseBtn" class="btn-primary">關閉</button>
@@ -493,9 +493,10 @@
 <!-- ===================== APP ===================== -->
 <div id="app" class="hidden">
   <header class="bar">
-    <div style="display:flex;align-items:baseline;gap:6px;min-width:0;flex-shrink:1;overflow:hidden">
-      <div class="title" id="barTitle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📅 智能行事曆</div>
-      <span style="font-size:10px;color:#aaa;font-weight:normal;white-space:nowrap;flex-shrink:0">v1.0</span>
+    <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-shrink:1;overflow:hidden">
+      <span style="width:4px;height:20px;background:var(--primary);border-radius:2px;flex-shrink:0"></span>
+      <div class="title" id="barTitle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">智能行事曆</div>
+      <span style="font-size:10px;color:#aaa;font-weight:normal;white-space:nowrap;flex-shrink:0">v1.1</span>
     </div>
     <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
       <button class="logout icobtn" id="activityBtn" style="position:relative">🔔<span id="activityBadge" class="act-badge" style="display:none"></span></button>
@@ -664,7 +665,7 @@ let formAssignees = new Set();   // 編輯記事時暫存已選執行人
 const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
 const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
 const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
-const APP_VER = "v1.0(2026)";
+const APP_VER = "v1.1(2026)";
 const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
 const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
 // 庫存 16 小類 → 行事曆 6 大類（衣物／旅遊備品庫存沒有，只能手動）
@@ -1092,8 +1093,6 @@ function openUpgradeSheet(feat){
   var intro=feat?('<div style="text-align:center;color:#E377C2;font-weight:600;margin-bottom:10px">🔒 '+feat+' 為付費功能，升級即可解鎖</div>'):'';
   var tblHead='<div style="font-weight:700;font-size:13px;margin:18px 2px 6px;color:#333">📊 完整功能比較</div>';
   openSheet("⭐ 升級方案", intro+c1+c2+note+tblHead+tbl, null, null, "關閉");
-  var _sc=$("sheetCancel"); if(_sc) _sc.style.display="none";
-  var _ss=$("sheetSave"); if(_ss) _ss.style.display="none";
 }
 function _copyText(t){
   var ok=false;
@@ -1225,6 +1224,7 @@ function showAdminChoice(){
   $("adminChoice").classList.remove("hidden");
 }
 function openAdminPanel(){
+  if(!state.isAdmin){ try{ toast("無管理員權限"); }catch(e){} return; }   // 守衛：非管理員一律擋下
   $("adminChoice").classList.add("hidden");
   $("adminPanel").classList.remove("hidden");
   loadAdminList();
@@ -1341,6 +1341,7 @@ $("adminBackBtn").addEventListener("click", ()=>{ $("adminPanel").classList.add(
 function hasPendingPurchase(){ try{ return !!localStorage.getItem("inv_pending_purchase"); }catch(e){ return false; } }
 async function autoLogin(){
   var saved; try{ saved=localStorage.getItem(AUTH_KEY); }catch(e){ saved=null; }
+  try{ var _hm=(location.hash||'').match(/[#&]u=([^&]+)/); if(_hm&&_hm[1]){ var _hu=decodeURIComponent(_hm[1]); if(_hu){ saved=_hu; try{ localStorage.setItem(AUTH_KEY,_hu); }catch(e){} try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} } } }catch(e){}   // 從網址接收登入(跨App直接進,不跳登入頁)
   if(!saved) return false;                                   // 沒記住 → 顯示登入頁
   state.user=saved;
   var isAdmin=(saved===DEFAULT_CODE)||(String(saved).toLowerCase()===ADMIN_EMAIL);
@@ -1682,7 +1683,7 @@ function switchTab(t){
   $("navOverview").classList.toggle("active", t==="overview");
   $("navShop").classList.toggle("active", t==="shop");
   $("navGoals").classList.toggle("active", t==="goals");
-  $("barTitle").textContent = t==="cal" ? "📅 智能行事曆" : (t==="overview" ? "📋 總覽" : (t==="shop" ? "🛒 待購清單" : "🎯 年度目標"));
+  $("barTitle").textContent = t==="cal" ? "智能行事曆" : (t==="overview" ? "📋 總覽" : (t==="shop" ? "🛒 待購清單" : "🎯 年度目標"));
   if(t==="overview") renderOverview();
   if(t==="shop") renderShop();
   if(t==="goals") renderGoals();
@@ -1786,7 +1787,6 @@ function openCalManager(){
     +'<button id="logoutFromSettings" type="button" class="logout" style="width:100%;padding:11px;border-radius:12px;color:#E8735C;font-weight:600">🚪 登出</button></div>';
 
   openSheet("⚙️ 設定", html, null, null);
-  const sv=$("sheetSave"); if(sv) sv.style.display="none";
   var _nb=$("notifyBtn");
   if(_nb){
     if(notifyOn()){ _nb.textContent="✅ 行程提醒已開啟"; _nb.style.background="var(--primary-soft)"; _nb.style.color="var(--primary)"; }
@@ -3283,18 +3283,25 @@ function openPeopleManager(){
    ============================================================ */
 function openSheet(title, innerHTML, onSave, onDelete, saveLabel){
   const root=$("modalRoot");
+  var isView = !onSave;                       // 沒有儲存動作 = 純看的
+  var acts = isView
+    ? '<div class="sheet-acts"><button class="btn-primary" id="sheetClose" style="width:100%">'+(saveLabel||"關閉")+'</button></div>'
+    : '<div class="sheet-acts"><button class="btn-ghost" id="sheetCancel">取消</button>'+
+      '<button class="btn-primary" id="sheetSave">'+(saveLabel||"儲存")+'</button></div>'+
+      (onDelete?'<button class="btn-danger" id="sheetDelete">刪除</button>':'');
   root.innerHTML=
     '<div class="overlay" id="ovl"><div class="sheet" id="sheet">'+
-      '<button id="sheetX" aria-label="關閉" style="position:absolute;top:10px;right:12px;border:none;background:#f0f0f3;color:#666;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;line-height:1">✕</button>'+
-      '<h3 style="padding-right:34px">'+esc(title)+'</h3>'+innerHTML+
-      '<div class="sheet-acts"><button class="btn-ghost" id="sheetCancel">取消</button>'+
-      '<button class="btn-primary" id="sheetSave">'+(saveLabel||"儲存")+'</button></div>'+
-      (onDelete?'<button class="btn-danger" id="sheetDelete">刪除</button>':'')+
+      '<div style="position:sticky;top:0;background:var(--surface);z-index:5;margin:-20px -18px 12px;padding:16px 18px 10px;border-radius:20px 20px 0 0">'+
+        '<h3 style="margin:0;font-size:17px">'+esc(title)+'</h3>'+
+      '</div>'+
+      innerHTML+ acts +
     '</div></div>';
-  var _x=$("sheetX"); if(_x) _x.addEventListener("click", closeSheet);
-  $("sheetCancel").addEventListener("click", closeSheet);
-  $("sheetSave").addEventListener("click", onSave||closeSheet);
-  if(onDelete) $("sheetDelete").addEventListener("click", onDelete);
+  if(isView){ var _c=$("sheetClose"); if(_c) _c.addEventListener("click", closeSheet); }
+  else {
+    $("sheetCancel").addEventListener("click", closeSheet);
+    $("sheetSave").addEventListener("click", onSave);
+    if(onDelete) $("sheetDelete").addEventListener("click", onDelete);
+  }
   $("ovl").addEventListener("click", e=>{ if(e.target.id==="ovl") closeSheet(); });
 }
 function closeSheet(){ $("modalRoot").innerHTML=""; }
