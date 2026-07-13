@@ -77,6 +77,8 @@
   header.bar .title{font-size:18px;font-weight:700;letter-spacing:.3px}
   header.bar .who{font-size:11px;color:var(--faint);margin-top:0}
   .logout{font-size:11px;color:var(--muted);padding:4px 7px;border:1px solid var(--line);border-radius:999px;background:var(--surface);white-space:nowrap}
+  .icobtn{font-size:17px;padding:7px 10px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink)}
+  .icobtn svg{display:block}
   .dp-toggle{display:flex;gap:5px;background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:4px;margin:8px 4px 2px}
   .dp-tab{flex:1;border:none;background:transparent;padding:9px 6px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted)}
   .dp-tab.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -410,7 +412,7 @@
       <p><b>未成年人：</b>未滿十八歲者，應在法定代理人同意後使用。</p>
       <h3>準據法與管轄</h3>
       <p>本條款以中華民國（台灣）法律為準據法；因本服務所生爭議，以臺灣高雄地方法院為第一審管轄法院。</p>
-      <p style="color:var(--muted);font-size:12px;margin-top:14px">最後更新：2026 年 7 月 13 日　·　聯絡：官方 LINE @373pfdee</p>
+      <p style="color:var(--muted);font-size:12px;margin-top:14px">最後更新：2026 年 7 月 13 日　·　聯絡：智在生活 官方 LINE</p>
     </div>
     <label class="consent-check" style="display:none"><input type="checkbox" id="consentChk"> <span>我已閱讀並同意上述服務條款與隱私權政策</span></label>
     <button id="consentCloseBtn" class="btn-primary">關閉</button>
@@ -472,8 +474,8 @@
     <div id="adminEditEmail" style="font-size:13px;color:#666;margin-bottom:12px;word-break:break-all"></div>
     <label style="font-size:13px;color:#444">方案</label>
     <select id="adminEditPlan" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin:4px 0 12px;font-size:14px">
-      <option value="basic">進階版（原價$799 / 早鳥$599）</option>
-      <option value="full">完整版（原價$1299 / 早鳥$999）</option>
+      <option value="basic">進階版（原價$1199 / 早鳥$599）</option>
+      <option value="full">完整版（原價$2399 / 早鳥$1199）</option>
       <option value="trial">試用（14天）</option>
       <option value="free">免費(過期)</option>
     </select>
@@ -496,12 +498,11 @@
       <span style="font-size:10px;color:#aaa;font-weight:normal;white-space:nowrap;flex-shrink:0">v1.0</span>
     </div>
     <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
-      <button class="logout" id="activityBtn" style="position:relative">🔔<span id="activityBadge" class="act-badge" style="display:none"></span></button>
+      <button class="logout icobtn" id="activityBtn" style="position:relative">🔔<span id="activityBadge" class="act-badge" style="display:none"></span></button>
       
-      <button class="logout" id="myAppsBtn" title="我的 App">📱</button>
-      <button class="logout" id="calBtn" title="切換／管理行事曆">📂</button>
+      <button class="logout icobtn" id="myAppsBtn" title="我的 App">📱</button>
+      <button class="logout icobtn" id="calBtn" title="設定／切換行事曆">⚙️</button>
       <button class="logout" id="upgradeBtn" style="display:none;background:#E377C2;color:#fff">⭐升級</button>
-      <button class="logout" id="logoutBtn" style="margin-left:6px">登出</button>
     </div>
   </header>
 
@@ -542,9 +543,6 @@
       </div>
 
       <div id="panePocket" style="display:none">
-        <div class="section-head">
-          <h2>🎒 百寶袋 <span style="font-size:12px;color:var(--faint);font-weight:400">隨手筆記</span></h2>
-        </div>
         <div class="pocket-add">
           <span class="pocket-ico">🎒</span>
           <input type="text" id="pocketInput" autocomplete="off" placeholder="想到什麼，先記這裡…">
@@ -1074,21 +1072,28 @@ function openUpgradeSheet(feat){
     return '<button onclick="chooseUpgrade(\''+key+'\')" style="border:none;background:'+color+';color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700">選這個</button>';
   }
   // 進階版卡（早鳥）
-  var c1='<div style="border:2px solid #2980b9;border-radius:12px;padding:12px;margin-top:10px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center">'
-    +'<div><div style="font-weight:700;font-size:15px">🔵 進階版</div>'
-    +'<div style="font-size:15px"><span style="text-decoration:line-through;color:#bbb">$799</span> <span style="color:#e74c3c;font-weight:700">NT$599</span></div><div style="font-size:11px;color:#e74c3c">🔥 早鳥限量優惠中</div></div>'
+  var c1='<div style="border:2px solid #2980b9;border-radius:14px;padding:14px;margin-top:10px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+    +'<div><div style="font-weight:700;font-size:16px">🔵 進階版</div>'
+    +'<div style="font-size:16px;margin-top:2px"><span style="text-decoration:line-through;color:#bbb">$1,199</span> <span style="color:#e74c3c;font-weight:800">NT$599</span><span style="font-size:12px;color:#888">/年</span></div>'
+    +'<div style="font-size:11px;color:#e74c3c;margin-top:2px">🔥 早鳥半價 · 平均每月只要 $50</div></div>'
     +planBtn("basic","#2980b9")
-    +'</div><div style="font-size:12px;color:#888;margin-top:6px">解鎖：總覽回顧、個人目標、進階記事、多本行事曆、資料備份</div></div>';
+    +'</div>'
+    +'<div style="font-size:12.5px;color:#555;margin-top:10px;line-height:1.8">✓ 每月回顧總覽，大小事不漏接<br>✓ 個人目標設定與追蹤<br>✓ 多本行事曆＋資料備份</div></div>';
   // 完整版卡（早鳥）
-  var c2='<div style="border:2px solid #8e44ad;border-radius:12px;padding:12px;margin-top:10px;background:#faf5ff">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center">'
-    +'<div><div style="font-weight:700;font-size:15px">🟣 完整版</div>'
-    +'<div style="font-size:15px"><span style="text-decoration:line-through;color:#bbb">$1299</span> <span style="color:#e74c3c;font-weight:700">NT$999</span></div><div style="font-size:11px;color:#e74c3c">🔥 早鳥限量優惠中</div></div>'
+  var c2='<div style="border:2px solid #8e44ad;border-radius:14px;padding:14px;margin-top:10px;background:#faf5ff">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+    +'<div><div style="font-weight:700;font-size:16px">🟣 完整版 <span style="font-size:11px;background:#8e44ad;color:#fff;padding:1px 7px;border-radius:20px;vertical-align:middle">最推薦</span></div>'
+    +'<div style="font-size:16px;margin-top:2px"><span style="text-decoration:line-through;color:#bbb">$2,399</span> <span style="color:#e74c3c;font-weight:800">NT$1,199</span><span style="font-size:12px;color:#888">/年</span></div>'
+    +'<div style="font-size:11px;color:#e74c3c;margin-top:2px">🔥 早鳥半價 · 平均每月只要 $100</div></div>'
     +planBtn("full","#8e44ad")
-    +'</div><div style="font-size:12px;color:#8e44ad;margin-top:6px">🏆 涵蓋進階版全部功能，再加：採購×庫存連動、任務指派、多人目標</div></div>';
+    +'</div>'
+    +'<div style="font-size:12.5px;color:#8e44ad;margin-top:10px;line-height:1.8">🏆 進階版全部功能，再加：<br>✓ 採購×庫存連動，不重複買、不缺貨<br>✓ 東西過期前主動提醒你<br>✓ 家人分工、多人共同目標</div></div>';
   var intro=feat?('<div style="text-align:center;color:#E377C2;font-weight:600;margin-bottom:10px">🔒 '+feat+' 為付費功能，升級即可解鎖</div>'):'';
-  openSheet("⭐ 升級方案", intro+tbl+note+c1+c2, null, null, "關閉");
+  var tblHead='<div style="font-weight:700;font-size:13px;margin:18px 2px 6px;color:#333">📊 完整功能比較</div>';
+  openSheet("⭐ 升級方案", intro+c1+c2+note+tblHead+tbl, null, null, "關閉");
+  var _sc=$("sheetCancel"); if(_sc) _sc.style.display="none";
+  var _ss=$("sheetSave"); if(_ss) _ss.style.display="none";
 }
 function _copyText(t){
   var ok=false;
@@ -1152,14 +1157,14 @@ function _row(k,v){
     '<div style="flex:1;font-size:13px;color:#333;font-weight:600;word-break:break-all">'+esc(v||"")+'</div></div>';
 }
 function chooseUpgrade(key){
-  var map={ basic:["進階版",599], full:["完整版",999] };
+  var map={ basic:["進階版",599], full:["完整版",1199] };
   var p=map[key]; if(!p) return;
   var email=state.user||"";
   var msg="【升級申請】\nApp：智能行事曆\n方案："+p[0]+"（早鳥 $"+p[1]+"）\n帳號："+email;
   _upgradePopup("升級申請", msg, p[0]+"（早鳥 $"+p[1]+"）", email, "智能行事曆");
 }
 function renewPlan(key){
-  var map={ basic:["進階版",599], full:["完整版",999] };
+  var map={ basic:["進階版",599], full:["完整版",1199] };
   var p=map[key]; if(!p) return;
   var email=state.user||"";
   var msg="【續約申請】\nApp：智能行事曆\n方案："+p[0]+"（$"+p[1]+"）\n帳號："+email;
@@ -1275,7 +1280,7 @@ function adminAddCustomer(){
   var email=prompt("客戶 Email："); if(!email) return;
   email=email.trim().toLowerCase();
   if(!isEmail(email)){ alert("Email 格式不正確"); return; }
-  var plan=prompt("方案代號：\nbasic=進階版(原$799/早鳥$599)\nfull=完整版(原$1299/早鳥$999)","full");
+  var plan=prompt("方案代號：\nbasic=進階版(原$1199/早鳥$599)\nfull=完整版(原$2399/早鳥$1199)","full");
   if(!plan) return; plan=plan.trim();
   if(["basic","full","family","trial","free"].indexOf(plan)<0){ alert("方案代號不正確"); return; }
   var months=prompt("有效月數（12=一年）","12"); if(months===null) return;
@@ -1376,11 +1381,11 @@ function _todayTimedEvents(){
 }
 function notifyOn(){ try{ return localStorage.getItem('notifyEnabled')==='1' && ('Notification' in window) && Notification.permission==='granted'; }catch(e){ return false; } }
 function requestNotify(){
-  if(!('Notification' in window)){ alert('此裝置或瀏覽器不支援通知'); return; }
-  if(Notification.permission==='denied'){ alert('通知已被封鎖。請到手機「設定 → 通知」允許本 App 後再試。'); return; }
+  if(!('Notification' in window)){ alert('此裝置不支援通知，請先將本 App「安裝到桌面」再試。'); return; }
+  if(Notification.permission==='denied'){ alert('🔔 通知被封鎖了\n請到手機設定開啟本 App 的通知。'); return; }
   Notification.requestPermission().then(function(p){
     if(p==='granted'){ try{ localStorage.setItem('notifyEnabled','1'); }catch(e){} toast('✅ 已開啟提醒'); try{ closeSheet(); }catch(e){} maybeNotifyToday(true); }
-    else { alert('未開啟通知。若要開啟，請到手機「設定 → 通知」允許本 App。'); }
+    else { alert('🔔 未開啟通知\n建議先將本 App「安裝到桌面」，再開啟提醒較穩定。'); }
   });
 }
 function _showNotif(title, body){
@@ -1434,7 +1439,7 @@ function applyPlanLocks(){
   if(ag){ ag.textContent=adv?"＋ 新增目標":"🔒 升級解鎖新增目標"; }
   var ub=$("upgradeBtn"); if(ub) ub.style.display=(state.plan!=="full"&&state.plan!=="admin")?"":"none";  // 完整版/admin外都顯示升級(含試用)
 }
-$("logoutBtn").addEventListener("click", ()=>{
+function doLogout(){
   if(!confirm("確定要登出嗎？")) return;    // 防誤觸
   // 斷開目前使用者的所有綁定（趁 state.user 還在，uref 才指對空間）
   try{ uref("records").off(); }catch(e){}
@@ -1452,7 +1457,9 @@ $("logoutBtn").addEventListener("click", ()=>{
   var _ap=$("adminPanel"); if(_ap) _ap.classList.add("hidden");
   var _lg=$("login"); if(_lg){ _lg.classList.remove("hidden"); _lg.style.display="flex"; }   // 明確顯示登入頁(蓋過防閃的inline none)
   codeInput.value=""; loginMsg.textContent="";
-});
+  var _ag=$("agreeChk"); if(_ag) _ag.checked=false;   // 清掉同意勾選
+}
+var _lob=$("logoutBtn"); if(_lob) _lob.addEventListener("click", doLogout);
 
 
 /* ============================================================
@@ -1713,7 +1720,7 @@ function openMyApps(){
   ];
   var _isAdminNow = state.isAdmin!==false && !!(state.user && (String(state.user).toLowerCase()===ADMIN_EMAIL || state.user===DEFAULT_CODE));
   var _authTok=''; try{ var _cu=localStorage.getItem(AUTH_KEY); if(_cu) _authTok='#u='+encodeURIComponent(_cu); }catch(e){}   // 帶登入身分,跨App免再登入
-  const html='<div class="app-list">'+apps.map(function(a){
+  const html='<div class="app-list">'+apps.filter(function(a){ return _isAdminNow || !a.dev; }).map(function(a){
     if(a.dev && !_isAdminNow){              // 開發中 → 非管理員鎖住
       return '<a class="app-row" href="javascript:void(0)" style="opacity:.45" onclick="alert(\'開發中，敬請期待 🙏\')"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">開發中</span></a>';
     }
@@ -1749,34 +1756,50 @@ function setCurrentCal(id){
 }
 function openCalManager(){
   const ids=Object.keys(state.calendars);
-  let html='<p style="font-size:12px;color:var(--muted);margin:-2px 2px 12px;line-height:1.5">點名稱可切換。每本行事曆的資料各自獨立；用<b>同一組授權碼</b>登入的家人，會看到同樣這些行事曆（即分享方式）。</p>';
+  var _sec=function(t){ return '<div style="font-size:12px;font-weight:700;color:var(--primary);margin:18px 2px 8px;letter-spacing:.3px">'+t+'</div>'; };
+  var _first='<div style="font-size:12px;font-weight:700;color:var(--primary);margin:2px 2px 8px;letter-spacing:.3px">📅 我的行事曆</div>';
+  let html=_first;
+  html+='<p style="font-size:11.5px;color:var(--muted);margin:0 2px 10px;line-height:1.5">點名稱可切換。每本資料各自獨立；用同一組帳號登入的家人會看到同樣的行事曆。</p>';
   html+='<div id="calList">'+ids.map(id=>{
     const on=id===state.currentCal;
     return '<div class="cal-row'+(on?" on":"")+'"><span class="cal-name" data-cal="'+id+'">'+(on?"✓ ":"")+esc(calName(id))+'</span>'+
       '<button type="button" class="cal-del" data-del="'+id+'">🗑</button></div>';
   }).join("")+'</div>';
   html+='<div class="chip-add" style="margin-top:10px"><input id="calNewName" autocomplete="off" placeholder="新行事曆名稱（如：家庭、工作）"><button id="calAddBtn" type="button">＋ 新增</button></div>';
-  html+='<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">'
-    +'<div style="font-size:12px;color:var(--muted);margin-bottom:8px">資料備份（記事＋目標）</div>'
-    +'<div style="display:flex;gap:8px">'
-    +'<button id="backupExport" type="button" class="logout" style="flex:1;padding:9px">⬇️ 匯出備份</button>'
+
+  html+=_sec("🔔 提醒");
+  html+='<button id="notifyBtn" type="button" class="logout" style="width:100%;padding:11px;border-radius:12px;font-weight:600">🔔 開啟行程提醒</button>'
+    +'<div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;line-height:1.5">建議先安裝到桌面，開啟後打開App會用手機通知提醒今天行程</div>';
+
+  html+=_sec("💾 資料備份");
+  html+='<div style="display:flex;gap:8px">'
+    +'<button id="backupExport" type="button" class="logout" style="flex:1;padding:9px">⬇️ 匯出</button>'
     +'<label class="logout" style="flex:1;padding:9px;text-align:center;cursor:pointer">⬆️ 匯入還原<input id="backupImport" type="file" accept="application/json,.json" style="display:none"></label>'
-    +'</div></div>';
-  html+='<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">'
-    +'<button id="notifyBtn" type="button" class="logout" style="width:100%;padding:11px;border-radius:12px;font-weight:600">🔔 開啟行程提醒</button>'
-    +'<div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">開啟後,打開App會用手機通知提醒今天的行程</div></div>';
+    +'</div>';
+
   if(state.isAdmin){
-    html+='<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">'
-      +'<button id="goAdminFromCal" type="button" class="logout" style="width:100%;padding:11px;background:var(--primary-soft);color:var(--primary);font-weight:600;border-radius:12px">🔧 管理後台</button></div>';
+    html+=_sec("🔧 管理");
+    html+='<button id="goAdminFromCal" type="button" class="logout" style="width:100%;padding:11px;background:var(--primary-soft);color:var(--primary);font-weight:600;border-radius:12px">🔧 管理後台</button>';
   }
-  openSheet("行事曆", html, null, null);
+
+  html+='<div style="margin-top:20px;border-top:1px solid var(--line);padding-top:14px">'
+    +'<button id="logoutFromSettings" type="button" class="logout" style="width:100%;padding:11px;border-radius:12px;color:#E8735C;font-weight:600">🚪 登出</button></div>';
+
+  openSheet("⚙️ 設定", html, null, null);
   const sv=$("sheetSave"); if(sv) sv.style.display="none";
   var _nb=$("notifyBtn");
   if(_nb){
     if(notifyOn()){ _nb.textContent="✅ 行程提醒已開啟"; _nb.style.background="var(--primary-soft)"; _nb.style.color="var(--primary)"; }
-    _nb.addEventListener("click", function(){ if(notifyOn()){ toast("提醒已經開啟囉"); } else { requestNotify(); } });
+    _nb.addEventListener("click", function(){
+      if(notifyOn()){
+        try{ localStorage.setItem('notifyEnabled','0'); }catch(e){}
+        _nb.textContent="🔔 開啟行程提醒"; _nb.style.background=""; _nb.style.color="";
+        toast("已關閉行程提醒");
+      } else { requestNotify(); }
+    });
   }
   if($("goAdminFromCal")) $("goAdminFromCal").addEventListener("click", function(){ closeSheet(); openAdminPanel(); });
+  if($("logoutFromSettings")) $("logoutFromSettings").addEventListener("click", function(){ closeSheet(); doLogout(); });
   $("calList").querySelectorAll(".cal-name").forEach(s=>s.addEventListener("click", ()=>setCurrentCal(s.getAttribute("data-cal"))));
   $("calList").querySelectorAll(".cal-del").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); deleteCalendar(b.getAttribute("data-del")); }));
   $("calAddBtn").addEventListener("click", ()=>{ const nm=$("calNewName").value.trim(); if(nm){ addCalendar(nm); } else { toast("請輸入名稱"); } });

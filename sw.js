@@ -1,12 +1,11 @@
 // 智能行事曆 Service Worker
-const CACHE_NAME = 'cal-cache-v3';
+const CACHE_NAME = 'cal-cache-v4';
 const CORE = [
   './',
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png',
-  './icon-maskable-512.png'
+  './icon-512.png'
 ];
 
 // 安裝：預快取核心檔案
