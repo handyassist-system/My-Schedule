@@ -1,8 +1,9 @@
 // 智能行事曆 Service Worker
-const CACHE_NAME = 'cal-cache-v4';
+const CACHE_NAME = 'cal-cache-v5';
 const CORE = [
   './',
   './index.html',
+  './inventory.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
