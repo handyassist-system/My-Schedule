@@ -1,5 +1,5 @@
 // 智能行事曆 Service Worker
-const CACHE_NAME = 'cal-cache-v1';
+const CACHE_NAME = 'cal-cache-v2';
 const CORE = [
   './',
   './index.html',
@@ -10,7 +10,6 @@ const CORE = [
 
 // 安裝：預快取核心檔案
 self.addEventListener('install', function(e){
-  self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then(function(c){ return c.addAll(CORE).catch(function(){}); })
   );
@@ -43,4 +42,20 @@ self.addEventListener('fetch', function(e){
       return caches.match(e.request).then(function(r){ return r || caches.match('./index.html'); });
     })
   );
+});
+
+// 點通知 → 開啟/聚焦 App
+self.addEventListener('notificationclick', function(e){
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({type:'window', includeUncontrolled:true}).then(function(list){
+      for(var i=0;i<list.length;i++){ if('focus' in list[i]) return list[i].focus(); }
+      if(clients.openWindow) return clients.openWindow('./index.html');
+    })
+  );
+});
+
+// 收到頁面指令 → 立即接管(用於「立即更新」)
+self.addEventListener('message', function(e){
+  if(e.data === 'SKIP_WAITING') self.skipWaiting();
 });
