@@ -3291,9 +3291,7 @@ function openSheet(title, innerHTML, onSave, onDelete, saveLabel){
       (onDelete?'<button class="btn-danger" id="sheetDelete">刪除</button>':'');
   root.innerHTML=
     '<div class="overlay" id="ovl"><div class="sheet" id="sheet">'+
-      '<div style="position:sticky;top:0;background:var(--surface);z-index:5;margin:-20px -18px 12px;padding:16px 18px 10px;border-radius:20px 20px 0 0">'+
-        '<h3 style="margin:0;font-size:17px">'+esc(title)+'</h3>'+
-      '</div>'+
+      '<h3 style="margin:0 0 14px;font-size:17px">'+esc(title)+'</h3>'+
       innerHTML+ acts +
     '</div></div>';
   if(isView){ var _c=$("sheetClose"); if(_c) _c.addEventListener("click", closeSheet); }
@@ -3375,7 +3373,7 @@ window.addEventListener('beforeinstallprompt', function(e){
 (function(){
   var btn=document.getElementById('installBtn'), bar=document.getElementById('installBar'), cls=document.getElementById('installClose');
   if(btn) btn.addEventListener('click', function(){
-    if(!_deferredPrompt){ alert('若沒出現安裝視窗：請用手機瀏覽器選單（⋮）選「安裝應用程式／加到主畫面」。iPhone 請用 Safari 的分享鈕 → 加入主畫面。'); return; }
+    if(!_deferredPrompt){ alert('請用 Chrome 瀏覽器開啟本頁再安裝。\n\n若沒出現安裝視窗：點手機瀏覽器選單（⋮）選「安裝應用程式／加到主畫面」。\niPhone 請用 Safari 的分享鈕 → 加入主畫面。'); return; }
     _deferredPrompt.prompt();
     _deferredPrompt.userChoice.then(function(){ _deferredPrompt=null; if(bar) bar.style.display='none'; });
   });
@@ -3400,7 +3398,7 @@ window.addEventListener('appinstalled', function(){ var b=document.getElementByI
       if(help){
         help.innerHTML = isIOS
           ? '📱 <b>iPhone 安裝：</b><br>1. 用 <b>Safari</b> 開啟本頁<br>2. 點下方「分享」鈕 <b>⬆️</b><br>3. 選「<b>加入主畫面</b>」'
-          : '📲 <b>安裝步驟：</b><br>1. 點右上角 <b>⋮</b> 選單<br>2. 點「加到主畫面」<br>3. 選「<b>安裝</b>」（請勿選「建立捷徑」）';
+          : '📲 <b>安裝步驟（請用 Chrome 開啟）：</b><br>1. 用 <b>Chrome</b> 瀏覽器開本頁<br>2. 點右上角 <b>⋮</b> 選單<br>3. 點「加到主畫面」→ 選「<b>安裝</b>」（請勿選「建立捷徑」）<br><span style="color:#E8735C">※ 其他瀏覽器可能無法安裝</span>';
         help.style.display='block';
       }
     }
