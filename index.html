@@ -425,7 +425,7 @@
     <h1>智能行事曆</h1>
     <p>請輸入 Email 登入</p>
     <input id="codeInput" class="code-input" type="email" inputmode="email" autocomplete="email" placeholder="請輸入 Email" maxlength="60">
-    <div class="code-hint">🎁 首次登入即享 14 天「完整版」全功能免費試用</div>
+    <div class="code-hint">🎁 首次登入即享 14 天「家庭版」全功能免費試用</div>
     <label class="login-consent"><input type="checkbox" id="agreeChk"> <span>我已閱讀並同意 <a id="termsLink" style="color:var(--primary);text-decoration:underline">《服務條款與隱私政策》</a></span></label>
     <button id="loginBtn" class="btn-primary">登入</button>
     <div id="loginMsg" class="login-msg"></div>
@@ -457,7 +457,7 @@
     <div id="adminList"></div>
     <hr style="margin:20px 0;border:none;border-top:1px solid #eee">
     <button onclick="previewFree()" style="border:none;background:#E377C2;color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600">🧪 模擬 free 版預覽</button>
-    <button onclick="previewBasic()" style="border:none;background:#5b8def;color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;margin-left:6px">🧪 模擬 進階版</button>
+    <button onclick="previewBasic()" style="border:none;background:#5b8def;color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;margin-left:6px">🧪 模擬 個人版</button>
     <div style="font-size:12px;color:#aaa;margin-top:6px">（測試用）</div>
   </div>
 </div>
@@ -474,8 +474,8 @@
     <div id="adminEditEmail" style="font-size:13px;color:#666;margin-bottom:12px;word-break:break-all"></div>
     <label style="font-size:13px;color:#444">方案</label>
     <select id="adminEditPlan" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin:4px 0 12px;font-size:14px">
-      <option value="basic">進階版（原價$1199 / 早鳥$599）</option>
-      <option value="full">完整版（原價$2399 / 早鳥$1199）</option>
+      <option value="basic">個人版（原價$1999 / 早鳥$999）</option>
+      <option value="full">家庭版（原價$3999 / 早鳥$1999）</option>
       <option value="trial">試用（14天）</option>
       <option value="free">免費(過期)</option>
     </select>
@@ -1011,7 +1011,7 @@ async function verifyCustomer(email){
   return { ok:true, plan:effPlan, expiry:sub.expiry, expired:!!expired };
 }
 function showTrialWelcome(expiry){
-  try{ alert("🎉 歡迎！\n\n已為你開啟 14 天「完整版」免費試用\n到期日："+expiry+"\n\n試用期間全功能開放，到期後仍可使用基本行事曆，想保留完整功能可隨時升級 😊"); }catch(e){}
+  try{ alert("🎉 歡迎！\n\n已為你開啟 14 天「家庭版」免費試用\n到期日："+expiry+"\n\n試用期間全功能開放，到期後仍可使用基本行事曆，想保留完整功能可隨時升級 😊"); }catch(e){}
 }
 function checkExpiryReminder(res, force){
   if(!res || res.newTrial || !res.expiry || res.plan==="free") return;   // 新試用/免費/無到期 → 不提醒
@@ -1023,7 +1023,7 @@ function checkExpiryReminder(res, force){
     try{ if(localStorage.getItem("cal_expReminded")===today) return; localStorage.setItem("cal_expReminded",today); }catch(e){}
   }
   var isTrial=res.plan==="trial";
-  var planName=isTrial?"試用":(res.plan==="full"?"完整版":(res.plan==="basic"?"進階版":"方案"));
+  var planName=isTrial?"試用":(res.plan==="full"?"家庭版":(res.plan==="basic"?"個人版":"方案"));
   setTimeout(function(){
     if(confirm("⏰ 提醒：你的"+planName+"還有 "+days+" 天到期（"+res.expiry+"）\n\n"+(isTrial?"升級可保留完整功能":"記得續約以繼續使用")+"\n\n要現在前往嗎？（可稍後）")){
       openUpgradeSheet();
@@ -1032,7 +1032,7 @@ function checkExpiryReminder(res, force){
 }
 // ===== 方案權限：只有 free(試用到期) 被鎖；trial/admin/paid/share 全開 =====
 var LINE_URL="https://line.me/R/ti/p/@373pfdee";
-// 方案分級：0=免費  1=進階版(basic)  2=完整版(full/trial/admin)
+// 方案分級：0=免費  1=個人版(basic)  2=家庭版(full/trial/admin)
 function planRank(){
   var p=state.plan;
   if(p==="admin"||p==="trial"||p==="full"||p==="family") return 2;
@@ -1042,57 +1042,42 @@ function planRank(){
 function canAdvanced(){ return planRank()>=1; }   // 總覽 / 目標 / 進階記事
 function canFull(){ return planRank()>=2; }        // 採購 / 庫存連動 / 任務指派
 function openUpgradeSheet(feat){
-  var rows=[
-    ["月曆・記事・重複・提醒","✓","✓","✓"],
-    ["🏷️ 10大智能分類整理","✓","✓","✓"],
-    ["👨‍👩‍👧 多人共用同一行事曆","✓","✓","✓"],
-    ["📋 總覽回顧","—","✓","✓"],
-    ["🎯 個人目標設定與追蹤","—","✓","✓"],
-    ["⏳ 進階記事(急迫/倒數/純記事)","—","✓","✓"],
-    ["🛒 採購清單","—","—","✓"],
-    ["📦 家中庫存管理","—","—","✓"],
-    ["🔄 採購×庫存自動連動","—","—","✓"],
-    ["👥 任務指派家人","—","—","✓"],
-    ["🏆 多人目標(家人各自進度)","—","—","✓"],
-    ["🗂️ 多本行事曆","—","✓","✓"],
-    ["💾 資料備份匯出/還原","—","✓","✓"]
-  ];
-  var tbl='<table style="width:100%;border-collapse:collapse;font-size:11px">'
-    +'<tr style="background:#f7f7f9"><th style="text-align:left;padding:6px">功能</th><th style="padding:6px;width:56px;color:#999">免費<br>(試用後)</th><th style="padding:6px;width:46px;color:#2980b9">進階</th><th style="padding:6px;width:46px;color:#8e44ad">完整</th></tr>'
-    +rows.map(function(r){return '<tr style="border-top:1px solid #eee"><td style="padding:6px">'+r[0]+'</td>'
-      +'<td style="text-align:center;padding:6px;color:'+(r[1]==="✓"?"#27ae60":"#ccc")+';font-weight:700">'+r[1]+'</td>'
-      +'<td style="text-align:center;padding:6px;color:'+(r[2]==="✓"?"#2980b9":"#ccc")+';font-weight:700">'+r[2]+'</td>'
-      +'<td style="text-align:center;padding:6px;color:'+(r[3]==="✓"?"#8e44ad":"#ccc")+';font-weight:700">'+r[3]+'</td></tr>';}).join('')
-    +'</table>';
-  var note='<div style="text-align:center;background:#fff8e1;color:#b8860b;font-size:13px;padding:8px;border-radius:8px;margin:12px 0">✨ 一次升級，整包解鎖，無需逐項購買</div>';
-  // 依目前方案智能顯示按鈕：目前方案→續約；其他→升級
-  function planBtn(key,color){
+  var intro = feat ? ('<div style="text-align:center;color:#E8735C;font-weight:700;font-size:13px;margin-bottom:12px">🔒 '+feat+' 需升級才能使用</div>') : '';
+  var deal='<div style="text-align:center;background:linear-gradient(135deg,#3E9B8E,#2F7A6F);color:#fff;border-radius:14px;padding:14px 12px;margin-bottom:2px">'
+    +'<div style="font-size:20px;font-weight:900;letter-spacing:.5px">🔥 早鳥半價限時優惠</div>'
+    +'<div style="font-size:12.5px;opacity:.92;margin-top:3px">升級解鎖全部功能，現在最劃算</div></div>';
+  function planBtn(key){
     var cur=state.plan;
-    if(cur===key){ return '<button onclick="renewPlan(\''+key+'\')" style="border:2px solid '+color+';background:#fff;color:'+color+';border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700">✓目前·續約</button>'; }
-    if(cur==="full" && key==="basic"){ return '<span style="color:#bbb;font-size:12px">已是完整版</span>'; }
-    return '<button onclick="chooseUpgrade(\''+key+'\')" style="border:none;background:'+color+';color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:700">選這個</button>';
+    if(cur===key){ return '<button onclick="renewPlan(\''+key+'\')" style="width:100%;border:2px solid #3E9B8E;background:#fff;color:#3E9B8E;border-radius:12px;padding:12px;font-size:15px;font-weight:800;margin-top:14px">✓ 目前方案·續約</button>'; }
+    if(cur==="full" && key==="basic"){ return '<div style="text-align:center;color:#bbb;font-size:13px;margin-top:14px">您已是家庭版</div>'; }
+    return '<button onclick="chooseUpgrade(\''+key+'\')" style="width:100%;border:none;background:'+(key==="full"?"#E8735C":"#3E9B8E")+';color:#fff;border-radius:12px;padding:13px;font-size:16px;font-weight:800;margin-top:14px;box-shadow:0 6px 16px rgba(0,0,0,.14)">立即升級 '+(key==="full"?"家庭版":"個人版")+' ➜</button>';
   }
-  // 進階版卡（早鳥）
-  var c1='<div style="border:2px solid #2980b9;border-radius:14px;padding:14px;margin-top:10px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
-    +'<div><div style="font-weight:700;font-size:16px">🔵 進階版</div>'
-    +'<div style="font-size:16px;margin-top:2px"><span style="text-decoration:line-through;color:#bbb">$1,199</span> <span style="color:#e74c3c;font-weight:800">NT$599</span><span style="font-size:12px;color:#888">/年</span></div>'
-    +'<div style="font-size:11px;color:#e74c3c;margin-top:2px">🔥 早鳥半價 · 平均每月只要 $50</div></div>'
-    +planBtn("basic","#2980b9")
-    +'</div>'
-    +'<div style="font-size:12.5px;color:#555;margin-top:10px;line-height:1.8">✓ 每月回顧總覽，大小事不漏接<br>✓ 個人目標設定與追蹤<br>✓ 多本行事曆＋資料備份</div></div>';
-  // 完整版卡（早鳥）
-  var c2='<div style="border:2px solid #8e44ad;border-radius:14px;padding:14px;margin-top:10px;background:#faf5ff">'
-    +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
-    +'<div><div style="font-weight:700;font-size:16px">🟣 完整版 <span style="font-size:11px;background:#8e44ad;color:#fff;padding:1px 7px;border-radius:20px;vertical-align:middle">最推薦</span></div>'
-    +'<div style="font-size:16px;margin-top:2px"><span style="text-decoration:line-through;color:#bbb">$2,399</span> <span style="color:#e74c3c;font-weight:800">NT$1,199</span><span style="font-size:12px;color:#888">/年</span></div>'
-    +'<div style="font-size:11px;color:#e74c3c;margin-top:2px">🔥 早鳥半價 · 平均每月只要 $100</div></div>'
-    +planBtn("full","#8e44ad")
-    +'</div>'
-    +'<div style="font-size:12.5px;color:#8e44ad;margin-top:10px;line-height:1.8">🏆 進階版全部功能，再加：<br>✓ 採購×庫存連動，不重複買、不缺貨<br>✓ 東西過期前主動提醒你<br>✓ 家人分工、多人共同目標</div></div>';
-  var intro=feat?('<div style="text-align:center;color:#E377C2;font-weight:600;margin-bottom:10px">🔒 '+feat+' 為付費功能，升級即可解鎖</div>'):'';
-  var tblHead='<div style="font-weight:700;font-size:13px;margin:18px 2px 6px;color:#333">📊 完整功能比較</div>';
-  openSheet("⭐ 升級方案", intro+c1+c2+note+tblHead+tbl, null, null, "關閉");
+  var c1='<div style="border:2px solid #E7E3DC;border-radius:18px;padding:18px;margin-top:14px;background:#fff">'
+    +'<div style="font-size:13px;font-weight:700;color:#8A8A93">一個人用</div>'
+    +'<div style="font-size:24px;font-weight:900;color:#2E2E33;margin:2px 0 8px">個人版</div>'
+    +'<div style="display:flex;align-items:baseline;gap:8px"><span style="text-decoration:line-through;color:#C4C0B8;font-size:16px">$1,999</span><span style="font-size:34px;font-weight:900;color:#E8735C">$999</span><span style="color:#8A8A93;font-size:14px">/年</span></div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="color:#2F7A6F;font-weight:700;font-size:13px">平均每月約 $83</span><span style="background:#E0A43B;color:#fff;font-weight:800;font-size:12px;padding:3px 10px;border-radius:8px">現省 $1,000</span></div>'
+    +'<div style="font-size:13.5px;color:#2E2E33;margin-top:14px;line-height:2">'
+      +'<div style="color:#8A8A93;font-size:12px;margin-bottom:4px">免費版試用後止步 —— 升級解鎖 👇</div>'
+      +'<span style="color:#3E9B8E;font-weight:800">✓</span> AI 目標設定與回顧<br>'
+      +'<span style="color:#3E9B8E;font-weight:800">✓</span> 多本行事曆分開管<br>'
+      +'<span style="color:#3E9B8E;font-weight:800">✓</span> 進階記事·資料備份</div>'
+    +planBtn("basic")+'</div>';
+  var c2='<div style="border:2.5px solid #E8735C;border-radius:18px;padding:18px;margin-top:16px;background:#FFF8F5;position:relative">'
+    +'<div style="position:absolute;top:-11px;left:18px;background:#E8735C;color:#fff;font-size:12px;font-weight:800;padding:3px 12px;border-radius:20px">⭐ 最推薦</div>'
+    +'<div style="font-size:13px;font-weight:700;color:#8A8A93;margin-top:4px">全家共用</div>'
+    +'<div style="font-size:24px;font-weight:900;color:#2E2E33;margin:2px 0 8px">家庭版</div>'
+    +'<div style="display:flex;align-items:baseline;gap:8px"><span style="text-decoration:line-through;color:#C4C0B8;font-size:16px">$3,999</span><span style="font-size:34px;font-weight:900;color:#E8735C">$1,999</span><span style="color:#8A8A93;font-size:14px">/年</span></div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="color:#2F7A6F;font-weight:700;font-size:13px">平均每月約 $166</span><span style="background:#E0A43B;color:#fff;font-weight:800;font-size:12px;padding:3px 10px;border-radius:8px">現省 $2,000</span></div>'
+    +'<div style="font-size:13.5px;color:#2E2E33;margin-top:14px;line-height:2">'
+      +'<div style="color:#8A8A93;font-size:12px;margin-bottom:4px">含個人版全部，再加 👇</div>'
+      +'<span style="color:#E8735C;font-weight:800">✓</span> 雙人／全家即時共享<br>'
+      +'<span style="color:#E8735C;font-weight:800">✓</span> 採購 × 庫存自動連動<br>'
+      +'<span style="color:#E8735C;font-weight:800">✓</span> 東西過期前主動提醒<br>'
+      +'<span style="color:#E8735C;font-weight:800">✓</span> 家人分工·多人目標</div>'
+    +planBtn("full")+'</div>';
+  var foot='<div style="text-align:center;color:#8A8A93;font-size:12px;margin-top:16px;line-height:1.7">🎁 先享 14 天完整功能免費試用<br>升級透過「智在生活」官方 LINE，安心又快速</div>';
+  openSheet("⭐ 升級方案", intro+deal+c1+c2+foot, null, null, "關閉");
 }
 function _copyText(t){
   var ok=false;
@@ -1156,17 +1141,17 @@ function _row(k,v){
     '<div style="flex:1;font-size:13px;color:#333;font-weight:600;word-break:break-all">'+esc(v||"")+'</div></div>';
 }
 function chooseUpgrade(key){
-  var map={ basic:["進階版",599], full:["完整版",1199] };
+  var map={ basic:["智能行事曆-個人版",999], full:["智能行事曆-家庭版",1999] };
   var p=map[key]; if(!p) return;
   var email=state.user||"";
-  var msg="【升級申請】\nApp：智能行事曆\n方案："+p[0]+"（早鳥 $"+p[1]+"）\n帳號："+email;
+  var msg="方案："+p[0]+"\n帳號："+email;
   _upgradePopup("升級申請", msg, p[0]+"（早鳥 $"+p[1]+"）", email, "智能行事曆");
 }
 function renewPlan(key){
-  var map={ basic:["進階版",599], full:["完整版",1199] };
+  var map={ basic:["智能行事曆-個人版",999], full:["智能行事曆-家庭版",1999] };
   var p=map[key]; if(!p) return;
   var email=state.user||"";
-  var msg="【續約申請】\nApp：智能行事曆\n方案："+p[0]+"（$"+p[1]+"）\n帳號："+email;
+  var msg="方案："+p[0]+"（續約）\n帳號："+email;
   _upgradePopup("續約申請", msg, p[0]+"（$"+p[1]+"）", email, "智能行事曆");
 }
 function showUpgrade(feat){ openUpgradeSheet(feat); }
@@ -1177,10 +1162,10 @@ function previewFree(){                    // 測試用：模擬 free 版
   var app=$("app"); if(app) app.style.paddingTop="34px";
   enterApp();
 }
-function previewBasic(){                   // 測試用：模擬 進階版
+function previewBasic(){                   // 測試用：模擬 個人版
   state.plan="basic"; state.isAdmin=false;  // 模擬真實客戶
   var ap=$("adminPanel"); if(ap) ap.classList.add("hidden");
-  var b=document.getElementById("previewBanner"); if(b){ b.textContent="🧪 進階版預覽中"; b.style.display="block"; _addEndPreview(b); }
+  var b=document.getElementById("previewBanner"); if(b){ b.textContent="🧪 個人版預覽中"; b.style.display="block"; _addEndPreview(b); }
   var app=$("app"); if(app) app.style.paddingTop="34px";
   enterApp();
 }
@@ -1229,7 +1214,7 @@ function openAdminPanel(){
   $("adminPanel").classList.remove("hidden");
   loadAdminList();
 }
-var PLAN_LABEL={ trial:"試用", free:"免費(過期)", basic:"進階版", full:"完整版", family:"完整版" };
+var PLAN_LABEL={ trial:"試用", free:"免費(過期)", basic:"個人版", full:"家庭版", family:"家庭版" };
 function _daysAgo(ts){
   if(!ts) return "—";
   var d=Math.floor((Date.now()-ts)/86400000);
@@ -1280,7 +1265,7 @@ function adminAddCustomer(){
   var email=prompt("客戶 Email："); if(!email) return;
   email=email.trim().toLowerCase();
   if(!isEmail(email)){ alert("Email 格式不正確"); return; }
-  var plan=prompt("方案代號：\nbasic=進階版(原$1199/早鳥$599)\nfull=完整版(原$2399/早鳥$1199)","full");
+  var plan=prompt("方案代號：\nbasic=個人版(原$1999/早鳥$999)\nfull=家庭版(原$3999/早鳥$1999)","full");
   if(!plan) return; plan=plan.trim();
   if(["basic","full","family","trial","free"].indexOf(plan)<0){ alert("方案代號不正確"); return; }
   var months=prompt("有效月數（12=一年）","12"); if(months===null) return;
@@ -1430,15 +1415,15 @@ function enterApp(){
 }
 function applyPlanLocks(){
   var adv=canAdvanced(), full=canFull();
-  var ov=$("navOverview");                              // 總覽：進階版以上
+  var ov=$("navOverview");                              // 總覽：個人版以上
   if(ov){ ov.innerHTML='<span class="ic">📋</span>總覽'+(adv?'':' 🔒'); ov.style.opacity=adv?"":"0.5"; }
   var sh=$("navShop");                                  // 待購可看→不放🔒
   if(sh){ sh.innerHTML='<span class="ic">🛒</span>待購'; sh.style.opacity=""; }
-  var ai=$("addItemBtn");                               // 新增待購：完整版
-  if(ai){ ai.textContent=full?"＋ 新增待購":"🔒 完整版解鎖新增待購"; }
-  var ag=$("addGoalBtn");                               // 新增目標：進階版以上
+  var ai=$("addItemBtn");                               // 新增待購：家庭版
+  if(ai){ ai.textContent=full?"＋ 新增待購":"🔒 家庭版解鎖新增待購"; }
+  var ag=$("addGoalBtn");                               // 新增目標：個人版以上
   if(ag){ ag.textContent=adv?"＋ 新增目標":"🔒 升級解鎖新增目標"; }
-  var ub=$("upgradeBtn"); if(ub) ub.style.display=(state.plan!=="full"&&state.plan!=="admin")?"":"none";  // 完整版/admin外都顯示升級(含試用)
+  var ub=$("upgradeBtn"); if(ub) ub.style.display=(state.plan!=="full"&&state.plan!=="admin")?"":"none";  // 家庭版/admin外都顯示升級(含試用)
 }
 function doLogout(){
   if(!confirm("確定要登出嗎？")) return;    // 防誤觸
@@ -1522,7 +1507,7 @@ function importPendingPurchase(){
   if(typeof switchTab==="function") switchTab("shop");
 }
 function pushInvDone(itemId, qty, name, opts){
-  if(!canFull()) return;               // 完整版才與庫存連動
+  if(!canFull()) return;               // 家庭版才與庫存連動
   opts=opts||{};
   if(!itemId && !opts.create) return;
   try{
@@ -1728,7 +1713,7 @@ function openMyApps(){
     if(_isAdminNow){                        // 管理員：全部可切換
       return '<a class="app-row" href="'+a.url+_authTok+'" rel="noopener"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">↗</span></a>';
     }
-    return !canFull()                           // 庫存：完整版才可切換
+    return !canFull()                           // 庫存：家庭版才可切換
       ? '<a class="app-row" href="javascript:void(0)" onclick="showUpgrade(\''+esc(a.name)+'\')"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">🔒</span></a>'
       : '<a class="app-row" href="'+a.url+_authTok+'" rel="noopener"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">↗</span></a>';
   }).join("")+'</div>';
@@ -1807,7 +1792,7 @@ function openCalManager(){
   if($("backupImport")) $("backupImport").addEventListener("change", function(){ if(this.files&&this.files[0]) importBackup(this.files[0]); this.value=""; });
 }
 function exportBackup(){
-  if(!canAdvanced()){ showUpgrade("資料備份"); return; }   // 進階版以上才可備份
+  if(!canAdvanced()){ showUpgrade("資料備份"); return; }   // 個人版以上才可備份
   const data={ type:"calendar-backup", version:2, exportedAt:new Date().toISOString(),
     calendars:state.calendars||{}, records:state.records||{}, goals:state.goals||{}, people:state.people||{} };
   try{
@@ -1853,7 +1838,7 @@ function doImport(data){
   }catch(e){ console.error(e); toast("還原失敗"); }
 }
 function addCalendar(name){
-  if(!canAdvanced()){ showUpgrade("多本行事曆"); return; }   // 進階版以上才可多本
+  if(!canAdvanced()){ showUpgrade("多本行事曆"); return; }   // 個人版以上才可多本
   if(!requireAuth()) return;
   const id=genId();
   const c={ name, createdAt:Date.now() };
@@ -2550,7 +2535,7 @@ function openRecordForm(rec, presets, asCopy){
     '<div id="rec_amountbox"'+(isShop?' style="display:none"':'')+'><div class="field"><label>金額（選填）</label>'+
       '<input id="rec_amount" type="number" inputmode="numeric" value="'+(r.amount!=null?r.amount:"")+'" placeholder="例如 1200"></div></div>'+
     (!canFull()
-      ? '<div class="field" style="opacity:.55;cursor:pointer" onclick="showUpgrade(\'任務指派家人（完整版）\')"><div class="label-row"><label>執行人（可複選） 🔒</label></div><div style="font-size:12px;color:#888;padding:4px 0">升級完整版，可指派家人任務</div></div>'
+      ? '<div class="field" style="opacity:.55;cursor:pointer" onclick="showUpgrade(\'任務指派家人（家庭版）\')"><div class="label-row"><label>執行人（可複選） 🔒</label></div><div style="font-size:12px;color:#888;padding:4px 0">升級家庭版，可指派家人任務</div></div>'
       : ('<div class="field"><div class="label-row"><label>執行人（可複選）</label><span class="manage-link" id="rec_manage">管理人員</span></div>'+
       '<div class="chips" id="rec_assignees"></div>'+
       '<div class="chip-add"><input id="rec_newperson" autocomplete="off" placeholder="新增人員名稱"><button id="rec_addperson" type="button">＋ 新增</button></div>'+
@@ -3121,7 +3106,7 @@ function openGoalForm(goal){
             '<option value="multi"'+((g.members&&g.members.length)?" selected":"")+'>多人（各自進度）</option>'+
           '</select>')
         : ('<select id="g_personmode"><option value="single" selected>單人</option></select>'+
-           '<div onclick="showUpgrade(\'多人目標\')" style="font-size:12px;color:#8e44ad;margin-top:4px;cursor:pointer">🔒 多人目標（家人各自進度）為完整版功能，點此升級</div>')
+           '<div onclick="showUpgrade(\'多人目標\')" style="font-size:12px;color:#8e44ad;margin-top:4px;cursor:pointer">🔒 多人目標（家人各自進度）為家庭版功能，點此升級</div>')
       )+'</div>'+
       '<div id="g_singlevals"'+((g.members&&g.members.length)?' style="display:none"':'')+'>'+
         '<div class="two">'+
