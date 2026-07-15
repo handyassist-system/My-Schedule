@@ -1089,10 +1089,18 @@ async function verifyCustomer(email){
 }
 function showTrialWelcome(expiry){
   try{
-    alert("🎉 歡迎！\n\n已為你開啟 14 天全功能免費試用\n到期日："+expiry
-      +"\n\n✨ 試用期間全功能開放\n\n👪 別忘了試試「全家共用」\n把你的 Email 給家人，在他的手機登入\n(試用期最多 2 台裝置)\n一人記錄，大家都看得到！\n\n到期後仍可使用基本行事曆 😊");
+    alert("🎉 歡迎使用智能行事曆！\n\n"
+      +"已開啟 14 天全功能免費試用\n"
+      +"到期日："+expiry+"\n\n"
+      +"───────────────\n\n"
+      +"👪 試試「全家共用」\n"
+      +"把 Email 給家人，在他手機登入\n"
+      +"一人記錄，大家都看得到！\n"
+      +"（試用期最多 2 台裝置）\n\n"
+      +"到期後仍可使用基本行事曆 😊");
   }catch(e){}
 }
+
 function checkExpiryReminder(res, force){
   if(!res || res.newTrial || !res.expiry || res.plan==="free") return;   // 新試用/免費/無到期 → 不提醒
   var exp=Date.parse(res.expiry+"T23:59:59"); if(!exp) return;
