@@ -1105,7 +1105,7 @@ function checkExpiryReminder(res, force){
   var isTrial=res.plan==="trial";
   var planName=isTrial?"試用":(res.plan==="full"?"家庭版":(res.plan==="basic"?"個人版":"方案"));
   setTimeout(function(){
-    if(confirm("⏰ 提醒：你的"+planName+"還有 "+days+" 天到期（"+res.expiry+"）\n\n"+(isTrial?"到期後將剩基本行事曆\n👪 全家共用也會停止（僅剩 1 台裝置）\n\n升級家庭版可繼續全家一起用":"記得續約以繼續使用")+"\n\n要現在前往嗎？（可稍後）")){
+    if(confirm("⏰ 提醒：你的"+planName+"還有 "+days+" 天到期（"+res.expiry+"）\n\n"+(isTrial?"到期後將剩基本行事曆\n👪 全家共用也會停止（僅剩 1 台裝置）\n\n升級家庭版可繼續全家一起用":"續約請透過官方 LINE，\n我們會盡快為你處理 😊")+"\n\n要現在前往嗎？（可稍後）")){
       openUpgradeSheet();
     }
   }, 800);
@@ -1121,6 +1121,37 @@ function planRank(){
 }
 function canAdvanced(){ return planRank()>=1; }   // 總覽 / 目標 / 進階記事
 function canFull(){ return planRank()>=2; }        // 採購 / 庫存連動 / 任務指派
+// 升級申請：流程說明頁（點「立即升級」後跳出）
+function _stepCard(ico,title,desc){
+  return '<div style="background:#F7F6F3;border-radius:14px;padding:15px 16px;display:flex;align-items:center;gap:14px">'
+    +'<span style="font-size:30px;line-height:1;flex:none">'+ico+'</span>'
+    +'<div><div style="font-size:16px;font-weight:900;color:#2E2E33;line-height:1.35">'+title+'</div>'
+    +(desc?'<div style="font-size:12px;color:#8A8A93;margin-top:3px;line-height:1.5">'+desc+'</div>':'')+'</div></div>';
+}
+function _stepArrow(){
+  return '<div style="text-align:center;color:#C9C4BA;font-size:20px;line-height:1;margin:7px 0">↓</div>';
+}
+function showUpgradeFlow(){
+  var root=$("modalRoot");
+  root.innerHTML=
+    '<div class="overlay" id="ovl"><div class="sheet" id="sheet" style="padding-top:20px">'+
+      '<div style="text-align:center;margin-bottom:20px">'+
+        '<div style="font-size:23px;font-weight:900;color:#2E2E33">⭐ 升級申請</div>'+
+        '<div style="font-size:13px;color:#8A8A93;margin-top:4px">完成升級只要 3 步驟</div>'+
+      '</div>'+
+      _stepCard("💬","加入官方 LINE","點下方按鈕，自動開啟「智在生活」官方帳號")+
+      _stepArrow()+
+      _stepCard("💳","依選單引導完成付款","選擇方案後會自動提供付款方式")+
+      _stepArrow()+
+      _stepCard("✅","24 小時內開通","回傳付款截圖，我們盡快為你開通")+
+      '<button id="upGoLine" style="width:100%;border:none;background:#06C755;color:#fff;border-radius:14px;padding:16px;font-size:17px;font-weight:900;margin-top:24px;box-shadow:0 6px 18px rgba(6,199,85,.3)">💬 前往官方 LINE</button>'+
+      '<div style="text-align:center;margin-top:12px;font-size:12px;color:#8A8A93;line-height:1.7">🔒 由「智在生活」官方 LINE 為你服務</div>'+
+      '<button id="upBack" style="width:100%;border:none;background:none;color:#8A8A93;font-size:13.5px;padding:14px;margin-top:4px">返回</button>'+
+    '</div></div>';
+  $("upGoLine").addEventListener("click", function(){ try{ location.href=LINE_URL; }catch(e){} });
+  $("upBack").addEventListener("click", function(){ closeSheet(); openUpgradeSheet(""); });
+  $("ovl").addEventListener("click", function(e){ if(e.target.id==="ovl") closeSheet(); });
+}
 function openUpgradeSheet(feat){
   var intro = feat ? ('<div style="text-align:center;color:#E63946;font-weight:700;font-size:13px;margin-bottom:12px">🔒 '+feat+' 需升級才能使用</div>') : '';
   var deal='<div style="text-align:center;background:#C1121F;color:#fff;border-radius:14px;padding:15px 12px;box-shadow:0 5px 16px rgba(193,18,31,.26)">'
@@ -1134,12 +1165,13 @@ function openUpgradeSheet(feat){
       +'🎒 百寶袋隨手記<br>'
       +'📖 1 本行事曆</div>'
     +'<div style="margin-top:11px;padding-top:10px;border-top:1.5px solid #D5E8E3;color:#2F7A6F;font-weight:900;font-size:13px">↓ 以下為升級才能使用的功能</div></div>';
-  function planBtn(key){
+  function planTag(key){
     var cur=state.plan;
-    if(cur===key){ return '<button onclick="renewPlan(\''+key+'\')" style="width:100%;border:2px solid #3E9B8E;background:#fff;color:#3E9B8E;border-radius:12px;padding:12px;font-size:15px;font-weight:800;margin-top:16px">✓ 目前方案·續約</button>'; }
-    if(cur==="full" && key==="basic"){ return '<div style="text-align:center;color:#bbb;font-size:13px;margin-top:16px">您已是家庭版</div>'; }
-    return '<button onclick="chooseUpgrade(\''+key+'\')" style="width:100%;border:none;background:'+(key==="full"?"#E8735C":"#3E9B8E")+';color:#fff;border-radius:12px;padding:14px;font-size:16px;font-weight:900;margin-top:16px;box-shadow:0 6px 16px rgba(0,0,0,.16)">立即升級 '+(key==="full"?"家庭版":"個人版")+' ➜</button>';
+    if(cur===key) return '<div style="text-align:center;border:2px solid #3E9B8E;background:#EAF5F2;color:#2F7A6F;border-radius:12px;padding:11px;font-size:14px;font-weight:800;margin-top:16px">✓ 目前方案</div>';
+    if(cur==="full" && key==="basic") return '<div style="text-align:center;color:#bbb;font-size:13px;margin-top:16px">您已是家庭版</div>';
+    return '';
   }
+
   function ft(ico,title,desc,hl){ return '<div style="margin-bottom:11px"><div style="font-size:14.5px;font-weight:800;color:'+(hl||"#2E2E33")+';line-height:1.45">'+ico+' '+title+'</div>'+(desc?'<div style="font-size:12px;color:#A8A8B0;margin-left:24px;line-height:1.55;margin-top:3px">'+desc+'</div>':'')+'</div>'; }
   function priceBox(orig,now,per,save){
     return '<div style="margin:10px 0 14px">'
@@ -1162,7 +1194,7 @@ function openUpgradeSheet(feat){
     +ft("🗂️","多本行事曆","工作家庭分開管，不再混在一起")
     +ft("⏳","急迫標記、倒數提醒","重要的事排最前，還剩幾天一眼看到")
     +ft("💾","資料備份","換手機也不怕資料不見")
-    +planBtn("basic")+'</div>';
+    +planTag("basic")+'</div>';
   var c2='<div style="border:2.5px solid #E8735C;border-radius:18px;padding:18px;margin-top:20px;background:#fff;position:relative">'
     +'<div style="position:absolute;top:-11px;left:18px;background:#E8735C;color:#fff;font-size:12px;font-weight:900;padding:3px 12px;border-radius:20px">⭐ 最推薦</div>'
     +'<div style="font-size:24px;font-weight:900;color:#2E2E33;margin-top:8px">家庭版</div>'
@@ -1173,74 +1205,11 @@ function openUpgradeSheet(feat){
     +ft("📅","採購一鍵排進行事曆","想到要買，順手就安排好","#E8735C")
     +ft("🏆","多人共同目標","全家一起存旅遊基金、一起運動，進度互相看得到")
     +ft("✅","家事分工指派","誰負責什麼一目了然")
-    +planBtn("full")+'</div>';
-  var foot='<div style="text-align:center;color:#8A8A93;font-size:12px;margin-top:18px;line-height:1.7">🎁 先享 14 天全功能免費試用<br>升級透過「智在生活」官方 LINE，安心又快速</div>';
+    +planTag("full")+'</div>';
+  var foot='<button id="goUpBtn" style="width:100%;border:none;background:#E8735C;color:#fff;border-radius:14px;padding:17px;font-size:18px;font-weight:900;margin-top:22px;box-shadow:0 6px 18px rgba(232,115,92,.34)">立即升級 ➜</button>'
+    +'<div style="text-align:center;color:#8A8A93;font-size:12px;margin-top:12px;line-height:1.7">🎁 先享 14 天全功能免費試用<br>升級透過「智在生活」官方 LINE，安心又快速</div>';
   openSheet("⭐ 升級方案", intro+deal+freeNote+c1+c2+foot, null, null, "關閉");
-}
-function _copyText(t){
-  var ok=false;
-  try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t); ok=true; } }catch(e){}
-  try{                                            // 備援：execCommand（相容舊瀏覽器/手機）
-    var ta=document.createElement("textarea");
-    ta.value=t; ta.setAttribute("readonly","");
-    ta.style.position="fixed"; ta.style.top="0"; ta.style.left="0"; ta.style.opacity="0";
-    document.body.appendChild(ta); ta.focus(); ta.select();
-    try{ ta.setSelectionRange(0, t.length); }catch(e){}
-    try{ document.execCommand("copy"); ok=true; }catch(e){}
-    document.body.removeChild(ta);
-  }catch(e){}
-  return ok;
-}
-function _upgradePopup(title, msg, planName, email, srcApp){
-  var root=$("modalRoot");
-  root.innerHTML=
-    '<div class="overlay" id="ovl"><div class="sheet" id="sheet" style="position:relative;padding-top:16px">'+
-      '<button id="upX" aria-label="關閉" style="position:absolute;top:12px;right:14px;border:none;background:#f0f0f3;color:#888;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;z-index:2">✕</button>'+
-      '<div style="text-align:center;margin-bottom:16px">'+
-        '<div style="font-size:22px;font-weight:900;color:#3E9B8E">⭐ '+esc(title)+'</div>'+
-        '<div style="font-size:13px;color:#8A8A93;margin-top:3px">完成升級只要 3 步驟</div>'+
-      '</div>'+
-      '<div style="margin:0 auto 18px;max-width:280px">'+
-        _flowStep("💬","加入官方 LINE")+_flowArrow()+
-        _flowStep("💳","依引導完成付款")+_flowArrow()+
-        _flowStep("✅","24 小時內開通")+
-      '</div>'+
-      '<div style="border:1px solid #EFEAE2;border-radius:14px;overflow:hidden;margin-bottom:16px">'+
-        '<div style="background:#EAF5F2;padding:9px 14px;font-size:12px;color:#2F7A6F;font-weight:700">您選擇的方案</div>'+
-        _row("方案", planName)+
-        _row("帳號", email)+
-      '</div>'+
-      '<button id="upGo" style="width:100%;border:none;background:#06C755;color:#fff;border-radius:12px;padding:15px;font-size:17px;font-weight:800;box-shadow:0 4px 14px rgba(6,199,85,.32)">💬 前往官方 LINE 升級</button>'+
-      '<div style="text-align:center;margin-top:14px;font-size:12px;color:#8A8A93;line-height:1.7">加入後會引導您完成付款<br>🔒 由「智在生活」官方 LINE 為你服務</div>'+
-    '</div></div>';
-  $("upGo").addEventListener("click", function(){ try{ location.href=LINE_URL; }catch(e){} });
-  $("upX").addEventListener("click", closeSheet);
-  $("ovl").addEventListener("click", function(e){ if(e.target.id==="ovl") closeSheet(); });
-}
-function _flowStep(ico,label){
-  return '<div style="display:flex;align-items:center;gap:10px;background:#faf5ff;border:1px solid #ecdcf7;border-radius:10px;padding:11px 14px">'+
-    '<span style="font-size:18px">'+ico+'</span>'+
-    '<span style="font-size:14px;color:#5b3a70;font-weight:600">'+label+'</span></div>';
-}
-function _flowArrow(){ return '<div style="text-align:center;color:#c9a8de;font-size:14px;line-height:1;margin:3px 0">↓</div>'; }
-function _row(k,v){
-  return '<div style="display:flex;padding:10px 14px;border-top:1px solid #f2f2f2">'+
-    '<div style="width:52px;color:#999;font-size:13px">'+k+'</div>'+
-    '<div style="flex:1;font-size:13px;color:#333;font-weight:600;word-break:break-all">'+esc(v||"")+'</div></div>';
-}
-function chooseUpgrade(key){
-  var map={ basic:["智能行事曆-個人版",999], full:["智能行事曆-家庭版",1999] };
-  var p=map[key]; if(!p) return;
-  var email=state.user||"";
-  var msg="方案："+p[0]+"\n帳號："+email;
-  _upgradePopup("升級申請", msg, p[0]+"（早鳥 $"+p[1]+"）", email, "智能行事曆");
-}
-function renewPlan(key){
-  var map={ basic:["智能行事曆-個人版",999], full:["智能行事曆-家庭版",1999] };
-  var p=map[key]; if(!p) return;
-  var email=state.user||"";
-  var msg="方案："+p[0]+"（續約）\n帳號："+email;
-  _upgradePopup("續約申請", msg, p[0]+"（$"+p[1]+"）", email, "智能行事曆");
+  var _gu=$("goUpBtn"); if(_gu) _gu.addEventListener("click", showUpgradeFlow);
 }
 function showUpgrade(feat){ openUpgradeSheet(feat); }
 function previewFree(){                    // 測試用：模擬 free 版
@@ -1293,10 +1262,6 @@ async function doLogin(){
   try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
   if(res.newTrial){ showTrialWelcome(res.expiry); } else { checkExpiryReminder(res, true); }
   enterApp();
-}
-function showAdminChoice(){
-  $("login").classList.add("hidden");
-  $("adminChoice").classList.remove("hidden");
 }
 function openAdminPanel(){
   if(!state.isAdmin){ try{ toast("無管理員權限"); }catch(e){} return; }   // 守衛：非管理員一律擋下
@@ -1367,11 +1332,18 @@ function adminAddCustomer(){
   if(["basic","full","family","trial","free"].indexOf(plan)<0){ alert("方案代號不正確"); return; }
   var months=prompt("有效月數（12=一年）","12"); if(months===null) return;
   var m=Number(months)||12;
-  var exp=new Date(Date.now()+m*30.44*86400000);
-  var expiry=exp.getFullYear()+"-"+String(exp.getMonth()+1).padStart(2,"0")+"-"+String(exp.getDate()).padStart(2,"0");
   var key=emailKey(email);
-  var rec={ email:email, plan:plan, expiry:expiry, status:"active", deviceLimit:planDeviceLimit(plan), createdAt:Date.now(), lastSeen:0, devices:{} };
-  db.ref("subscribers/"+key).update(rec).then(function(){ alert("已建立/更新：\n"+email+"\n"+(PLAN_LABEL[plan]||plan)+"\n到期 "+expiry); loadAdminList(); }).catch(function(e){ alert("建立失敗"); });
+  // 續約政策：已有到期日 → 從到期日往後延長；新客戶/已過期 → 從今天算
+  db.ref("subscribers/"+key).once("value").then(function(snap){
+    var old=snap.val();
+    var expiry=_addMonths(old&&old.expiry?old.expiry:null, m);
+    var rec={ email:email, plan:plan, expiry:expiry, status:"active", deviceLimit:planDeviceLimit(plan) };
+    if(!old){ rec.createdAt=Date.now(); rec.lastSeen=0; rec.devices={}; }   // 新客戶才初始化
+    db.ref("subscribers/"+key).update(rec).then(function(){
+      alert((old?"已續約/更新：":"已建立：")+"\n"+email+"\n"+(PLAN_LABEL[plan]||plan)+"\n到期 "+expiry+(old&&old.expiry?"\n(由原到期日 "+old.expiry+" 延長)":""));
+      loadAdminList();
+    }).catch(function(e){ alert("建立失敗"); });
+  }).catch(function(){ alert("讀取失敗"); });
 }
 function _addMonths(baseYmd, months){
   var base = baseYmd ? new Date(baseYmd+"T00:00:00") : new Date();
@@ -1420,7 +1392,6 @@ $("goCalBtn").addEventListener("click", ()=>{ $("adminChoice").classList.add("hi
 $("goAdminBtn").addEventListener("click", openAdminPanel);
 $("adminBackBtn").addEventListener("click", ()=>{ $("adminPanel").classList.add("hidden"); enterApp(); });
 
-function hasPendingPurchase(){ try{ return !!localStorage.getItem("inv_pending_purchase"); }catch(e){ return false; } }
 async function autoLogin(){
   var saved; try{ saved=localStorage.getItem(AUTH_KEY); }catch(e){ saved=null; }
   try{ var _hm=(location.hash||'').match(/[#&]u=([^&]+)/); if(_hm&&_hm[1]){ var _hu=decodeURIComponent(_hm[1]); if(_hu){ saved=_hu; try{ localStorage.setItem(AUTH_KEY,_hu); }catch(e){} try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} } } }catch(e){}   // 從網址接收登入(跨App直接進,不跳登入頁)

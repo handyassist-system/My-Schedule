@@ -745,14 +745,6 @@ function doLogin(){
     document.getElementById('authInput').focus();
   }
 }
-function doLogout(){
-  localStorage.removeItem(AUTH_KEY);
-  try{ localStorage.removeItem('cal_auth'); }catch(e){}          // 一起登出(兩個App共用登入)
-  document.getElementById('loginPage').style.display='flex';
-  document.getElementById('appWrap').style.display='none';
-  var _ai2=document.getElementById('authInput'); if(_ai2) _ai2.value='';
-  var _ae2=document.getElementById('authErr'); if(_ae2) _ae2.textContent='';
-}
 var _ai=document.getElementById('authInput'); if(_ai) _ai.addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 
 // ══════════════════════════════════
