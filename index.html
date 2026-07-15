@@ -1833,7 +1833,11 @@ function openCalManager(){
     return '<div class="cal-row'+(on?" on":"")+'"><span class="cal-name" data-cal="'+id+'">'+(on?"✓ ":"")+esc(calName(id))+'</span>'+
       '<button type="button" class="cal-del" data-del="'+id+'">🗑</button></div>';
   }).join("")+'</div>';
-  html+='<div class="chip-add" style="margin-top:10px"><input id="calNewName" autocomplete="off" placeholder="新行事曆名稱（如：家庭、工作）"><button id="calAddBtn" type="button">＋ 新增</button></div>';
+  if(canAdvanced()){
+    html+='<div class="chip-add" style="margin-top:10px"><input id="calNewName" autocomplete="off" placeholder="新行事曆名稱（如：家庭、工作）"><button id="calAddBtn" type="button">＋ 新增</button></div>';
+  } else {
+    html+='<button id="calAddLocked" type="button" style="width:100%;margin-top:10px;padding:11px;border:1.5px dashed var(--line);background:var(--bg);color:var(--muted);border-radius:12px;font-size:13px;font-weight:600;font-family:inherit">🔒 新增行事曆（升級個人版解鎖）</button>';
+  }
 
   html+=_sec("🔔 提醒");
   html+='<button id="notifyBtn" type="button" class="logout" style="width:100%;padding:11px;border-radius:12px;font-weight:600">🔔 開啟行程提醒</button>'
@@ -1869,7 +1873,10 @@ function openCalManager(){
   if($("logoutFromSettings")) $("logoutFromSettings").addEventListener("click", function(){ closeSheet(); doLogout(); });
   $("calList").querySelectorAll(".cal-name").forEach(s=>s.addEventListener("click", ()=>setCurrentCal(s.getAttribute("data-cal"))));
   $("calList").querySelectorAll(".cal-del").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); deleteCalendar(b.getAttribute("data-del")); }));
-  $("calAddBtn").addEventListener("click", ()=>{ const nm=$("calNewName").value.trim(); if(nm){ addCalendar(nm); } else { toast("請輸入名稱"); } });
+  var _cab=$("calAddBtn");
+  if(_cab) _cab.addEventListener("click", ()=>{ const nm=$("calNewName").value.trim(); if(nm){ addCalendar(nm); } else { toast("請輸入名稱"); } });
+  var _cal2=$("calAddLocked");
+  if(_cal2) _cal2.addEventListener("click", function(){ closeSheet(); showUpgrade("多本行事曆"); });
   if($("backupExport")) $("backupExport").addEventListener("click", exportBackup);
   if($("backupImport")) $("backupImport").addEventListener("change", function(){ if(this.files&&this.files[0]) importBackup(this.files[0]); this.value=""; });
 }
