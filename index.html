@@ -1481,8 +1481,8 @@ function maybeNotifyToday(force){
   var evs=_todayTimedEvents();
   if(!evs.length){ if(force) toast('今天沒有行程'); return; }
   var titles=evs.slice(0,3).map(function(r){ return (r.start? r.start+' ':'')+(r.title||'行程'); });
-  var extra=evs.length>3? (' 等 '+evs.length+' 筆'):'';
-  _showNotif('📅 今天的行程', titles.join('、')+extra);
+  var more=evs.length>3? ('…等 '+evs.length+' 筆'):'';
+  _showNotif('📅 今天有 '+evs.length+' 筆行程', titles.join('、')+more);
   try{ localStorage.setItem('notifiedDate', t); }catch(e){}
 }
 
