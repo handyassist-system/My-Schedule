@@ -1460,7 +1460,11 @@ function requestNotify(){
   }
   Notification.requestPermission().then(function(p){
     if(p==='granted'){ try{ localStorage.setItem('notifyEnabled','1'); }catch(e){} toast('✅ 已開啟提醒'); try{ closeSheet(); }catch(e){} maybeNotifyToday(true); }
-    else { alert('🔔 未開啟通知\n建議先將本 App「安裝到桌面」，再開啟提醒較穩定。'); }
+    else if(p==='denied'){
+      alert('🔔 你選擇了「封鎖」通知\n\n若要開啟，請到瀏覽器或手機設定\n把本站/本 App 的通知改成「允許」');
+    } else {
+      alert('🔔 尚未開啟通知\n\n請再點一次「開啟行程提醒」\n並選擇「允許」');
+    }
   });
 }
 function _showNotif(title, body){
