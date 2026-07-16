@@ -3533,8 +3533,8 @@ window.addEventListener('appinstalled', function(){
       var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
       if(help){
         help.innerHTML = isIOS
-          ? '📱 <b>安裝步驟：</b><br>1. 請改用「<b>Safari 瀏覽器</b>」開啟本頁<br>2. 點「<b>分享</b>」按鈕 ⬆️<br>3. 選「<b>加入主畫面</b>」'
-          : '📲 <b>安裝步驟：</b><br>1. 請改用「<b>Chrome 瀏覽器</b>」開啟本頁<br>2. 點「<b>安裝到手機桌面</b>」<br>3. 跳出視窗 → 選「<b>安裝</b>」';
+          ? '📱 <b>安裝步驟：</b><br>1. 請改用「<b>Safari 瀏覽器</b>」開啟本頁<br>2. 點「<b>分享</b>」按鈕 ⬆️<br>3. 選「<b>加入主畫面</b>」<br><span style="display:block;margin-top:9px;padding-top:9px;border-top:1px dashed #DDD8CE;color:#8A8A93;font-size:11.5px">💡 若你已安裝過，請直接到手機桌面找「智能行事曆」開啟</span>'
+          : '📲 <b>安裝步驟：</b><br>1. 請改用「<b>Chrome 瀏覽器</b>」開啟本頁<br>2. 點「<b>安裝到手機桌面</b>」<br>3. 跳出視窗 → 選「<b>安裝</b>」<br><span style="display:block;margin-top:9px;padding-top:9px;border-top:1px dashed #DDD8CE;color:#8A8A93;font-size:11.5px">💡 若你已安裝過，請直接到手機桌面找「智能行事曆」開啟</span>';
         help.style.display='block';
       }
     }
