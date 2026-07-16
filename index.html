@@ -327,7 +327,7 @@
   /* 多行事曆 */
   .cal-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 12px;border-radius:12px;background:var(--bg);margin-bottom:8px}
   .cal-row.on{background:#EAF2FF;border:1.5px solid var(--primary)}
-  .cal-name{flex:1;font-size:15px;color:var(--ink);font-weight:600;cursor:pointer}
+  .cal-name{flex:1;font-size:14px;color:var(--ink);font-weight:600;cursor:pointer}
   .cal-del{flex:none;width:34px;height:34px;border-radius:9px;background:#FDE8E8;color:#DC2626;font-size:15px}
   .iconchip:active{transform:scale(.94)}
 
@@ -1824,40 +1824,58 @@ function setCurrentCal(id){
 }
 function openCalManager(){
   const ids=Object.keys(state.calendars);
-  var _sec=function(t){ return '<div style="font-size:12px;font-weight:700;color:var(--primary);margin:18px 2px 8px;letter-spacing:.3px">'+t+'</div>'; };
-  var _first='<div style="font-size:12px;font-weight:700;color:var(--primary);margin:2px 2px 8px;letter-spacing:.3px">📅 我的行事曆</div>';
-  let html=_first;
-  html+='<p style="font-size:11.5px;color:var(--muted);margin:0 2px 10px;line-height:1.5">點名稱可切換。每本資料各自獨立；用同一組帳號登入的家人會看到同樣的行事曆。</p>';
-  html+='<div id="calList">'+ids.map(id=>{
+  var _box=function(title, inner){
+    return '<div style="margin-bottom:20px">'
+      +'<div style="font-size:15px;font-weight:900;color:var(--ink);margin:0 2px 8px;letter-spacing:.3px">'+title+'</div>'
+      +'<div style="background:#fff;border:1px solid #E3DED4;border-radius:18px;padding:15px;box-shadow:0 2px 10px rgba(46,46,51,.06)">'+inner+'</div>'
+      +'</div>';
+  };
+
+  // 我的行事曆
+  var calInner='<p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.6">點名稱可切換。每本資料各自獨立；用同一組帳號登入的家人會看到同樣的行事曆。</p>';
+  calInner+='<div id="calList">'+ids.map(id=>{
     const on=id===state.currentCal;
     return '<div class="cal-row'+(on?" on":"")+'"><span class="cal-name" data-cal="'+id+'">'+(on?"✓ ":"")+esc(calName(id))+'</span>'+
       '<button type="button" class="cal-del" data-del="'+id+'">🗑</button></div>';
   }).join("")+'</div>';
   if(canAdvanced()){
-    html+='<div class="chip-add" style="margin-top:10px"><input id="calNewName" autocomplete="off" placeholder="新行事曆名稱（如：家庭、工作）"><button id="calAddBtn" type="button">＋ 新增</button></div>';
+    calInner+='<div class="chip-add" style="margin-top:10px"><input id="calNewName" autocomplete="off" placeholder="新行事曆名稱（如：家庭、工作）"><button id="calAddBtn" type="button">＋ 新增</button></div>';
   } else {
-    html+='<button id="calAddLocked" type="button" style="width:100%;margin-top:10px;padding:11px;border:1.5px dashed var(--line);background:var(--bg);color:var(--muted);border-radius:12px;font-size:13px;font-weight:600;font-family:inherit">🔒 新增行事曆（升級個人版解鎖）</button>';
+    calInner+='<button id="calAddLocked" type="button" style="width:100%;margin-top:10px;padding:12px;border:1.5px dashed var(--line);background:var(--bg);color:var(--muted);border-radius:12px;font-size:14px;font-weight:600;font-family:inherit">🔒 新增行事曆（升級個人版解鎖）</button>';
   }
 
-  html+=_sec("🔔 提醒");
-  html+='<button id="notifyBtn" type="button" class="logout" style="width:100%;padding:11px;border-radius:12px;font-weight:600">🔔 開啟行程提醒</button>'
-    +'<div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;line-height:1.5">建議先安裝到桌面，開啟後打開App會用手機通知提醒今天行程</div>';
+  // 提醒
+  var notiInner='<button id="notifyBtn" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">🔔 開啟行程提醒</button>'
+    +'<div style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.6">建議先安裝到桌面，開啟後打開App會用手機通知提醒今天行程</div>';
 
-  html+=_sec("💾 資料備份");
-  html+='<div style="display:flex;gap:8px">'
-    +'<button id="backupExport" type="button" class="logout" style="flex:1;padding:9px">⬇️ 匯出</button>'
-    +'<label class="logout" style="flex:1;padding:9px;text-align:center;cursor:pointer">⬆️ 匯入還原<input id="backupImport" type="file" accept="application/json,.json" style="display:none"></label>'
+  // 資料備份
+  var backInner='<div style="display:flex;gap:8px">'
+    +'<button id="backupExport" type="button" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">⬇️ 匯出</button>'
+    +'<label style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;text-align:center;cursor:pointer">⬆️ 匯入還原<input id="backupImport" type="file" accept="application/json,.json" style="display:none"></label>'
     +'</div>';
 
+  // 分享
+  var shareInner='<button id="shareAppBtn" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">📤 分享給朋友</button>'
+    +'<div style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.6">好用的話，把它分享給需要的家人朋友</div>';
+
+  let html=_box("📅 我的行事曆", calInner)
+    + _box("🔔 提醒", notiInner)
+    + _box("💾 資料備份", backInner)
+    + _box("📤 分享", shareInner);
+
   if(state.isAdmin){
-    html+=_sec("🔧 管理");
-    html+='<button id="goAdminFromCal" type="button" class="logout" style="width:100%;padding:11px;background:var(--primary-soft);color:var(--primary);font-weight:600;border-radius:12px">🔧 管理後台</button>';
+    html+=_box("🔧 管理", '<button id="goAdminFromCal" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">🔧 管理後台</button>');
   }
 
-  html+='<div style="margin-top:20px;border-top:1px solid var(--line);padding-top:14px">'
-    +'<button id="logoutFromSettings" type="button" class="logout" style="width:100%;padding:11px;border-radius:12px;color:#E8735C;font-weight:600">🚪 登出</button></div>';
-
   openSheet("⚙️ 設定", html, null, null);
+  // 登出鈕放在「關閉」下方
+  var _acts=document.querySelector("#sheet .sheet-acts");
+  if(_acts){
+    var _lo=document.createElement("button");
+    _lo.id="logoutFromSettings"; _lo.type="button"; _lo.textContent="🚪 登出";
+    _lo.setAttribute("style","width:100%;padding:15px;border-radius:12px;border:1.5px solid #E8735C;background:#fff;color:#E8735C;font-weight:600;font-size:16px;font-family:inherit;margin-top:10px");
+    _acts.insertAdjacentElement("afterend", _lo);
+  }
   var _nb=$("notifyBtn");
   if(_nb){
     if(notifyOn()){ _nb.textContent="✅ 行程提醒已開啟"; _nb.style.background="var(--primary-soft)"; _nb.style.color="var(--primary)"; }
@@ -1869,6 +1887,7 @@ function openCalManager(){
       } else { requestNotify(); }
     });
   }
+  if($("shareAppBtn")) $("shareAppBtn").addEventListener("click", shareApp);
   if($("goAdminFromCal")) $("goAdminFromCal").addEventListener("click", function(){ closeSheet(); openAdminPanel(); });
   if($("logoutFromSettings")) $("logoutFromSettings").addEventListener("click", function(){ closeSheet(); doLogout(); });
   $("calList").querySelectorAll(".cal-name").forEach(s=>s.addEventListener("click", ()=>setCurrentCal(s.getAttribute("data-cal"))));
@@ -1879,6 +1898,23 @@ function openCalManager(){
   if(_cal2) _cal2.addEventListener("click", function(){ closeSheet(); showUpgrade("多本行事曆"); });
   if($("backupExport")) $("backupExport").addEventListener("click", exportBackup);
   if($("backupImport")) $("backupImport").addEventListener("change", function(){ if(this.files&&this.files[0]) importBackup(this.files[0]); this.value=""; });
+}
+// 分享 App 給朋友
+function shareApp(){
+  var url="https://handyassist-system.github.io/My-Schedule/";
+  var txt="📅 智在生活・智能行事曆\n\n"
+    +"全家行事曆，一次搞定\n"
+    +"記事、提醒、採購、庫存都能管\n\n"
+    +"🎁 首次登入享 14 天免費試用\n\n"
+    +url;
+  if(navigator.share){
+    navigator.share({ title:"智在生活 · 智能行事曆", text:txt }).catch(function(){});
+  } else {
+    try{
+      navigator.clipboard.writeText(txt);
+      toast("已複製分享文字，貼給朋友吧！");
+    }catch(e){ alert(txt); }
+  }
 }
 function exportBackup(){
   if(!canAdvanced()){ showUpgrade("資料備份"); return; }   // 個人版以上才可備份
