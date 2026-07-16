@@ -1207,8 +1207,8 @@ function openUpgradeSheet(feat){
     +'<div style="position:absolute;top:-11px;left:18px;background:#E8735C;color:#fff;font-size:12px;font-weight:900;padding:3px 12px;border-radius:20px">⭐ 最推薦</div>'
     +'<div style="font-size:24px;font-weight:900;color:#2E2E33;margin-top:8px">家庭版</div>'
         +priceBox("3,999","1,999","166","2,000")
-    +ft("📦","涵蓋個人版全部")
-    +ft("👪","3 台裝置共用","一人記錄大家同步，不用再一直轉述","#E8735C")
+    +ft("📦","涵蓋個人版全部功能")
+    +ft("👪","3 台裝置共用","一人記錄，大家同步，不用再一直轉述","#E8735C")
     +ft("🛒","採購 × 庫存自動連動","買完打勾自動入庫，不再重複買、快過期會提醒","#E8735C")
     +ft("📅","採購一鍵排進行事曆","想到要買，順手就安排好","#E8735C")
     +ft("🏆","多人共同目標","全家一起存旅遊基金、一起運動，進度互相看得到")
@@ -1450,7 +1450,14 @@ function _todayTimedEvents(){
 function notifyOn(){ try{ return localStorage.getItem('notifyEnabled')==='1' && ('Notification' in window) && Notification.permission==='granted'; }catch(e){ return false; } }
 function requestNotify(){
   if(!('Notification' in window)){ alert('此裝置不支援通知，請先將本 App「安裝到桌面」再試。'); return; }
-  if(Notification.permission==='denied'){ alert('🔔 通知被封鎖了\n請到手機設定開啟本 App 的通知。'); return; }
+  if(Notification.permission==='denied'){
+    var _standalone=false;
+    try{ _standalone=(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone===true; }catch(e){}
+    alert(_standalone
+      ? '🔔 通知已被封鎖\n\n解除方式：\n手機「設定」→「應用程式」\n→ 找到「智能行事曆」\n→「通知」→ 開啟'
+      : '🔔 通知已被封鎖\n\n解除方式：\n點網址列左邊的 🔒 圖示\n→「權限」或「網站設定」\n→「通知」→ 改成「允許」\n\n改完請重新整理頁面');
+    return;
+  }
   Notification.requestPermission().then(function(p){
     if(p==='granted'){ try{ localStorage.setItem('notifyEnabled','1'); }catch(e){} toast('✅ 已開啟提醒'); try{ closeSheet(); }catch(e){} maybeNotifyToday(true); }
     else { alert('🔔 未開啟通知\n建議先將本 App「安裝到桌面」，再開啟提醒較穩定。'); }
@@ -1846,7 +1853,7 @@ function openCalManager(){
 
   // 提醒
   var notiInner='<button id="notifyBtn" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">🔔 開啟行程提醒</button>'
-    +'<div style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.6">建議先安裝到桌面，開啟後打開App會用手機通知提醒今天行程</div>';
+    +'<div style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.6">建議先安裝到桌面，開啟後打開 App 會用手機通知提醒今天的行程</div>';
 
   // 資料備份
   var backInner='<div style="display:flex;gap:8px">'
