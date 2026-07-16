@@ -3504,9 +3504,9 @@ window.addEventListener('beforeinstallprompt', function(e){
 window.addEventListener('appinstalled', function(){
   var b=document.getElementById('installBar'); if(b) b.style.display='none';
   var hb=document.getElementById('installHintBtn');
-  if(hb){ hb.textContent='✅ 已開始安裝'; hb.disabled=true; hb.style.opacity='1'; hb.style.background='var(--primary)'; hb.style.color='#fff'; hb.style.borderColor='var(--primary)'; }
+  if(hb){ hb.textContent='✅ 已開始安裝'; hb.disabled=true; hb.style.opacity='1'; hb.style.background='#F0EEEA'; hb.style.color='#9A9AA2'; hb.style.borderColor='#E3DED4'; hb.style.fontWeight='600'; }
   var help=document.getElementById('installHelp');
-  if(help){ help.innerHTML='✅ <b>已開始安裝</b><br><span style="color:#8A8A93;font-size:11.5px">桌面圖示稍等幾秒就會出現<br>請勿關閉本頁</span>'; help.style.display='block'; }
+  if(help){ help.innerHTML='<span style="color:#8A8A93;font-size:12.5px">需稍等幾秒等待桌面圖示出現</span><br><span style="color:#E8735C;font-size:12.5px;font-weight:700">請勿關閉視窗！</span>'; help.style.display='block'; }
 });
 // 登入頁「安裝到手機桌面」按鈕
 (function(){
