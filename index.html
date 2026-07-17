@@ -425,7 +425,7 @@
     <h1>智能行事曆</h1>
     <p>請輸入 Email 登入</p>
     <input id="codeInput" class="code-input" type="email" inputmode="email" autocomplete="email" placeholder="請輸入 Email" maxlength="60">
-    <div class="code-hint">🎁 首次登入即享 14 天全功能免費試用</div>
+    <div class="code-hint">🎁 首次登入即享 21 天全功能免費試用</div>
     <label class="login-consent"><input type="checkbox" id="agreeChk"> <span>我已閱讀並同意 <a id="termsLink" style="color:var(--primary);text-decoration:underline">《服務條款與隱私政策》</a></span></label>
     <button id="loginBtn" class="btn-primary">登入</button>
     <div id="loginMsg" class="login-msg"></div>
@@ -476,7 +476,7 @@
     <select id="adminEditPlan" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin:4px 0 12px;font-size:14px">
       <option value="basic">個人版（原價$1999 / 早鳥$999）</option>
       <option value="full">家庭版（原價$3999 / 早鳥$1999）</option>
-      <option value="trial">試用（14天）</option>
+      <option value="trial">試用（21天）</option>
       <option value="free">免費(過期)</option>
     </select>
     <label style="font-size:13px;color:#444">到期日（可手動修改）</label>
@@ -1074,8 +1074,8 @@ async function verifyCustomer(email){
     return { ok:true, plan: (localStorage.getItem("cal_plan")||"free") };
   }
   var sub=snap.val();
-  if(!sub){                                   // 新客戶 → 自動開 14 天試用
-    var expTs=now+14*86400000;
+  if(!sub){                                   // 新客戶 → 自動開 21 天試用
+    var expTs=now+21*86400000;
     var rec={ email:email, plan:"trial", expiry:_ymdTs(expTs), status:"active", deviceLimit:2, createdAt:now, lastSeen:now, devices:{} };
     try{ await db.ref("subscribers/"+key).set(rec); }catch(e){}
     return { ok:true, plan:"trial", expiry:rec.expiry, newTrial:true };
@@ -1090,7 +1090,7 @@ async function verifyCustomer(email){
 function showTrialWelcome(expiry){
   try{
     alert("🎉 歡迎使用智能行事曆！\n\n"
-      +"已開啟 14 天全功能免費試用\n"
+      +"已開啟 21 天全功能免費試用\n"
       +"到期日："+expiry+"\n\n"
       +"───────────────\n\n"
       +"👪 試試「全家共用」\n"
@@ -1181,7 +1181,7 @@ function openUpgradeSheet(feat){
   }
 
   function incl(txt){ return '<div style="margin:14px 0 12px;padding-bottom:11px;border-bottom:1px dashed #E0DCD3;font-size:14.5px;font-weight:800;color:#2E2E33;line-height:1.45">📦 '+txt+'</div>'; }
-  function ft(ico,title,desc,hl){ return '<div style="margin-bottom:11px"><div style="font-size:14.5px;font-weight:800;color:'+(hl||"#2E2E33")+';line-height:1.45"><span style="color:#3E9B8E;font-weight:900">＋</span> '+ico+' '+title+'</div>'+(desc?'<div style="font-size:12px;color:#A8A8B0;margin-left:24px;line-height:1.55;margin-top:3px">'+desc+'</div>':'')+'</div>'; }
+  function ft(ico,title,desc,hl){ return '<div style="margin-bottom:11px"><div style="font-size:14.5px;font-weight:800;color:'+(hl||"#2E2E33")+';line-height:1.45">'+ico+' '+title+'</div>'+(desc?'<div style="font-size:12px;color:#A8A8B0;margin-left:24px;line-height:1.55;margin-top:3px">'+desc+'</div>':'')+'</div>'; }
   function priceBox(orig,now,per,save){
     return '<div style="margin:10px 0 14px">'
       +'<div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap">'
@@ -1198,8 +1198,8 @@ function openUpgradeSheet(feat){
     +'<div style="font-size:24px;font-weight:900;color:#2E2E33">個人版</div>'
     +priceBox("1,999","999","83","1,000")
     +incl("涵蓋基本功能")
-    +ft("➕ 📋","一頁總覽","行程、待辦、記事集中看，不再忘東忘西","#E8735C")
-    +ft("➕ 🎯","目標追蹤（3 種方式）","每週運動、存旅遊基金、考證照，都不半途而廢","#E8735C")
+    +ft("➕ 📋","一頁總覽","行程、待辦、記事集中看，不再忘東忘西")
+    +ft("➕ 🎯","目標追蹤（3 種方式）","每週運動、存旅遊基金、考證照，都不半途而廢")
     +ft("➕ 🗂️","多本行事曆","工作家庭分開管，不再混在一起")
     +ft("➕ ⏳","急迫標記、倒數提醒","重要的事排最前，還剩幾天一眼看到")
     +ft("➕ 💾","資料備份","換手機也不怕資料不見")
@@ -1209,14 +1209,14 @@ function openUpgradeSheet(feat){
     +'<div style="font-size:24px;font-weight:900;color:#2E2E33;margin-top:8px">家庭版</div>'
         +priceBox("3,999","1,999","166","2,000")
     +incl("涵蓋個人版全部功能")
-    +ft("➕ 👪","3 台裝置共用","一人記錄，大家同步，不用再一直轉述","#E8735C")
-    +ft("➕ 🛒","採購 × 庫存自動連動","買完打勾自動入庫，不再重複買、快過期會提醒","#E8735C")
-    +ft("➕ 📅","採購一鍵排進行事曆","想到要買，順手就安排好","#E8735C")
+    +ft("➕ 👪","3 台裝置共用","一人記錄，大家同步，不用再一直轉述")
+    +ft("➕ 🛒","採購 × 庫存自動連動","買完打勾自動入庫，不再重複買、快過期會提醒")
+    +ft("➕ 📅","採購一鍵排進行事曆","想到要買，順手就安排好")
     +ft("➕ 🏆","多人共同目標","全家一起存旅遊基金、一起運動，進度互相看得到")
     +ft("➕ ✅","家事分工指派","誰負責什麼一目了然")
     +planTag("full")+'</div>';
   var foot='<button id="goUpBtn" style="width:100%;border:none;background:#E8735C;color:#fff;border-radius:14px;padding:17px;font-size:18px;font-weight:900;margin-top:22px;box-shadow:0 6px 18px rgba(232,115,92,.34)">立即升級 ➜</button>'
-    +'<div style="text-align:center;color:#8A8A93;font-size:12px;margin-top:12px;line-height:1.7">🎁 先享 14 天全功能免費試用<br>升級透過「智在生活」官方 LINE，安心又快速</div>';
+    +'<div style="text-align:center;color:#8A8A93;font-size:12px;margin-top:12px;line-height:1.7">🎁 先享 21 天全功能免費試用<br>升級透過「智在生活」官方 LINE，安心又快速</div>';
   openSheet("⭐ 升級方案", intro+deal+freeNote+c1+c2+foot, null, null, "關閉");
   var _gu=$("goUpBtn"); if(_gu) _gu.addEventListener("click", showUpgradeFlow);
 }
@@ -1949,7 +1949,7 @@ function shareApp(){
   var txt="📅 智在生活・智能行事曆\n\n"
     +"全家行事曆，一次搞定\n"
     +"記事、提醒、採購、庫存都能管\n\n"
-    +"🎁 首次登入享 14 天免費試用\n\n"
+    +"🎁 首次登入享 21 天免費試用\n\n"
     +"⚠️ 複製網址以「Chrome 瀏覽器」開啟，即可安裝到桌面\n"
     +url;
   if(navigator.share){
