@@ -1180,7 +1180,8 @@ function openUpgradeSheet(feat){
     return '';
   }
 
-  function ft(ico,title,desc,hl){ return '<div style="margin-bottom:11px"><div style="font-size:14.5px;font-weight:800;color:'+(hl||"#2E2E33")+';line-height:1.45">'+ico+' '+title+'</div>'+(desc?'<div style="font-size:12px;color:#A8A8B0;margin-left:24px;line-height:1.55;margin-top:3px">'+desc+'</div>':'')+'</div>'; }
+  function incl(txt){ return '<div style="margin:14px 0 12px;padding-bottom:11px;border-bottom:1px dashed #E0DCD3;font-size:14.5px;font-weight:800;color:#2E2E33;line-height:1.45">📦 '+txt+'</div>'; }
+  function ft(ico,title,desc,hl){ return '<div style="margin-bottom:11px"><div style="font-size:14.5px;font-weight:800;color:'+(hl||"#2E2E33")+';line-height:1.45"><span style="color:#3E9B8E;font-weight:900">＋</span> '+ico+' '+title+'</div>'+(desc?'<div style="font-size:12px;color:#A8A8B0;margin-left:24px;line-height:1.55;margin-top:3px">'+desc+'</div>':'')+'</div>'; }
   function priceBox(orig,now,per,save){
     return '<div style="margin:10px 0 14px">'
       +'<div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap">'
@@ -1196,23 +1197,23 @@ function openUpgradeSheet(feat){
   var c1='<div style="border:2px solid #E7E3DC;border-radius:18px;padding:18px;margin-top:14px;background:#fff">'
     +'<div style="font-size:24px;font-weight:900;color:#2E2E33">個人版</div>'
     +priceBox("1,999","999","83","1,000")
-    +ft("📦","涵蓋基本功能")
-    +ft("📋","一頁總覽","行程、待辦、記事集中看，不再忘東忘西","#E8735C")
-    +ft("🎯","目標追蹤（3 種方式）","每週運動、存旅遊基金、考證照，都不半途而廢","#E8735C")
-    +ft("🗂️","多本行事曆","工作家庭分開管，不再混在一起")
-    +ft("⏳","急迫標記、倒數提醒","重要的事排最前，還剩幾天一眼看到")
-    +ft("💾","資料備份","換手機也不怕資料不見")
+    +incl("涵蓋基本功能")
+    +ft("➕ 📋","一頁總覽","行程、待辦、記事集中看，不再忘東忘西","#E8735C")
+    +ft("➕ 🎯","目標追蹤（3 種方式）","每週運動、存旅遊基金、考證照，都不半途而廢","#E8735C")
+    +ft("➕ 🗂️","多本行事曆","工作家庭分開管，不再混在一起")
+    +ft("➕ ⏳","急迫標記、倒數提醒","重要的事排最前，還剩幾天一眼看到")
+    +ft("➕ 💾","資料備份","換手機也不怕資料不見")
     +planTag("basic")+'</div>';
   var c2='<div style="border:2.5px solid #E8735C;border-radius:18px;padding:18px;margin-top:20px;background:#fff;position:relative">'
     +'<div style="position:absolute;top:-11px;left:18px;background:#E8735C;color:#fff;font-size:12px;font-weight:900;padding:3px 12px;border-radius:20px">⭐ 最推薦</div>'
     +'<div style="font-size:24px;font-weight:900;color:#2E2E33;margin-top:8px">家庭版</div>'
         +priceBox("3,999","1,999","166","2,000")
-    +ft("📦","涵蓋個人版全部功能")
-    +ft("👪","3 台裝置共用","一人記錄，大家同步，不用再一直轉述","#E8735C")
-    +ft("🛒","採購 × 庫存自動連動","買完打勾自動入庫，不再重複買、快過期會提醒","#E8735C")
-    +ft("📅","採購一鍵排進行事曆","想到要買，順手就安排好","#E8735C")
-    +ft("🏆","多人共同目標","全家一起存旅遊基金、一起運動，進度互相看得到")
-    +ft("✅","家事分工指派","誰負責什麼一目了然")
+    +incl("涵蓋個人版全部功能")
+    +ft("➕ 👪","3 台裝置共用","一人記錄，大家同步，不用再一直轉述","#E8735C")
+    +ft("➕ 🛒","採購 × 庫存自動連動","買完打勾自動入庫，不再重複買、快過期會提醒","#E8735C")
+    +ft("➕ 📅","採購一鍵排進行事曆","想到要買，順手就安排好","#E8735C")
+    +ft("➕ 🏆","多人共同目標","全家一起存旅遊基金、一起運動，進度互相看得到")
+    +ft("➕ ✅","家事分工指派","誰負責什麼一目了然")
     +planTag("full")+'</div>';
   var foot='<button id="goUpBtn" style="width:100%;border:none;background:#E8735C;color:#fff;border-radius:14px;padding:17px;font-size:18px;font-weight:900;margin-top:22px;box-shadow:0 6px 18px rgba(232,115,92,.34)">立即升級 ➜</button>'
     +'<div style="text-align:center;color:#8A8A93;font-size:12px;margin-top:12px;line-height:1.7">🎁 先享 14 天全功能免費試用<br>升級透過「智在生活」官方 LINE，安心又快速</div>';
@@ -1474,16 +1475,46 @@ function _showNotif(title, body){
     } else { new Notification(title,{body:body,icon:'icon-192.png'}); }
   }catch(e){}
 }
+// 桌面 App 圖示紅點：今天未完成筆數
+function updateAppBadge(){
+  try{
+    var n=_todayTimedEvents().length;
+    if(navigator.setAppBadge){
+      if(n>0) navigator.setAppBadge(n).catch(function(){});
+      else navigator.clearAppBadge().catch(function(){});
+    }
+  }catch(e){}
+}
+function _slotNow(){                       // 時段：早(0-12)/午(12-18)/晚(18-24)
+  var h=new Date().getHours();
+  return h<12 ? "am" : (h<18 ? "pm" : "night");
+}
 function maybeNotifyToday(force){
   if(!notifyOn()) return;
-  var t=ymd(new Date());
-  if(!force){ try{ if(localStorage.getItem('notifiedDate')===t) return; }catch(e){} }   // 一天只推一次(不打擾)
-  var evs=_todayTimedEvents();
-  if(!evs.length){ if(force) toast('今天沒有行程'); return; }
-  var titles=evs.slice(0,3).map(function(r){ return (r.start? r.start+' ':'')+(r.title||'行程'); });
-  var more=evs.length>3? ('…等 '+evs.length+' 筆'):'';
-  _showNotif('📅 今天有 '+evs.length+' 筆行程', titles.join('、')+more);
-  try{ localStorage.setItem('notifiedDate', t); }catch(e){}
+  var t=ymd(new Date()), slot=_slotNow(), key=t+"_"+slot;
+  var isFirstToday=false;
+  if(!force){
+    try{
+      if(localStorage.getItem('notifiedSlot')===key) return;       // 同時段只推一次
+      isFirstToday = (localStorage.getItem('notifiedDate')!==t);   // 今天第一次？
+    }catch(e){}
+  }
+  var all=_todayTimedEvents();                                     // 今天未完成(含逾期/無時間)
+  if(!all.length){ if(force) toast('今天沒有未完成的行程'); return; }
+  var nowHM=String(new Date().getHours()).padStart(2,"0")+":"+String(new Date().getMinutes()).padStart(2,"0");
+  var upcoming=all.filter(function(r){ return r.start && r.start>=nowHM; });   // 還沒到時間的
+  var title, body;
+  if(isFirstToday || force){                                       // 今天第一次 → 推全部
+    var first=upcoming[0]||all[0];
+    title = (first.start? '⏰ '+first.start+' ':'📅 ')+(first.title||'行程');
+    body  = '今天有 '+all.length+' 筆行程';
+  } else {                                                          // 之後 → 只提未完成
+    if(!upcoming.length){ if(force) toast('今天沒有即將到來的行程'); return; }
+    title = '⏰ '+upcoming[0].start+' '+(upcoming[0].title||'行程');
+    body  = '今天還有 '+all.length+' 筆未完成';
+  }
+  _showNotif(title, body);
+  try{ localStorage.setItem('notifiedSlot', key); localStorage.setItem('notifiedDate', t); }catch(e){}
 }
 
 function enterApp(){
@@ -1537,6 +1568,7 @@ function doLogout(){
   var _lg=$("login"); if(_lg){ _lg.classList.remove("hidden"); _lg.style.display="flex"; }   // 明確顯示登入頁(蓋過防閃的inline none)
   codeInput.value=""; loginMsg.textContent="";
   var _ag=$("agreeChk"); if(_ag) _ag.checked=false;   // 清掉同意勾選
+  try{ if(navigator.clearAppBadge) navigator.clearAppBadge().catch(function(){}); }catch(e){}   // 清桌面紅點
 }
 var _lob=$("logoutBtn"); if(_lob) _lob.addEventListener("click", doLogout);
 
@@ -1573,7 +1605,8 @@ function bindData(){
     setTimeout(importPendingPurchase, 800);
   });
 }
-function renderAll(){ processRecurrences(); refreshOverviewFilterOptions(); renderCalendar(); renderDayEvents(); renderPocket(); renderOverview(); renderShop(); renderGoals(); if(typeof applyPlanLocks==="function") applyPlanLocks(); }
+function renderAll(){ processRecurrences(); refreshOverviewFilterOptions(); renderCalendar(); renderDayEvents(); renderPocket(); renderOverview(); renderShop(); renderGoals(); if(typeof applyPlanLocks==="function") applyPlanLocks();   updateAppBadge();                 // 同步桌面圖示紅點
+}
 
 /* ===== 庫存 App 整合（兩個 App 同源 handyassist-system.github.io，共用 localStorage） ===== */
 function importPendingPurchase(){
