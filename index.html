@@ -180,6 +180,12 @@
     background:var(--surface);color:var(--ink);outline:none;font-size:14px;
   }
   .empty-state{text-align:center;color:var(--faint);padding:40px 20px;font-size:14px}
+  .ov-chipbar{display:flex;align-items:center;gap:8px;overflow-x:auto;padding:2px 4px 12px}
+  .ov-chipbar .chip{flex:none;font-size:13px;padding:7px 14px}
+  .ov-filter-btn{flex:none;width:34px;height:34px;border-radius:50%;background:var(--surface);border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;position:relative}
+  .ov-filter-btn .dot{position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--important);display:none}
+  .ov-filter-btn.has-filter .dot{display:block}
   .ov-hint{font-size:12px;color:var(--muted);background:var(--primary-soft);border-radius:10px;padding:8px 12px;margin:0 4px 10px;line-height:1.5}
 
   /* ---------- Modal ---------- */
@@ -285,19 +291,30 @@
   .iconchip.on{background:#EAF2FF;border-color:var(--primary);color:var(--primary);font-weight:600}
 
   /* 年度目標 */
+  .goal-card{position:relative}
   .goal-card .goal-prog{display:flex;align-items:center;gap:8px;margin-top:12px}
   .goal-card .name{white-space:normal;overflow:visible;text-overflow:clip}
   .goal-card .acts{display:flex;flex-wrap:wrap;gap:6px;flex:none;width:100%;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
   .goal-card .acts .icon-btn{width:auto;min-width:34px;height:34px;padding:0 11px;white-space:nowrap;font-size:13px;display:inline-flex;align-items:center;justify-content:center}
   .goal-card .goal-segs .seg{cursor:pointer}
+  .goal-card .manage-btn{background:var(--primary);color:#fff;border-color:var(--primary);flex:1 1 auto;font-weight:700}
+  .goal-card .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .goal-card .more-btn{flex:none;width:28px;height:28px;border-radius:50%;background:var(--bg);color:var(--faint);
+    display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer}
+  .goal-card .popover{position:absolute;top:40px;right:14px;background:var(--surface);border:1px solid var(--line);
+    border-radius:12px;box-shadow:var(--shadow);width:148px;z-index:20;overflow:hidden;display:none}
+  .goal-card .popover.open{display:block}
+  .goal-card .pop-item{padding:11px 14px;font-size:13.5px;color:var(--ink);border-top:1px solid var(--line);cursor:pointer}
+  .goal-card .pop-item:first-child{border-top:none}
+  .goal-card .pop-item.danger{color:var(--important)}
+  .goal-menu{margin-top:4px}
+  .goal-menu .menu-item{padding:13px 4px;font-size:15px;color:var(--ink);border-top:1px solid var(--line);cursor:pointer}
+  .goal-menu .menu-item:first-child{border-top:none}
   .goal-members{margin-top:10px;display:flex;flex-direction:column;gap:12px}
   .gmem{padding:8px 0;border-top:1px dashed var(--line)}
   .gmem:first-child{border-top:none}
   .gmem-hd{font-size:14px;color:var(--ink)}
   .mem-done{font-size:12px;color:#2CA02C;font-weight:700;background:#E8F5E9;padding:1px 8px;border-radius:999px}
-  .gmem-rec{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
-  .gmem-sel,.gmem-input{padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px}
-  .gmem-input{width:90px}
   .mem-edit{display:flex;gap:6px;margin-bottom:6px}
   .mem-edit input{padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px;min-width:0}
   .goal-bar{flex:1;height:9px;border-radius:6px;background:var(--bg);overflow:hidden}
@@ -555,23 +572,26 @@
 
     <!-- Overview tab -->
     <section id="tabOverview" class="hidden">
-      <div class="filters">
-        <div class="filter-row">
-          <span class="filter-label">期間</span>
-          <select id="ovYear"></select>
-          <select id="ovMonth"></select>
-          <select id="ovDay"></select>
+      <div class="ov-chipbar" id="ovChipBar">
+        <div class="chip" data-ovchip="week">本週</div>
+        <div class="chip on" data-ovchip="month">本月</div>
+        <div class="ov-filter-btn" id="ovFilterBtn"><span>🔍</span><span class="dot" id="ovFilterDot"></span></div>
+      </div>
+      <div id="ovFiltersReal" style="display:none">
+        <div class="field"><label>年</label><select id="ovYear"></select></div>
+        <div class="two">
+          <div class="field"><label>月</label><select id="ovMonth"></select></div>
+          <div class="field"><label>日</label><select id="ovDay"></select></div>
         </div>
-        <div class="filter-row">
-          <span class="filter-label">篩選</span>
+        <div class="field"><label>狀態</label>
           <select id="ovStatus">
             <option value="pending">未完成</option>
             <option value="done">已完成</option>
             <option value="all">全部</option>
           </select>
-          <select id="ovCategory"><option value="all">全部分類</option></select>
-          <select id="ovAssignee"><option value="all">全部負責人</option></select>
         </div>
+        <div class="field"><label>分類</label><select id="ovCategory"><option value="all">全部分類</option></select></div>
+        <div class="field"><label>負責人</label><select id="ovAssignee"><option value="all">全部負責人</option></select></div>
       </div>
       <div id="ovList"></div>
     </section>
@@ -582,7 +602,7 @@
         <span></span>
         <button class="add-btn" id="addItemBtn">＋ 新增待購</button>
       </div>
-      <p class="shop-hint">勾選後自動完成並從清單消失，依購物子分類分組。</p>
+      <p class="shop-hint">勾選後自動完成並從清單消失。</p>
       <div id="shopList"></div>
     </section>
 
@@ -662,7 +682,7 @@ const state = {
 let formAssignees = new Set();   // 編輯記事時暫存已選執行人
 
 /* ---------- 1.5 分類定義 ---------- */
-const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
+const CAT_ORDER = ["life","work","shopping","finance","activity","health","travel","study","side","other"];
 const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
 const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
 const APP_VER = "v1.0(2026)";
@@ -1455,8 +1475,8 @@ function requestNotify(){
     var _standalone=false;
     try{ _standalone=(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone===true; }catch(e){}
     alert(_standalone
-      ? '🔔 通知已被封鎖\n\n解除方式：\n手機「設定」→「應用程式」\n→ 找到「智能行事曆」\n→「通知」→ 開啟'
-      : '🔔 通知已被封鎖\n\n解除方式：\n點網址列左邊的 🔒 圖示\n→「權限」或「網站設定」\n→「通知」→ 改成「允許」\n\n改完請重新整理頁面');
+      ? '🔔 通知已被封鎖\n\n解除方式：\n⚙️ 手機「設定」→ 📱「應用程式」\n→ 找到「智能行事曆」\n→ 🔔「通知」→ 開啟'
+      : '🔔 通知已被封鎖\n\n解除方式：\n點網址列左邊的 🔒 圖示\n→「權限」或「網站設定」\n→ 🔔「通知」→ 改成「允許」\n\n改完請重新整理頁面');
     return;
   }
   Notification.requestPermission().then(function(p){
@@ -1803,7 +1823,6 @@ function switchTab(t){
 /* 跳出 App 再回來 → 回到「行事曆」今天（總覽預設＝當月＋逾期） */
 function resetToTodayOverview(){
   if($("app").classList.contains("hidden")) return;   // 未登入不動
-  ovMode="todo";
   const t=new Date();
   if($("ovYear")) $("ovYear").value=String(t.getFullYear());
   if($("ovMonth")) $("ovMonth").value=String(t.getMonth()+1);
@@ -1811,6 +1830,8 @@ function resetToTodayOverview(){
   if($("ovStatus")) $("ovStatus").value="pending";
   if($("ovCategory")) $("ovCategory").value="all";
   if($("ovAssignee")) $("ovAssignee").value="all";
+  ovWeekRange=null;
+  if(typeof ovSetChipActive==="function") ovSetChipActive("month");
   switchTab("cal");   // 回到行事曆頁
   goToToday();        // 跳到今天
 }
@@ -1899,8 +1920,7 @@ function openCalManager(){
     +'</div>';
 
   // 分享
-  var shareInner='<button id="shareAppBtn" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">📤 分享給朋友</button>'
-    +'<div style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.6">好用的話，把它分享給需要的家人朋友</div>';
+  var shareInner='<button id="shareAppBtn" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">📤 分享給朋友</button>';
 
   let html=_box("📅 我的行事曆", calInner)
     + _box("🔔 提醒", notiInner)
@@ -2204,26 +2224,76 @@ function openMonthPicker(){
 /* ============================================================
    6.5 總覽（查詢／回顧，可篩選）
    ============================================================ */
-let ovMode = "todo";   // todo=待辦(逾期+今天未完成)；period=查特定期間
 ["ovStatus","ovCategory","ovAssignee","ovYear","ovDay"].forEach(idd=>{
-  const el=$(idd); if(el) el.addEventListener("change", ()=>{ ovMode="period"; renderOverview(); });
+  const el=$(idd); if(el) el.addEventListener("change", ()=>{ ovWeekRange=null; ovSetChipActive(""); renderOverview(); });
 });
 // 月份改變時：選「整年」就停用日；否則開放日
 $("ovMonth").addEventListener("change", function(){
   const noMonth = this.value==="";
   $("ovDay").disabled = noMonth;
   if(noMonth) $("ovDay").value="";
-  ovMode="period"; renderOverview();
+  ovWeekRange=null; ovSetChipActive(""); renderOverview();
 });
 (function initOvPickers(){
   const t=new Date();
-  let ys=""; for(let y=2020;y<=2035;y++) ys+='<option value="'+y+'">'+y+' 年</option>';
+  let ys='<option value="">全部年</option>'; for(let y=2020;y<=2035;y++) ys+='<option value="'+y+'">'+y+' 年</option>';
   $("ovYear").innerHTML=ys; $("ovYear").value=String(t.getFullYear());
   let ms='<option value="">整年</option>'; for(let m=1;m<=12;m++) ms+='<option value="'+m+'">'+m+' 月</option>';
   $("ovMonth").innerHTML=ms; $("ovMonth").value=String(t.getMonth()+1);
   let ds='<option value="">整月</option>'; for(let d=1;d<=31;d++) ds+='<option value="'+d+'">'+d+' 日</option>';
   $("ovDay").innerHTML=ds; $("ovDay").value="";
 })();
+
+// ---- 總覽快速篩選 chips（今天／本週／本月／全部）----
+let ovWeekRange = null;   // 選「本週」時的 [start,end]，其他情況為 null
+let ovQuickKind = "month";   // 目前選中的 chip：today/week/month/all，手動用進階篩選時為 ""
+function ovSetChipActive(kind){
+  ovQuickKind = kind;
+  document.querySelectorAll("#ovChipBar .chip").forEach(c=>c.classList.toggle("on", c.getAttribute("data-ovchip")===kind));
+}
+function ovQuickFilter(kind){
+  ovWeekRange=null;
+  const t=new Date();
+  if(kind==="week"){
+    const dow=(t.getDay()+6)%7;                          // 0=週一
+    const mon=new Date(t); mon.setDate(t.getDate()-dow);
+    const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+    ovWeekRange=[ymd(mon), ymd(sun)];
+    $("ovStatus").value="pending";
+  }
+  ovSetChipActive(kind);
+  renderOverview();
+}
+document.querySelectorAll("#ovChipBar .chip").forEach(c=>{
+  c.addEventListener("click", ()=>ovQuickFilter(c.getAttribute("data-ovchip")));
+});
+function ovUpdateFilterDot(){
+  const btn=$("ovFilterBtn"); if(!btn) return;
+  const extra=($("ovCategory").value!=="all") || ($("ovAssignee").value!=="all");
+  btn.classList.toggle("has-filter", extra);
+}
+function ovCloseFilterSheet(){
+  const slot=$("ovfSlot"), dst=$("ovFiltersReal");
+  if(slot && dst){ while(slot.firstChild) dst.appendChild(slot.firstChild); }
+  $("modalRoot").innerHTML="";
+}
+function ovOpenFilterSheet(){
+  const root=$("modalRoot");
+  root.innerHTML=
+    '<div class="overlay" id="ovfOvl"><div class="sheet" id="ovfSheet">'+
+      '<h3 style="margin:0 0 14px;font-size:17px">進階篩選</h3>'+
+      '<div id="ovfSlot"></div>'+
+      '<div class="sheet-acts"><button class="btn-primary" id="ovfClose" style="width:100%">套用</button></div>'+
+    '</div></div>';
+  const slot=$("ovfSlot"), src=$("ovFiltersReal");
+  while(src.firstChild) slot.appendChild(src.firstChild);
+  $("ovfClose").addEventListener("click", ()=>{
+    ovWeekRange=null; ovSetChipActive("");
+    ovCloseFilterSheet(); renderOverview(); ovUpdateFilterDot();
+  });
+  $("ovfOvl").addEventListener("click", e=>{ if(e.target.id==="ovfOvl"){ ovCloseFilterSheet(); ovUpdateFilterDot(); } });
+}
+$("ovFilterBtn").addEventListener("click", ovOpenFilterSheet);
 
 /* 🎒 百寶袋：隨手記一筆（無日期記事，只有標題） */
 function quickAddPocket(){
@@ -2262,11 +2332,13 @@ function refreshOverviewFilterOptions(){
     as.innerHTML='<option value="all">全部負責人</option>'+Object.entries(state.people).map(([id,p])=>'<option value="'+id+'">'+esc(p.name)+'</option>').join("");
     as.value=cur && [...as.options].some(o=>o.value===cur)?cur:"all";
   }
+  if(typeof ovUpdateFilterDot==="function") ovUpdateFilterDot();
 }
 
 function overviewDateMatch(r){
   const rg=recRange(r);
   if(!rg) return r.category!=="shopping";   // 無日期：🎒百寶袋顯示；採購(純待購)不灌進總覽
+  if(ovWeekRange) return rg[0] <= ovWeekRange[1] && rg[1] >= ovWeekRange[0];
   const y=$("ovYear").value, m=$("ovMonth").value, d=$("ovDay").value;
   if(!y) return true;
   const pad=n=>String(n).padStart(2,"0");
@@ -2291,6 +2363,11 @@ function latestPendingOccUpTo(r, today){
   return null;
 }
 function occInOvPeriod(r){
+  if(ovWeekRange){
+    const out=[]; let dd=new Date(ovWeekRange[0]+"T00:00:00");
+    for(let i=0;i<8;i++){ const ds=ymd(dd); if(ds>ovWeekRange[1]) break; if(occursOn(r,ds)) out.push(ds); dd.setDate(dd.getDate()+1); }
+    return out;
+  }
   const y=$("ovYear").value, m=$("ovMonth").value, d=$("ovDay").value;
   const pad=k=>String(k).padStart(2,"0");
   if(!y){ const nx=firstOccOnOrAfter(r, ymd(new Date())); return nx?[nx]:[]; }
@@ -2302,6 +2379,19 @@ function occInOvPeriod(r){
 }
 function thisMonthStr(){ const n=new Date(); return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0"); }
 function inCurrentMonth(ds){ return !!ds && ds.slice(0,7)===thisMonthStr(); }
+// 判斷某日期是否落在目前選中的快速期間（本週／本月）內
+function _ovInPeriod(ds){
+  if(!ds) return false;
+  if(ovQuickKind==="week") return !!ovWeekRange && ds>=ovWeekRange[0] && ds<=ovWeekRange[1];
+  if(ovQuickKind==="month") return inCurrentMonth(ds);
+  return false;
+}
+// 目前快速期間的起始日（用來算「這個期間之前」＝逾期的基準）
+function _ovPeriodStart(){
+  if(ovQuickKind==="week" && ovWeekRange) return ovWeekRange[0];
+  if(ovQuickKind==="month") return thisMonthStr()+"-01";
+  return ymd(new Date());
+}
 function occInMonth(r, y, m){
   const pad=k=>String(k).padStart(2,"0"); const out=[];
   const dim=new Date(y, m, 0).getDate();
@@ -2309,18 +2399,22 @@ function occInMonth(r, y, m){
   return out;
 }
 function buildOverviewRows(){
-  const todo=(ovMode==="todo"); const today=ymd(new Date());
+  const inQuick=(ovQuickKind==="week"||ovQuickKind==="month");
   const out=[];
   curEntries().forEach(([id,r])=>{
     const rep = hasRepeat(r) && r.category!=="shopping" && r.dateStart;
     if(!rep){ out.push(Object.assign({id}, r)); return; }
     let occs=[];
-    if(todo){
-      // 預設：當月發生日 ＋ 逾期（之前月份最近一筆未完成；純紀錄不算逾期）
-      const n=new Date(), cy=n.getFullYear(), cm=n.getMonth()+1;
-      occs = occInMonth(r, cy, cm);
+    if(inQuick){
+      // 期間內發生日 ＋ 逾期（期間之前最近一筆未完成；純紀錄不算逾期）
+      if(ovQuickKind==="month"){
+        const n=new Date(), cy=n.getFullYear(), cm=n.getMonth()+1;
+        occs = occInMonth(r, cy, cm);
+      } else {
+        occs = occInOvPeriod(r);   // 今天／本週：已支援 ovWeekRange
+      }
       if(!r.isLog){
-        const od = latestPendingOccUpTo(r, dayBefore(cy+"-"+String(cm).padStart(2,"0")+"-01"));
+        const od = latestPendingOccUpTo(r, dayBefore(_ovPeriodStart()));
         if(od && occs.indexOf(od)<0) occs.push(od);
       }
     } else {
@@ -2357,8 +2451,8 @@ function cleanDuplicatePurchases(){
 }
 function renderOverview(){
   const wrap=$("ovList");
-  const todo = (ovMode==="todo");
-  const statusF= todo ? "pending" : $("ovStatus").value;     // pending / done / all
+  const inQuick = (ovQuickKind==="week"||ovQuickKind==="month");
+  const statusF= inQuick ? "pending" : $("ovStatus").value;     // pending / done / all
   const catF=$("ovCategory").value;
   const whoF=$("ovAssignee").value;
   const today=ymd(new Date());
@@ -2368,13 +2462,13 @@ function renderOverview(){
     if(catF!=="all" && r.category!==catF) return false;   // 全部分類含採購；選特定分類才篩
     if(whoF!=="all" && !(r.assignees||[]).includes(whoF)) return false;
     const k=recKind(r);
-    if(todo){
-      // 預設：當月 ＋ 逾期（未完成）。已完成不顯示；純紀錄當月才顯示
+    if(inQuick){
+      // 今天／本週／本月：一律「未完成 ＋ 逾期」。已完成不顯示；純紀錄限期間內才顯示
       if(k==="done") return false;
-      if(k==="log"){ const rg=recRange(r); return !!(rg && inCurrentMonth(rg[0])); }
+      if(k==="log"){ const rg=recRange(r); return !!(rg && _ovInPeriod(rg[0])); }
       const rg=recRange(r);
       if(!rg) return r.category!=="shopping";   // 無日期 🎒百寶袋
-      return rg[0] < today || inCurrentMonth(rg[0]);   // 逾期 或 當月
+      return rg[0] < today || _ovInPeriod(rg[0]);   // 逾期 或 期間內
     }
     if(!overviewDateMatch(r)) return false;   // 無日期者一律顯示；有日期(含預期日)依篩選
     if(k!=="log"){                            // 純紀錄不分未完成/已完成，一律顯示
@@ -2402,7 +2496,7 @@ function renderOverview(){
   let total=order.reduce((n,k)=>n+buckets[k].length,0);
   var _dupN=findDuplicatePurchases().length;
   var _dupBtn=_dupN>0 ? '<button onclick="cleanDuplicatePurchases()" style="width:100%;margin-bottom:8px;padding:9px;border:none;border-radius:8px;background:#E377C2;color:#fff;font-size:14px;font-weight:600">🧹 清除重複採購（'+_dupN+' 筆）</button>' : '';
-  const hint = _dupBtn + (todo ? '<div class="ov-hint">📋 當月未完成 ＋ 逾期（用上方年／月／日可查其他期間）</div>' : '');
+  const hint = _dupBtn + ((ovQuickKind==="week"||ovQuickKind==="month") ? '<div class="ov-hint">📋 只顯示未完成的項目（含逾期未完成）</div>' : '');
   if(total===0){ wrap.innerHTML=hint+'<div class="empty-state">'+(todo?'目前沒有當月或逾期未完成的事 🎉':'沒有符合的記事，試著調整上方篩選。')+'</div>'; return; }
 
   wrap.innerHTML=hint;
@@ -2700,7 +2794,7 @@ function openRecordForm(rec, presets, asCopy){
         '</select>'+
         '<input id="rec_repeatEvery" type="number" min="1" value="'+repEvery+'" placeholder="間隔數">'+
       '</div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">勾「重複」：這筆會自動出現在每個重複日（每天／每週／每月／每年），不用每次重建。</div>'+
+      '<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">💡 例如：每年都要記得的事，選「每…年」填 1，之後自動重複出現，不用手動新增。</div>'+
     '</div>'+
     '<div id="rec_amountbox"'+(isShop?' style="display:none"':'')+'><div class="field"><label>金額（選填）</label>'+
       '<input id="rec_amount" type="number" inputmode="numeric" value="'+(r.amount!=null?r.amount:"")+'" placeholder="例如 1200"></div></div>'+
@@ -3043,7 +3137,13 @@ function goalCard(g, idx, total){
   card.className="card goal-card";
   const p=goalProgress(g); const col=catColor(g.category);
   let h='<div class="stripe" style="background:'+col+'"></div><div class="body">';
-  h+='<div class="row1"><span class="name">'+esc(g.title)+'</span></div>';
+  h+='<div class="row1"><span class="name">'+esc(g.title)+'</span><div class="more-btn" data-more>⋯</div></div>';
+  h+='<div class="popover" data-popover>'+
+      '<div class="pop-item" data-copy>📋 複製目標</div>'+
+      '<div class="pop-item" data-up style="'+(idx<=0?'opacity:.4;pointer-events:none':'')+'">▲ 上移</div>'+
+      '<div class="pop-item" data-down style="'+(idx>=total-1?'opacity:.4;pointer-events:none':'')+'">▼ 下移</div>'+
+      '<div class="pop-item danger" data-del>🗑 刪除目標</div>'+
+    '</div>';
   h+='<div class="meta">'+pillHtml(g.category)+' <span>'+esc(g.year||"")+'</span></div>';
   if(g.type==="simple"){
     h+='<div class="goal-status'+(p.complete?' is-done':'')+'">'+(p.complete?"已完成 🎉":"進行中")+'</div>';
@@ -3076,7 +3176,6 @@ function goalCard(g, idx, total){
       h+='</div>';
     });
     h+='</div>';
-    h+='<div class="gmem-rec">記錄：<select id="memsel_'+g.id+'" class="gmem-sel">'+g.members.map((m,mi)=>'<option value="'+mi+'">'+esc(m.name)+'</option>').join("")+'</select><input type="number" id="meminp_'+g.id+'" class="gmem-input" placeholder="數值"><button class="icon-btn gmem-apply" data-memapply>套用</button></div>';
   } else {
     if(g.type==="milestone"){
       h+='<div class="goal-sub">完成 '+p.done+' / '+p.total+' 項</div>';
@@ -3107,43 +3206,118 @@ function goalCard(g, idx, total){
     }
   }
   h+='<div class="acts">';
-  h+='<button class="icon-btn" data-up'+(idx<=0?' disabled':'')+' title="上移">▲</button><button class="icon-btn" data-down'+(idx>=total-1?' disabled':'')+' title="下移">▼</button>';
-  if(g.type==="number") h+='<button class="icon-btn" data-prog>＋進度</button><button class="icon-btn" data-fin>✓ 標記完成</button>';
   if(g.type==="freq") h+='<button class="icon-btn" data-bump>＋1 今天完成</button><button class="icon-btn" data-undo>↩︎ 退回</button>';
   if(g.type==="simple") h+='<button class="icon-btn" data-done>'+(g.done?"↩︎ 取消完成":"✓ 標記完成")+'</button>';
-  if(g.type==="number") h+='<button class="icon-btn" data-extend title="提高目標、進度保留">➕ 延長</button>';
-  if(g.type==="milestone") h+='<button class="icon-btn" data-extend title="新增項目、已完成保留">➕ 加項目</button>';
-  h+='<button class="icon-btn" data-next title="複製此目標">📋 複製</button>';
-  h+='<button class="icon-btn" data-edit>✏️</button><button class="icon-btn" data-del>🗑</button></div></div>';
+  h+='<button class="icon-btn manage-btn" data-manage>管理目標</button>';
+  h+='</div></div>';
   card.innerHTML=h;
-  card.querySelector("[data-edit]").addEventListener("click", ()=>openGoalForm(g));
-  card.querySelector("[data-del]").addEventListener("click", ()=>deleteGoal(g.id, g.title));
-  const nb=card.querySelector("[data-next]"); if(nb) nb.addEventListener("click", ()=>copyGoalToNextYear(g));
-  const upb=card.querySelector("[data-up]"); if(upb&&!upb.disabled) upb.addEventListener("click", ()=>moveGoal(g.id,-1));
-  const dnb=card.querySelector("[data-down]"); if(dnb&&!dnb.disabled) dnb.addEventListener("click", ()=>moveGoal(g.id,1));
-  const xb=card.querySelector("[data-extend]"); if(xb) xb.addEventListener("click", ()=>extendGoal(g.id));
+  card.querySelector("[data-manage]").addEventListener("click", ()=>openGoalManage(g, idx, total));
+  const moreBtn=card.querySelector("[data-more]"), pop=card.querySelector("[data-popover]");
+  if(moreBtn) moreBtn.addEventListener("click", (e)=>{ e.stopPropagation(); document.querySelectorAll(".goal-card .popover.open").forEach(p=>{ if(p!==pop) p.classList.remove("open"); }); pop.classList.toggle("open"); });
+  const cpb=card.querySelector("[data-copy]"); if(cpb) cpb.addEventListener("click", ()=>copyGoalToNextYear(g));
+  const upb=card.querySelector("[data-up]"); if(upb && idx>0) upb.addEventListener("click", ()=>moveGoal(g.id,-1));
+  const dnb=card.querySelector("[data-down]"); if(dnb && idx<total-1) dnb.addEventListener("click", ()=>moveGoal(g.id,1));
+  const delb=card.querySelector("[data-del]"); if(delb) delb.addEventListener("click", ()=>deleteGoal(g.id, g.title));
   card.querySelectorAll("[data-segval]").forEach(el=>{
-    if(el.hasAttribute("data-mseg")) el.addEventListener("click", ()=>setMemberCurrent(g.id, Number(el.getAttribute("data-mseg")), Number(el.getAttribute("data-segval")), true));
-    else el.addEventListener("click", ()=>setGoalSegment(g.id, Number(el.getAttribute("data-segval"))));
+    const isDone=el.classList.contains("seg-done");
+    if(el.hasAttribute("data-mseg")){
+      const mi=Number(el.getAttribute("data-mseg"));
+      const m=g.members&&g.members[mi];
+      el.addEventListener("click", ()=>{
+        const raw=Number(el.getAttribute("data-segval"));
+        const val=_segToggleVal(g.dir, g.step, raw, isDone);
+        setMemberCurrent(g.id, mi, val, true);
+      });
+    } else {
+      el.addEventListener("click", ()=>{
+        const raw=Number(el.getAttribute("data-segval"));
+        const val=_segToggleVal(g.dir, g.step, raw, isDone);
+        setGoalSegment(g.id, val);
+      });
+    }
   });
-  const ma=card.querySelector("[data-memapply]");
-  if(ma) ma.addEventListener("click", ()=>{
-    const sel=card.querySelector("#memsel_"+g.id), inp=card.querySelector("#meminp_"+g.id);
-    if(!sel||!inp||inp.value==="") return;
-    setMemberCurrent(g.id, Number(sel.value), Number(inp.value), true);
-  });
-  const pb=card.querySelector("[data-prog]"); if(pb) pb.addEventListener("click", ()=>updateGoalProgress(g));
-  const fb=card.querySelector("[data-fin]"); if(fb) fb.addEventListener("click", ()=>markGoalDone(g.id));
   const bp=card.querySelector("[data-bump]"); if(bp) bp.addEventListener("click", ()=>bumpFreq(g.id));
   const ub=card.querySelector("[data-undo]"); if(ub) ub.addEventListener("click", ()=>undoFreq(g.id));
   const dn=card.querySelector("[data-done]"); if(dn) dn.addEventListener("click", ()=>toggleGoalDone(g.id));
   card.querySelectorAll("[data-ms]").forEach(cb=>cb.addEventListener("change", function(){ toggleMilestone(g.id, Number(this.getAttribute("data-ms"))); }));
   return card;
 }
+document.addEventListener("click", function(e){
+  if(!e.target.closest(".goal-card .more-btn") && !e.target.closest(".goal-card .popover")){
+    document.querySelectorAll(".goal-card .popover.open").forEach(p=>p.classList.remove("open"));
+  }
+});
+// 「管理目標」整合彈窗：目前進度＋標記完成／提高目標值／編輯／複製／排序／刪除，統一入口
+function openGoalManage(g, idx, total){
+  const root=$("modalRoot");
+  const isNum=(g.type==="number");
+  const isMulti=isNum && Array.isArray(g.members) && g.members.length;
+  let inner="";
+  if(isNum && !isMulti){
+    inner+='<div class="field"><label>目前進度</label><div class="two"><input id="gmCur" type="number" value="'+(g.current!=null?g.current:0)+'" style="flex:1"><button class="btn-primary" id="gmSave" style="width:auto;flex:none;margin-top:0;padding:0 16px;border:none;border-radius:10px">儲存</button></div></div>';
+  }
+  let items='<div class="menu-item" id="gmEdit">✏️ 修改目標</div>';
+  if(isMulti) items+='<div class="menu-item" id="gmMembers">📊 進度設定</div>';
+  root.innerHTML=
+    '<div class="overlay" id="gmOvl"><div class="sheet" id="gmSheet">'+
+      '<h3 style="margin:0 0 14px;font-size:17px">'+esc(g.title)+'</h3>'+
+      inner+'<div class="goal-menu">'+items+'</div>'+
+    '</div></div>';
+  function close(){ root.innerHTML=""; }
+  $("gmOvl").addEventListener("click", e=>{ if(e.target.id==="gmOvl") close(); });
+  if($("gmSave")) $("gmSave").addEventListener("click", ()=>{
+    const v=Number($("gmCur").value); if(isNaN(v)){ toast("請輸入數字"); return; }
+    saveGoalPatch(g.id, { current:v }); close();
+  });
+  $("gmEdit").addEventListener("click", ()=>{ close(); openGoalForm(g); });
+  if($("gmMembers")) $("gmMembers").addEventListener("click", ()=>{ close(); openMemberSheet(g); });
+}
+// 「進度設定」獨立彈窗：多人目標的成員名單＋各自進度，跟「修改目標」表單分開
+let goalMembers=[];   // 編輯時暫存
+function openMemberSheet(g){
+  const root=$("modalRoot");
+  goalMembers=(g.members&&g.members.length)?g.members.map(m=>({name:m.name||"",current:(m.current!=null?m.current:0),target:(m.target!=null?m.target:0)})):[{name:"我",current:0,target:0},{name:"老公",current:0,target:0}];
+  root.innerHTML=
+    '<div class="overlay" id="msOvl"><div class="sheet" id="msSheet">'+
+      '<h3 style="margin:0 0 14px;font-size:17px">進度設定</h3>'+
+      '<div class="label-row"><label>成員（各自目前/目標）</label><span class="manage-link" id="ms_add">＋ 加成員</span></div>'+
+      '<div id="ms_list"></div>'+
+      '<div class="sheet-acts"><button class="btn-ghost" id="ms_cancel">取消</button><button class="btn-primary" id="ms_save">儲存</button></div>'+
+    '</div></div>';
+  function renderList(){
+    const box=$("ms_list"); if(!box) return;
+    box.innerHTML=goalMembers.map((m,i)=>'<div class="mem-edit"><input data-mn="'+i+'" autocomplete="off" value="'+esc(m.name)+'" placeholder="名字" style="flex:1.2"><input data-mc="'+i+'" type="number" value="'+(m.current!=null?m.current:0)+'" placeholder="目前" style="flex:1"><input data-mt="'+i+'" type="number" value="'+(m.target!=null?m.target:0)+'" placeholder="目標" style="flex:1"><button type="button" class="ms-del" data-mdel="'+i+'">✕</button></div>').join("");
+    box.querySelectorAll("[data-mn]").forEach(inp=>inp.addEventListener("input",function(){ goalMembers[Number(this.getAttribute("data-mn"))].name=this.value; }));
+    box.querySelectorAll("[data-mc]").forEach(inp=>inp.addEventListener("input",function(){ goalMembers[Number(this.getAttribute("data-mc"))].current=this.value; }));
+    box.querySelectorAll("[data-mt]").forEach(inp=>inp.addEventListener("input",function(){ goalMembers[Number(this.getAttribute("data-mt"))].target=this.value; }));
+    box.querySelectorAll("[data-mdel]").forEach(b=>b.addEventListener("click",function(){ goalMembers.splice(Number(this.getAttribute("data-mdel")),1); renderList(); }));
+  }
+  renderList();
+  function close(){ root.innerHTML=""; }
+  $("msOvl").addEventListener("click", e=>{ if(e.target.id==="msOvl") close(); });
+  $("ms_cancel").addEventListener("click", close);
+  $("ms_add").addEventListener("click", ()=>{ goalMembers.push({name:"",current:0,target:0}); renderList(); });
+  $("ms_save").addEventListener("click", ()=>{
+    const clean=goalMembers.filter(m=>(m.name||"").trim()).map(m=>{
+      const old=(g.members||[]).find(x=>x.name===m.name);
+      const start=(old && old.start!=null) ? Number(old.start) : Number(m.current)||0;
+      return { name:m.name.trim(), current:Number(m.current)||0, target:Number(m.target)||0, start:start };
+    });
+    if(!clean.length){ toast("多人請至少一位成員"); return; }
+    saveGoalPatch(g.id, { members: clean });
+    close();
+  });
+}
 function markGoalDone(id){
   const g=state.goals[id]; if(!g) return;
   const tgt=Number(g.target)||0;
   saveGoalPatch(id, { current: tgt });   // 目前值＝目標值 → 100%、區間全達成
+}
+// 徽章點兩下切換：已達成→退回上一階；未達成→前進到那一階
+function _segToggleVal(dir, step, val, isDone){
+  if(!isDone) return val;
+  step=Math.abs(Number(step)||0)||1;
+  return (dir==="down") ? val+step : Math.max(0, val-step);
 }
 function setGoalSegment(id, val){
   if(!requireAuth()) return;
@@ -3190,23 +3364,6 @@ function toggleGoalDone(id){
   const g=state.goals[id]; if(!g) return;
   saveGoalPatch(id, { done: !g.done });
 }
-function updateGoalProgress(g){
-  if(Array.isArray(g.members) && g.members.length){
-    // 多人目標：更新「下拉選的那個成員」
-    const sel=document.getElementById("memsel_"+g.id);
-    const mi=sel?Number(sel.value):0;
-    const m=g.members[mi]; if(!m){ return; }
-    const cur=prompt("更新「"+m.name+"」目前進度"+(g.unit?("（"+g.unit+"）"):""), m.current!=null?m.current:0);
-    if(cur===null) return;
-    const v=Number(cur); if(isNaN(v)){ toast("請輸入數字"); return; }
-    setMemberCurrent(g.id, mi, v, true);
-    return;
-  }
-  const cur=prompt("更新「"+g.title+"」目前進度"+(g.unit?("（"+g.unit+"）"):""), g.current!=null?g.current:0);
-  if(cur===null) return;
-  const v=Number(cur); if(isNaN(v)){ toast("請輸入數字"); return; }
-  saveGoalPatch(g.id, { current:v });
-}
 function toggleMilestone(id, idx){
   const g=state.goals[id]; if(!g) return;
   const ms=(g.milestones||[]).slice(); if(!ms[idx]) return;
@@ -3241,16 +3398,27 @@ function deleteGoal(id, title){
 }
 
 let goalMilestones=[];   // 編輯時暫存里程碑
-let goalMembers=[];      // 編輯時暫存多人成員
+// 單位下拉（基本選項 + 保留舊資料 + 其他自訂）
+function _unitSelect(cur){
+  var base=["公斤","天","次","元"];
+  var list=base.slice();
+  if(cur && list.indexOf(cur)<0) list.push(cur);        // 舊資料的單位自動保留
+  var h='<select id="g_unit_sel">';
+  h+='<option value=""'+(cur?"":" selected")+' disabled>請選擇</option>';
+  list.forEach(function(u){ h+='<option value="'+esc(u)+'"'+(cur===u?" selected":"")+'>'+esc(u)+'</option>'; });
+  h+='<option value="__other">其他…</option></select>';
+  h+='<input id="g_unit" type="hidden" value="'+esc(cur||"")+'">';
+  return h;
+}
+const GOAL_NAME_PLACEHOLDER = { number:"例如：存到 30 萬", freq:"例如：每週運動 3 次", milestone:"例如：考取多益 700 分", simple:"例如：完成新手訓練" };
 function openGoalForm(goal){
   if(!canAdvanced()){ showUpgrade(goal?"編輯目標":"新增目標"); return; }   // 免費版：鎖新增/編輯(可看、可更新進度)
   const isEdit=!!goal; const g=goal||{};
   const type=g.type||"number"; const cat=g.category||"life"; const yr=g.year||new Date().getFullYear();
   const dir=g.dir||((g.target!=null&&g.start!=null&&Number(g.target)<Number(g.start))?"down":"up");
   goalMilestones=(g.milestones||[]).map(m=>({text:m.text,done:!!m.done,date:m.date||""}));
-  goalMembers=(g.members&&g.members.length)?g.members.map(m=>({name:m.name||"",current:(m.current!=null?m.current:0),target:(m.target!=null?m.target:0)})):[{name:"我",current:0,target:0},{name:"老公",current:0,target:0}];
   const html=
-    '<div class="field"><label>目標名稱</label><input id="g_title" autocomplete="off" value="'+esc(g.title||"")+'" placeholder="例如：存到 30 萬"></div>'+
+    '<div class="field"><label>目標名稱</label><input id="g_title" autocomplete="off" value="'+esc(g.title||"")+'" placeholder="'+GOAL_NAME_PLACEHOLDER[type]+'"></div>'+
     '<div class="two">'+
       '<div class="field"><label>年度</label><input id="g_year" type="number" value="'+yr+'"></div>'+
       '<div class="field"><label>類型</label><select id="g_type">'+
@@ -3262,33 +3430,21 @@ function openGoalForm(goal){
     '</div>'+
     '<div class="field"><label>分類</label>'+iconPicker("g_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
     '<div id="g_numbox"'+(type==="number"?"":' style="display:none"')+'>'+
+      '<div class="field"><label>目標值 <span style="color:#E8735C">*</span></label><input id="g_target" type="number" value="'+(g.target!=null?g.target:"")+'" placeholder="例如：300000"></div>'+
       '<div class="two">'+
-        '<div class="field"><label>方向</label><select id="g_dir">'+
-          '<option value="up"'+(dir==="up"?" selected":"")+'>遞增（往上加）</option>'+
-          '<option value="down"'+(dir==="down"?" selected":"")+'>遞減（往下減，如減重）</option>'+
-        '</select></div>'+
-        '<div class="field"><label>間隔（選填）</label><input id="g_step" type="number" value="'+(g.step!=null?g.step:"")+'" placeholder="每階，如 50000"></div>'+
+        '<div class="field"><label>目前 <span style="color:#E8735C">*</span></label><input id="g_current" type="number" value="'+(g.current!=null?g.current:"")+'" placeholder="例如：60000"></div>'+
+        '<div class="field"><label>單位 <span style="color:#E8735C">*</span></label>'+_unitSelect(g.unit||"")+'</div>'+
       '</div>'+
+      '<div class="field"><label>每隔多少算一階段？</label><input id="g_step" type="number" min="1" value="'+(g.step!=null?g.step:"")+'" placeholder="例如：30000"><div style="font-size:11.5px;color:var(--muted);margin-top:4px">💡 例如：目標 30 萬、目前 6 萬，每 3 萬算一階段</div></div>'+
       '<div class="field"><label>對象</label>'+
       (canFull()
         ? ('<select id="g_personmode">'+
             '<option value="single"'+(!(g.members&&g.members.length)?" selected":"")+'>單人</option>'+
-            '<option value="multi"'+((g.members&&g.members.length)?" selected":"")+'>多人（各自進度）</option>'+
+            '<option value="multi"'+((g.members&&g.members.length)?" selected":"")+'>多人（各自進度，儲存後於「管理目標」→「進度設定」新增成員）</option>'+
           '</select>')
         : ('<select id="g_personmode"><option value="single" selected>單人</option></select>'+
            '<div onclick="showUpgrade(\'多人目標\')" style="font-size:12px;color:#8e44ad;margin-top:4px;cursor:pointer">🔒 多人目標（家人各自進度）為家庭版功能，點此升級</div>')
       )+'</div>'+
-      '<div id="g_singlevals"'+((g.members&&g.members.length)?' style="display:none"':'')+'>'+
-        '<div class="two">'+
-          '<div class="field"><label>目標值</label><input id="g_target" type="number" value="'+(g.target!=null?g.target:"")+'" placeholder="300000"></div>'+
-          '<div class="field"><label>目前</label><input id="g_current" type="number" value="'+(g.current!=null?g.current:0)+'"></div>'+
-        '</div>'+
-      '</div>'+
-      '<div id="g_membersbox"'+((g.members&&g.members.length)?'':' style="display:none"')+'>'+
-        '<div class="label-row"><label>成員（各自目前/目標）</label><span class="manage-link" id="g_addmem">＋ 加成員</span></div>'+
-        '<div id="g_memlist"></div>'+
-      '</div>'+
-      '<div class="field"><label>單位（選填）</label><input id="g_unit" autocomplete="off" value="'+esc(g.unit||"")+'" placeholder="元 / 本 / 次 / 公斤"></div>'+
     '</div>'+
     '<div id="g_msbox"'+(type==="milestone"?"":' style="display:none"')+'>'+
       '<div class="label-row"><label>里程碑清單</label><span class="manage-link" id="g_addms">＋ 加一項</span></div>'+
@@ -3306,19 +3462,25 @@ function openGoalForm(goal){
     function(){ saveGoal(isEdit?g.id:null, g); },
     isEdit?function(){ deleteGoal(g.id, g.title); }:null);
   wireIconPicker("g_category");
+  // 單位下拉 → 寫入 hidden；選「其他」跳輸入
+  var _us=$("g_unit_sel");
+  if(_us) _us.addEventListener("change", function(){
+    if(this.value==="__other"){
+      var v=prompt("請輸入單位（例如：本、公里、小時）","");
+      if(v && v.trim()){
+        var u=v.trim();
+        var opt=document.createElement("option"); opt.value=u; opt.textContent=u;
+        this.insertBefore(opt, this.options[this.options.length-1]);
+        this.value=u; $("g_unit").value=u;
+      } else { this.value=$("g_unit").value||""; }
+    } else { $("g_unit").value=this.value; }
+  });
   $("g_type").addEventListener("change", function(){
     $("g_numbox").style.display=this.value==="number"?"":"none";
     $("g_msbox").style.display=this.value==="milestone"?"":"none";
     $("g_freqbox").style.display=this.value==="freq"?"":"none";
+    var titleEl=$("g_title"); if(titleEl) titleEl.placeholder=GOAL_NAME_PLACEHOLDER[this.value]||"";
   });
-  if($("g_personmode")) $("g_personmode").addEventListener("change", function(){
-    const multi=this.value==="multi";
-    $("g_singlevals").style.display=multi?"none":"";
-    $("g_membersbox").style.display=multi?"":"none";
-    if(multi) renderMemEditor();
-  });
-  if($("g_addmem")) $("g_addmem").addEventListener("click", function(){ goalMembers.push({name:"",current:0,target:0}); renderMemEditor(); });
-  renderMemEditor();
   $("g_addms").addEventListener("click", function(){ goalMilestones.push({text:"",done:false,date:""}); renderMsEditor(); });
   renderMsEditor();
 }
@@ -3329,15 +3491,6 @@ function renderMsEditor(){
   box.querySelectorAll("[data-mi]").forEach(inp=>inp.addEventListener("input", function(){ goalMilestones[Number(this.getAttribute("data-mi"))].text=this.value; }));
   box.querySelectorAll("[data-mdate]").forEach(inp=>inp.addEventListener("change", function(){ goalMilestones[Number(this.getAttribute("data-mdate"))].date=this.value; }));
   box.querySelectorAll("[data-md]").forEach(b=>b.addEventListener("click", function(){ goalMilestones.splice(Number(this.getAttribute("data-md")),1); renderMsEditor(); }));
-}
-function renderMemEditor(){
-  const box=$("g_memlist"); if(!box) return;
-  box.innerHTML=goalMembers.map((m,i)=>'<div class="mem-edit"><input data-mn="'+i+'" autocomplete="off" value="'+esc(m.name)+'" placeholder="名字" style="flex:1.2"><input data-mc="'+i+'" type="number" value="'+(m.current!=null?m.current:0)+'" placeholder="目前" style="flex:1"><input data-mt="'+i+'" type="number" value="'+(m.target!=null?m.target:0)+'" placeholder="目標" style="flex:1"><button type="button" class="ms-del" data-mdel="'+i+'">✕</button></div>').join("")
-    || '<div style="font-size:12px;color:var(--faint);padding:4px 2px">點「＋ 加成員」新增</div>';
-  box.querySelectorAll("[data-mn]").forEach(inp=>inp.addEventListener("input",function(){ goalMembers[Number(this.getAttribute("data-mn"))].name=this.value; }));
-  box.querySelectorAll("[data-mc]").forEach(inp=>inp.addEventListener("input",function(){ goalMembers[Number(this.getAttribute("data-mc"))].current=this.value; }));
-  box.querySelectorAll("[data-mt]").forEach(inp=>inp.addEventListener("input",function(){ goalMembers[Number(this.getAttribute("data-mt"))].target=this.value; }));
-  box.querySelectorAll("[data-mdel]").forEach(b=>b.addEventListener("click",function(){ goalMembers.splice(Number(this.getAttribute("data-mdel")),1); renderMemEditor(); }));
 }
 function saveGoal(id, prev){
   if(!requireAuth()) return;
@@ -3350,25 +3503,29 @@ function saveGoal(id, prev){
     createdAt:(prev&&prev.createdAt)?prev.createdAt:Date.now()
   };
   if(type==="number"){
-    data.target=Number($("g_target").value)||0;
-    data.current=Number($("g_current").value)||0;
-    data.dir=($("g_dir").value==="down")?"down":"up";
+    // 必填驗證
+    const tv=$("g_target").value.trim(), cv=$("g_current").value.trim();
+    if(tv===""){ alert("⚠️ 請輸入目標值\n\n如果這個目標無法用數字衡量，\n建議改用「簡單型」或「里程碑型」"); return; }
+    if(cv===""){ alert("⚠️ 請輸入目前的數值\n\n例如減重請填現在的體重，\n從零開始請填 0"); return; }
+    data.target=Number(tv)||0;
+    data.current=Number(cv)||0;
+    if(data.target===data.current){ alert("⚠️ 目標值和目前值相同\n\n請確認是否已達成目標"); return; }
+    data.dir=(data.target < data.current) ? "down" : "up";        // 自動判定方向
     const stp=$("g_step").value;
-    data.step=(stp!=="")?(Math.abs(Number(stp))||null):null;
-    // 起始值：遞增一律從0起算（修正低段位/「1」不顯示與0/1切換異常）；遞減從目前值起算、編輯保留不漂移
+    const _diff=Math.abs(data.target-data.current);
+    data.step=(stp!=="") ? (Math.abs(Number(stp))||5) : 5;   // 預設間隔 5
+    // 起始值：遞增從0起算；遞減從目前值起算、編輯保留不漂移
     if(data.dir==="down") data.start=(id && prev && prev.start!=null && (prev.dir||"up")==="down") ? (Number(prev.start)||0) : data.current;
     else data.start=0;
-    data.unit=$("g_unit").value.trim();
+    data.unit=($("g_unit").value||"").trim();
+    if(!data.unit){ alert("⚠️ 請選擇單位\n\n例如：公斤、元、次、天"); return; }
     const _multi = $("g_personmode") && $("g_personmode").value==="multi";
     if(_multi){
-      const _pm = (prev && Array.isArray(prev.members)) ? prev.members : [];
-      data.members = goalMembers.filter(m=>(m.name||"").trim()).map(m=>{
-        const nm=m.name.trim(), cur=Number(m.current)||0, tgt=Number(m.target)||0;
-        const old=_pm.find(x=>x.name===nm);
-        const start=(old && old.start!=null) ? Number(old.start) : cur;   // 起始：沿用或以目前為起點，不漂移
-        return {name:nm, current:cur, target:tgt, start:start};
-      });
-      if(!data.members.length){ toast("多人請至少一位成員"); return; }
+      if(prev && Array.isArray(prev.members) && prev.members.length){
+        data.members = prev.members;   // 已有成員：不動，改到「管理目標→人員設定」調整
+      } else {
+        data.members = [{ name:"我", current:data.current, target:data.target, start:data.current }];   // 剛切成多人：先建一位，之後到「進度設定」加人
+      }
       data.target=Number(data.members[0].target)||0;   // 相容欄位
       data.current=Number(data.members[0].current)||0;
     } else {
@@ -3377,20 +3534,21 @@ function saveGoal(id, prev){
     data.milestones=null; data.progress=null; data.done=null;
   } else if(type==="milestone"){
     data.milestones=goalMilestones.filter(m=>(m.text||"").trim()).map(m=>({text:m.text.trim(),done:!!m.done,date:m.date||null}));
-    data.target=null; data.current=null; data.unit=null; data.progress=null; data.start=null; data.step=null; data.dir=null; data.done=null;
+    if(!data.milestones.length){ alert("⚠️ 請至少新增一個里程碑\n\n里程碑就是達成目標的小步驟，\n例如：報名 → 上課 → 考試"); return; }
+    data.target=null; data.current=null; data.unit=null; data.progress=null; data.start=null; data.step=null; data.dir=null; data.done=null; data.members=null;
   } else if(type==="freq"){
     data.perWeek=Math.max(1, Number($("g_perweek").value)||1);
     data.unit=($("g_funit")&&$("g_funit").value.trim())||"次";
     data.freqLog=(prev&&Array.isArray(prev.freqLog))?prev.freqLog:[];
-    data.target=null; data.current=null; data.milestones=null; data.progress=null; data.start=null; data.step=null; data.dir=null; data.done=null;
+    data.target=null; data.current=null; data.milestones=null; data.progress=null; data.start=null; data.step=null; data.dir=null; data.done=null; data.members=null;
   } else {   // simple（進行中／已完成）
     data.done=!!(prev&&prev.done);
-    data.target=null; data.current=null; data.unit=null; data.milestones=null; data.progress=null; data.start=null; data.step=null; data.dir=null;
+    data.target=null; data.current=null; data.unit=null; data.milestones=null; data.progress=null; data.start=null; data.step=null; data.dir=null; data.members=null;
   }
   if(LOCAL_MODE){
     const key=id||genId();
     const merged=Object.assign({}, state.goals[key]||{}, data);
-    ["target","current","unit","milestones","progress","start","step","dir","done"].forEach(k=>{ if(data[k]===null) delete merged[k]; });
+    ["target","current","unit","milestones","progress","start","step","dir","done","members"].forEach(k=>{ if(data[k]===null) delete merged[k]; });
     state.goals[key]=merged; lsSaveGoals(); closeSheet(); renderGoals(); toast(id?"已更新":"已新增"); return;
   }
   const key=id||uref("goals").push().key;
