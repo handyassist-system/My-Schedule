@@ -634,6 +634,7 @@
 <!-- Firebase compat SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 /* ============================================================
    智能行事曆　個人記事系統（記事 records + 人員 people）
@@ -654,9 +655,11 @@ const firebaseConfig = {
 
 let _firebaseReady = false;
 let db = null;
+let auth = null;
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.database();
+  auth = firebase.auth();
   _firebaseReady = true;
 } catch (e) {
   console.error("Firebase 初始化失敗", e);
@@ -1266,6 +1269,41 @@ function endPreview(){                      // 結束預覽，回管理員
   enterApp();
 }
 
+// 一般客戶：驗證通過後的收尾（設方案、裝置、記住登入、進App）——供「點連結完成登入」共用
+async function finishCustomerLogin(email){
+  loginBtn.disabled=true; loginBtn.textContent="驗證中…";
+  var res;
+  try{ res=await verifyCustomer(email); }catch(e){ res={ok:true,plan:"free"}; }
+  loginBtn.disabled=false; loginBtn.textContent="登入";
+  if(!res.ok){ loginMsg.textContent=res.msg||"無法登入，請聯繫客服"; return; }
+  var _dev=await checkDevice(email, res.plan);                       // 裝置管制
+  if(!_dev.ok){ showDeviceLimit(email, res.plan, _dev.limit); return; }
+  state.isAdmin=false; state.user=email; state.plan=res.plan;
+  localStorage.setItem(AUTH_KEY,email);
+  try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
+  if(res.newTrial){ showTrialWelcome(res.expiry); } else { checkExpiryReminder(res, true); }
+  enterApp();
+}
+// 新裝置第一次登入：完成 Firebase Email 連結驗證後，接續原本的方案/裝置檢查
+async function completeEmailLinkSignIn(){
+  try{
+    if(!auth || !auth.isSignInWithEmailLink(window.location.href)) return false;
+  }catch(e){ return false; }
+  var email; try{ email=localStorage.getItem("emailForSignIn"); }catch(e){}
+  if(!email){ email=prompt("請輸入你登入時使用的 Email，以完成驗證："); }
+  if(!email){ return false; }
+  try{
+    await auth.signInWithEmailLink(email, window.location.href);
+    try{ localStorage.removeItem("emailForSignIn"); }catch(e){}
+    try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}   // 清掉網址上的驗證參數
+    await finishCustomerLogin(email);
+    return true;
+  }catch(e){
+    if(loginMsg) loginMsg.textContent="😕 驗證連結無效或已過期，請重新登入。";
+    try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+    return false;
+  }
+}
 async function doLogin(){
   loginMsg.textContent="";
   const input=codeInput.value.trim();
@@ -1278,19 +1316,18 @@ async function doLogin(){
   if(!isEmail(input)){ loginMsg.textContent="Email 格式不正確"; return; }
   // 管理員 email → 選擇畫面（但有待帶入採購時直接進行事曆，不打斷）
   if(input.toLowerCase()===ADMIN_EMAIL){ state.isAdmin=true; state.user=input; state.plan="full"; localStorage.setItem(AUTH_KEY,input); enterApp(); return; }
-  // 一般客戶 → 驗證 / 自動開試用
-  loginBtn.disabled=true; loginBtn.textContent="驗證中…";
-  var res;
-  try{ res=await verifyCustomer(input); }catch(e){ res={ok:true,plan:"free"}; }
+  // 一般客戶（新裝置）→ 寄送 Email 登入連結，驗證信箱後才繼續
+  if(!auth){ loginMsg.textContent="驗證服務暫時無法使用，請稍後再試"; return; }
+  loginBtn.disabled=true; loginBtn.textContent="寄送中…";
+  try{
+    var acs={ url: location.href.split('#')[0].split('?')[0], handleCodeInApp:true };
+    await auth.sendSignInLinkToEmail(input, acs);
+    try{ localStorage.setItem("emailForSignIn", input); }catch(e){}
+    loginMsg.textContent="📧 登入連結已寄到 "+input+"，請到信箱點擊完成登入（找不到請看垃圾郵件夾）";
+  }catch(e){
+    loginMsg.textContent="寄送失敗："+((e&&e.message)?e.message:"請稍後再試");
+  }
   loginBtn.disabled=false; loginBtn.textContent="登入";
-  if(!res.ok){ loginMsg.textContent=res.msg||"無法登入，請聯繫客服"; return; }
-  var _dev=await checkDevice(input, res.plan);                       // 裝置管制
-  if(!_dev.ok){ showDeviceLimit(input, res.plan, _dev.limit); return; }
-  state.isAdmin=false; state.user=input; state.plan=res.plan;
-  localStorage.setItem(AUTH_KEY,input);
-  try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
-  if(res.newTrial){ showTrialWelcome(res.expiry); } else { checkExpiryReminder(res, true); }
-  enterApp();
 }
 function openAdminPanel(){
   if(!state.isAdmin){ try{ toast("無管理員權限"); }catch(e){} return; }   // 守衛：非管理員一律擋下
@@ -3639,7 +3676,12 @@ function openConfirm(title, messageHtml, onConfirm, confirmLabel){
    ============================================================ */
 // ===== 啟動 =====
 function _startAppFlow(){
-  autoLogin().then(function(ok){ if(!ok){ var l=document.getElementById("login"); if(l) l.style.display="flex"; } }).catch(function(){ var l=document.getElementById("login"); if(l) l.style.display="flex"; });
+  completeEmailLinkSignIn().then(function(done){
+    if(done) return;   // 已經是「點連結完成登入」流程，enterApp() 已在裡面處理
+    autoLogin().then(function(ok){ if(!ok){ var l=document.getElementById("login"); if(l) l.style.display="flex"; } }).catch(function(){ var l=document.getElementById("login"); if(l) l.style.display="flex"; });
+  }).catch(function(){
+    autoLogin().then(function(ok){ if(!ok){ var l=document.getElementById("login"); if(l) l.style.display="flex"; } }).catch(function(){ var l=document.getElementById("login"); if(l) l.style.display="flex"; });
+  });
 }
 _startAppFlow();
 
