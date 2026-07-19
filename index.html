@@ -1342,8 +1342,10 @@ async function completeEmailLinkSignIn(){
     await auth.signInWithEmailLink(email, window.location.href);
     try{ localStorage.removeItem("emailForSignIn"); }catch(e){}
     try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}   // 清掉網址上的驗證參數
-    await finishCustomerLogin(email);
-    return true;
+    // 驗證完成後不直接進 App，跳回登入頁讓客人看到「安裝到手機桌面」提示，按登入即可（裝置已驗證，不會再收信）
+    try{ codeInput.value=email; }catch(e){}
+    if(loginMsg) loginMsg.textContent="✅ 已驗證成功，請按下方「登入」進入";
+    return false;
   }catch(e){
     if(loginMsg) loginMsg.textContent="😕 驗證連結無效或已過期，請重新登入。";
     try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
