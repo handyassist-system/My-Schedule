@@ -493,8 +493,8 @@
     <div id="adminEditEmail" style="font-size:13px;color:#666;margin-bottom:12px;word-break:break-all"></div>
     <label style="font-size:13px;color:#444">方案</label>
     <select id="adminEditPlan" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin:4px 0 12px;font-size:14px">
-      <option value="basic">個人版（原價$1999 / 早鳥$999）</option>
-      <option value="full">家庭版（原價$3999 / 早鳥$1999）</option>
+      <option value="basic">個人版（原價$1888 / 特價$1188）</option>
+      <option value="full">家庭版（原價$3388 / 特價$2388）</option>
       <option value="trial">試用（21天）</option>
       <option value="free">免費(過期)</option>
     </select>
@@ -1051,18 +1051,11 @@ function showDeviceLimit(email, plan, limit){
     '<div class="overlay" id="ovl" style="align-items:center"><div class="sheet" id="sheet" style="border-radius:20px;max-width:400px;margin:0 16px;padding:24px 20px">'+
       '<div style="text-align:center;font-size:44px;line-height:1;margin-bottom:10px">📱</div>'+
       '<div style="text-align:center;font-size:19px;font-weight:900;color:#2E2E33">已達裝置上限</div>'+
-      '<div style="text-align:center;font-size:13.5px;color:#8A8A93;margin-top:8px;line-height:1.7">您目前的方案可在 <b style="color:#E8735C">'+limit+' 台裝置</b>使用。<br>若這是您的新手機，可登出其他裝置。</div>'+
-      '<button id="dlKick" style="width:100%;border:none;background:#3E9B8E;color:#fff;border-radius:12px;padding:14px;font-size:15px;font-weight:800;margin-top:18px">這是我的新裝置，登出其他裝置</button>'+
+      '<div style="text-align:center;font-size:13.5px;color:#8A8A93;margin-top:8px;line-height:1.7">您目前的方案可在 <b style="color:#E8735C">'+limit+' 台裝置</b>使用。<br>若要更換裝置或釋出名額，請透過「智在生活」官方 LINE 聯繫我們協助處理。</div>'+
       (isFull?'':'<div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #EFEAE2"><div style="font-size:13px;color:#8A8A93;margin-bottom:10px">想和家人一起使用？</div>'+
       '<button id="dlUp" style="width:100%;border:none;background:#E8735C;color:#fff;border-radius:12px;padding:13px;font-size:15px;font-weight:800">升級家庭版，最多 3 人共用</button></div>')+
       '<button id="dlClose" style="width:100%;border:none;background:none;color:#8A8A93;font-size:13px;padding:12px;margin-top:6px">關閉</button>'+
     '</div></div>';
-  document.getElementById("dlKick").addEventListener("click", async function(){
-    var b=this; b.textContent="處理中…"; b.disabled=true;
-    var ok=await kickOtherDevices(email);
-    if(ok){ closeSheet(); toast("已登出其他裝置，請重新登入"); }
-    else { b.textContent="失敗，請再試一次"; b.disabled=false; }
-  });
   var up=document.getElementById("dlUp");
   if(up) up.addEventListener("click", function(){ closeSheet(); openUpgradeSheet(""); });
   document.getElementById("dlClose").addEventListener("click", closeSheet);
@@ -1114,12 +1107,6 @@ async function checkDevice(email, plan){
   try{ db.ref("subscribers/"+key+"/deviceLimit").set(limit); }catch(e){}
   return {ok:true};
 }
-// 登出其他裝置：只留自己
-async function kickOtherDevices(email){
-  var key=emailKey(email), id=_devId(), now=Date.now();
-  var only={}; only[id]={ name:_devName(), last:now, first:now };
-  try{ await db.ref("subscribers/"+key+"/devices").set(only); return true; }catch(e){ return false; }
-}
 async function verifyCustomer(email){
   var key=emailKey(email);
   var now=await getServerTime();
@@ -1149,8 +1136,8 @@ function showTrialWelcome(expiry){
       +"到期日："+expiry+"\n\n"
       +"───────────────\n\n"
       +"👪 試試「全家共用」\n"
-      +"把 Email 給家人，在他手機登入\n"
-      +"一人記錄，大家都看得到！\n"
+      +"到「設定」→「邀請家人」產生邀請碼\n"
+      +"把碼給家人，一人記錄，大家都看得到！\n"
       +"（試用期最多 2 台裝置）\n\n"
       +"到期後仍可使用基本行事曆 😊");
   }catch(e){}
@@ -1251,7 +1238,7 @@ function openUpgradeSheet(feat){
   }
   var c1='<div style="border:2px solid #E7E3DC;border-radius:18px;padding:18px;margin-top:14px;background:#fff">'
     +'<div style="font-size:24px;font-weight:900;color:#2E2E33">個人版</div>'
-    +priceBox("1,999","999","83","1,000")
+    +priceBox("1,888","1,188","99","700")
     +incl("涵蓋基本功能")
     +ft("➕ 📋","一頁總覽","行程、待辦、記事集中看，不再忘東忘西")
     +ft("➕ 🎯","目標追蹤（3 種方式）","每週運動、存旅遊基金、考證照，都不半途而廢")
@@ -1262,7 +1249,8 @@ function openUpgradeSheet(feat){
   var c2='<div style="border:2.5px solid #E8735C;border-radius:18px;padding:18px;margin-top:20px;background:#fff;position:relative">'
     +'<div style="position:absolute;top:-11px;left:18px;background:#E8735C;color:#fff;font-size:12px;font-weight:900;padding:3px 12px;border-radius:20px">⭐ 最推薦</div>'
     +'<div style="font-size:24px;font-weight:900;color:#2E2E33;margin-top:8px">家庭版</div>'
-        +priceBox("3,999","1,999","166","2,000")
+        +priceBox("3,388","2,388","199","1,000")
+    +'<div style="text-align:center;background:#FDEEE7;color:#E8735C;font-weight:800;font-size:12.5px;padding:8px;border-radius:10px;margin-bottom:4px">💡 比個人版每月只要多 $100，全家一起用</div>'
     +incl("涵蓋個人版全部功能")
     +ft("➕ 👪","3 台裝置共用","產生邀請碼，家人立即加入，不用共用帳密")
     +ft("➕ 🛒","採購 × 庫存自動連動","買完打勾自動入庫，不再重複買、快過期會提醒")
@@ -1310,11 +1298,37 @@ async function finishCustomerLogin(email){
   if(!res.ok){ loginMsg.textContent=res.msg||"無法登入，請聯繫客服"; return; }
   var _dev=await checkDevice(email, res.plan);                       // 裝置管制
   if(!_dev.ok){ showDeviceLimit(email, res.plan, _dev.limit); return; }
+  var _prevPlan; try{ _prevPlan=localStorage.getItem("cal_plan"); }catch(e){}
   state.isAdmin=false; state.user=email; state.plan=res.plan;
   localStorage.setItem(AUTH_KEY,email);
   try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
-  if(res.newTrial){ showTrialWelcome(res.expiry); } else { checkExpiryReminder(res, true); }
+  if(res.newTrial){
+    showTrialWelcome(res.expiry);
+  } else if(res.expired && res.plan==="free" && _prevPlan && _prevPlan!=="free"){
+    var _shownKey="cal_trialExpiredShown";
+    var _already; try{ _already=localStorage.getItem(_shownKey); }catch(e){}
+    if(_already!==res.expiry){ showTrialExpired(); try{ localStorage.setItem(_shownKey,res.expiry); }catch(e){} }
+  } else if(_prevPlan && (_prevPlan==="trial"||_prevPlan==="free") && (res.plan==="basic"||res.plan==="full"||res.plan==="family")){
+    showUpgradeSuccess(res.plan);
+  } else {
+    checkExpiryReminder(res, true);
+  }
   enterApp();
+}
+// 試用期到期、降級成免費版時的提示（只在「剛從有方案變免費」那次跳，不會每次登入都跳）
+function showTrialExpired(){
+  try{
+    alert("⏳ 試用期已結束\n\n21 天全功能試用已到期，目前僅能使用基本行事曆功能\n\n"
+      +"升級可解鎖：總覽、目標追蹤、多本行事曆、家人共用...\n\n"
+      +"透過「智在生活」官方 LINE 即可升級 😊");
+  }catch(e){}
+}
+// 剛升級成功時的歡迎訊息
+function showUpgradeSuccess(newPlan){
+  var name = (newPlan==="full"||newPlan==="family") ? "家庭版" : "個人版";
+  try{
+    alert("🎉 升級成功！\n\n感謝支持「智在生活」\n您現在是"+name+"用戶，功能已全部解鎖\n\n祝使用愉快 😊");
+  }catch(e){}
 }
 // 新裝置第一次登入：完成 Firebase Email 連結驗證後，接續原本的方案/裝置檢查
 async function completeEmailLinkSignIn(){
@@ -1359,7 +1373,12 @@ async function doLogin(){
     await finishCustomerLogin(input);
     return;
   }
-  // 一般客戶（新裝置）→ 寄送 Email 登入連結，驗證信箱後才繼續
+  // 這台裝置的瀏覽器已經驗證過同一個信箱（就算App裡登出過）→ 不用再寄信
+  if(auth && auth.currentUser && auth.currentUser.email && auth.currentUser.email.toLowerCase()===input.toLowerCase()){
+    await finishCustomerLogin(input);
+    return;
+  }
+  // 一般客戶（新裝置／換過信箱）→ 寄送 Email 登入連結，驗證信箱後才繼續
   if(!auth){ loginMsg.textContent="驗證服務暫時無法使用，請稍後再試"; return; }
   loginBtn.disabled=true; loginBtn.textContent="寄送中…";
   try{
@@ -1436,7 +1455,7 @@ function adminAddCustomer(){
   var email=prompt("客戶 Email："); if(!email) return;
   email=email.trim().toLowerCase();
   if(!isEmail(email)){ alert("Email 格式不正確"); return; }
-  var plan=prompt("方案代號：\nbasic=個人版(原$1999/早鳥$999)\nfull=家庭版(原$3999/早鳥$1999)","full");
+  var plan=prompt("方案代號：\nbasic=個人版(原$1888/特價$1188)\nfull=家庭版(原$3388/特價$2388)","full");
   if(!plan) return; plan=plan.trim();
   if(["basic","full","family","trial","free"].indexOf(plan)<0){ alert("方案代號不正確"); return; }
   var months=prompt("有效月數（12=一年）","12"); if(months===null) return;
@@ -3440,12 +3459,14 @@ function extendGoal(id){
   if(!requireAuth()) return;
   const g=state.goals[id]; if(!g) return;
   if(g.type==="number"){
+    const dir=g.dir||"up";
     const cur=Number(g.target)||0;
-    const v=prompt("延長目標：輸入新的目標值"+(g.unit?("（"+g.unit+"）"):""), cur);
+    const v=prompt((dir==="down"?"延長目標：輸入更低的新目標值":"延長目標：輸入新的目標值")+(g.unit?("（"+g.unit+"）"):""), cur);
     if(v==null) return;
     const nt=Number(v);
     if(!(nt>0)){ toast("請輸入有效數字"); return; }
-    if(nt<=cur){ toast("新目標需大於目前 "+cur); return; }
+    const ok = dir==="down" ? (nt<cur) : (nt>cur);
+    if(!ok){ toast(dir==="down" ? "新目標需小於目前 "+cur : "新目標需大於目前 "+cur); return; }
     saveGoalPatch(id, { target: nt });   // 進度保留，闖關自動補關卡
     toast("目標已延長至 "+nt+(g.unit||""));
   } else if(g.type==="milestone"){
