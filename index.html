@@ -1157,8 +1157,16 @@ function checkExpiryReminder(res, force){
   }
   var isTrial=res.plan==="trial";
   var planName=isTrial?"試用":(res.plan==="full"?"家庭版":(res.plan==="basic"?"個人版":"方案"));
+  var trialMsg="到期後，以下功能將無法繼續使用：\n"
+    +"━━━━━━━━━━━━━━━\n"
+    +"📊 一頁總覽\n🎯 目標追蹤\n📖 多本行事曆\n⏱️ 急迫、倒數提醒\n💾 資料備份\n"
+    +"👪 全家共用（僅剩 1 台裝置）\n"
+    +"━━━━━━━━━━━━━━━\n\n"
+    +"到期後仍可使用基本行事曆功能\n\n"
+    +"升級解鎖以上全部功能，並可全家一起用";
+  var paidMsg="續約請透過官方 LINE，\n我們會盡快為你處理 😊";
   setTimeout(function(){
-    if(confirm("⏰ 提醒：你的"+planName+"還有 "+days+" 天到期（"+res.expiry+"）\n\n"+(isTrial?"到期後將剩基本行事曆\n👪 全家共用也會停止（僅剩 1 台裝置）\n\n升級家庭版可繼續全家一起用":"續約請透過官方 LINE，\n我們會盡快為你處理 😊")+"\n\n要現在前往嗎？（可稍後）")){
+    if(confirm("⏰ 試用即將到期\n\n你的"+planName+"還有 "+days+" 天到期（"+res.expiry+"）\n\n"+(isTrial?trialMsg:paidMsg)+"\n\n要現在前往嗎？（可稍後）")){
       openUpgradeSheet();
     }
   }, 800);
