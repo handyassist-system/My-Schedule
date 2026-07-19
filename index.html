@@ -442,6 +442,8 @@
     <h1>智能行事曆</h1>
     <p>請輸入 Email 登入</p>
     <input id="codeInput" class="code-input" type="email" inputmode="email" autocomplete="email" placeholder="請輸入 Email" maxlength="60">
+    <div id="inviteToggle" style="font-size:12.5px;color:var(--primary);text-align:right;margin-top:6px;cursor:pointer">有邀請碼嗎？</div>
+    <input id="inviteInput" class="code-input" style="display:none;margin-top:8px" type="text" inputmode="numeric" maxlength="6" placeholder="輸入 6 位邀請碼">
     <div class="code-hint">🎁 首次登入即享 21 天全功能免費試用</div>
     <label class="login-consent"><input type="checkbox" id="agreeChk"> <span>我已閱讀並同意 <a id="termsLink" style="color:var(--primary);text-decoration:underline">《服務條款與隱私政策》</a></span></label>
     <button id="loginBtn" class="btn-primary">登入</button>
@@ -994,10 +996,40 @@ const ADMIN_EMAIL = "mp65p@hotmail.com";
 const codeInput=$("codeInput"), loginBtn=$("loginBtn"), loginMsg=$("loginMsg");
 loginBtn.addEventListener("click", doLogin);
 codeInput.addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+(function(){
+  var t=document.getElementById("inviteToggle"), i=document.getElementById("inviteInput");
+  if(t && i) t.addEventListener("click", function(){
+    var open=i.style.display!=="none";
+    i.style.display=open?"none":"";
+    t.textContent=open?"有邀請碼嗎？":"收起邀請碼欄位";
+    if(!open) i.focus();
+  });
+})();
 
 function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
 // ===== 使用者資料隔離：每個 email 一個空間；0430後門用共用根空間 =====
 function emailKey(e){ return String(e||"").toLowerCase().replace(/[.#$\[\]]/g,"_"); }
+function genInviteCode(){ return String(Math.floor(100000+Math.random()*900000)); }
+// 客人本人產生邀請碼給家人（30分鐘內有效，用一次就失效，重新產生會蓋掉舊碼）
+async function createInviteCode(){
+  if(!state.user || state.isAdmin) return null;
+  var key=emailKey(state.user);
+  var code=genInviteCode(), exp=Date.now()+30*60*1000;
+  try{ await db.ref("subscribers/"+key+"/inviteCode").set({code:code, exp:exp}); }catch(e){ return null; }
+  return { code:code, exp:exp };
+}
+// 家人登入用：驗證邀請碼是否正確、未過期；成功後刪除(單次有效)
+async function verifyInviteCode(email, code){
+  var key=emailKey(email);
+  var snap;
+  try{ snap=await db.ref("subscribers/"+key+"/inviteCode").once("value"); }catch(e){ return false; }
+  var v=snap.val();
+  if(!v || !v.code) return false;
+  if(String(v.code)!==String(code).trim()) return false;
+  if(Date.now() > Number(v.exp||0)) return false;
+  try{ await db.ref("subscribers/"+key+"/inviteCode").remove(); }catch(e){}
+  return true;
+}
 function userBase(){
   var u=state.user||"";
   if(u===DEFAULT_CODE) return "";                    // 0430 後門 → 共用根空間(維持舊行為)
@@ -1232,7 +1264,7 @@ function openUpgradeSheet(feat){
     +'<div style="font-size:24px;font-weight:900;color:#2E2E33;margin-top:8px">家庭版</div>'
         +priceBox("3,999","1,999","166","2,000")
     +incl("涵蓋個人版全部功能")
-    +ft("➕ 👪","3 台裝置共用","一人記錄，大家同步，不用再一直轉述")
+    +ft("➕ 👪","3 台裝置共用","產生邀請碼，家人立即加入，不用共用帳密")
     +ft("➕ 🛒","採購 × 庫存自動連動","買完打勾自動入庫，不再重複買、快過期會提醒")
     +ft("➕ 📅","採購一鍵排進行事曆","想到要買，順手就安排好")
     +ft("➕ 🏆","多人共同目標","全家一起存旅遊基金、一起運動，進度互相看得到")
@@ -1316,6 +1348,17 @@ async function doLogin(){
   if(!isEmail(input)){ loginMsg.textContent="Email 格式不正確"; return; }
   // 管理員 email → 選擇畫面（但有待帶入採購時直接進行事曆，不打斷）
   if(input.toLowerCase()===ADMIN_EMAIL){ state.isAdmin=true; state.user=input; state.plan="full"; localStorage.setItem(AUTH_KEY,input); enterApp(); return; }
+  // 邀請碼登入（家人）→ 不寄信，直接比對代碼放行
+  var _inviteEl=document.getElementById("inviteInput");
+  var _invite=_inviteEl ? _inviteEl.value.trim() : "";
+  if(_invite){
+    loginBtn.disabled=true; loginBtn.textContent="驗證中…";
+    var _ok=await verifyInviteCode(input, _invite);
+    loginBtn.disabled=false; loginBtn.textContent="登入";
+    if(!_ok){ loginMsg.textContent="😕 邀請碼錯誤或已過期，請確認代碼或請本人重新產生"; return; }
+    await finishCustomerLogin(input);
+    return;
+  }
   // 一般客戶（新裝置）→ 寄送 Email 登入連結，驗證信箱後才繼續
   if(!auth){ loginMsg.textContent="驗證服務暫時無法使用，請稍後再試"; return; }
   loginBtn.disabled=true; loginBtn.textContent="寄送中…";
@@ -1956,11 +1999,20 @@ function openCalManager(){
     +'<label style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;text-align:center;cursor:pointer">⬆️ 匯入還原<input id="backupImport" type="file" accept="application/json,.json" style="display:none"></label>'
     +'</div>';
 
+  // 邀請家人
+  var inviteInner='<button id="genInviteBtn" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">👨‍👩‍👧 產生邀請碼</button>'
+    +'<div style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.6">產生邀請碼給家人，對方用自己的手機輸入你的 Email＋這組碼即可直接登入，不用收信驗證</div>'
+    +'<div id="inviteResult" style="display:none;margin-top:12px;text-align:center;background:var(--primary-soft);border-radius:12px;padding:14px">'
+      +'<div style="font-size:30px;font-weight:900;letter-spacing:6px;color:var(--primary-d)" id="inviteCodeText"></div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-top:6px">30 分鐘內有效，用掉一次就失效</div>'
+    +'</div>';
+
   // 分享
   var shareInner='<button id="shareAppBtn" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">📤 分享給朋友</button>';
 
   let html=_box("📅 我的行事曆", calInner)
     + _box("🔔 提醒", notiInner)
+    + (state.user && !state.isAdmin ? _box("👨‍👩‍👧 邀請家人", inviteInner) : "")
     + _box("💾 資料備份", backInner)
     + _box("📤 分享", shareInner);
 
@@ -1989,6 +2041,15 @@ function openCalManager(){
     });
   }
   if($("shareAppBtn")) $("shareAppBtn").addEventListener("click", shareApp);
+  var _gib=$("genInviteBtn");
+  if(_gib) _gib.addEventListener("click", async function(){
+    _gib.disabled=true; _gib.textContent="產生中…";
+    var r=await createInviteCode();
+    _gib.disabled=false; _gib.textContent="👨‍👩‍👧 產生邀請碼";
+    if(!r){ toast("產生失敗，請稍後再試"); return; }
+    $("inviteCodeText").textContent=r.code;
+    $("inviteResult").style.display="";
+  });
   if($("goAdminFromCal")) $("goAdminFromCal").addEventListener("click", function(){ closeSheet(); openAdminPanel(); });
   if($("logoutFromSettings")) $("logoutFromSettings").addEventListener("click", function(){ closeSheet(); doLogout(); });
   $("calList").querySelectorAll(".cal-name").forEach(s=>s.addEventListener("click", ()=>setCurrentCal(s.getAttribute("data-cal"))));
