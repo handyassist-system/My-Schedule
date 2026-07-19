@@ -2083,11 +2083,26 @@ function openCalManager(){
   if(_gib) _gib.addEventListener("click", async function(){
     _gib.disabled=true; _gib.textContent="產生中…";
     var r=await createInviteCode();
-    _gib.disabled=false; _gib.textContent="👨‍👩‍👧 產生邀請碼";
+    _gib.disabled=false; _gib.textContent="🔄 產生新邀請碼";
     if(!r){ toast("產生失敗，請稍後再試"); return; }
     $("inviteCodeText").textContent=r.code;
     $("inviteResult").style.display="";
   });
+  // 打開設定頁時，如果之前產生的邀請碼還沒過期，直接顯示出來，避免誤按「產生」把還有效的舊碼作廢
+  if(_gib){
+    (async function(){
+      try{
+        var _key=emailKey(state.user);
+        var _snap=await db.ref("subscribers/"+_key+"/inviteCode").once("value");
+        var _v=_snap.val();
+        if(_v && _v.code && Date.now()<Number(_v.exp||0)){
+          $("inviteCodeText").textContent=_v.code;
+          $("inviteResult").style.display="";
+          _gib.textContent="🔄 產生新邀請碼";
+        }
+      }catch(e){}
+    })();
+  }
   if($("goAdminFromCal")) $("goAdminFromCal").addEventListener("click", function(){ closeSheet(); openAdminPanel(); });
   if($("logoutFromSettings")) $("logoutFromSettings").addEventListener("click", function(){ closeSheet(); doLogout(); });
   $("calList").querySelectorAll(".cal-name").forEach(s=>s.addEventListener("click", ()=>setCurrentCal(s.getAttribute("data-cal"))));
