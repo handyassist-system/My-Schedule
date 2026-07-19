@@ -1009,6 +1009,9 @@ codeInput.addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
 function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
 // ===== 使用者資料隔離：每個 email 一個空間；0430後門用共用根空間 =====
 function emailKey(e){ return String(e||"").toLowerCase().replace(/[.#$\[\]]/g,"_"); }
+var FAMILY_DEVICE_KEY="cal_role_family";
+function isFamilyDevice(){ try{ return localStorage.getItem(FAMILY_DEVICE_KEY)==="1"; }catch(e){ return false; } }
+function markDeviceRole(isFamily){ try{ localStorage.setItem(FAMILY_DEVICE_KEY, isFamily?"1":"0"); }catch(e){} }
 function genInviteCode(){ return String(Math.floor(100000+Math.random()*900000)); }
 // 客人本人產生邀請碼給家人（30分鐘內有效，用一次就失效，重新產生會蓋掉舊碼）
 async function createInviteCode(){
@@ -1382,12 +1385,14 @@ async function doLogin(){
     var _ok=await verifyInviteCode(input, _invite);
     loginBtn.disabled=false; loginBtn.textContent="登入";
     if(!_ok){ loginMsg.textContent="😕 邀請碼錯誤或已過期，請確認代碼或請本人重新產生"; return; }
+    markDeviceRole(true);   // 標記：這台裝置是用邀請碼登入的家人，不可產生邀請碼
     await finishCustomerLogin(input);
     return;
   }
   // 這台裝置的瀏覽器已經驗證過同一個信箱（就算App裡登出過）→ 不用再寄信
   var _fbUser = auth ? await waitAuthReady() : null;
   if(_fbUser && _fbUser.email && _fbUser.email.toLowerCase()===input.toLowerCase()){
+    markDeviceRole(false);   // 標記：這台裝置是本人用信箱驗證登入的
     await finishCustomerLogin(input);
     return;
   }
@@ -1694,6 +1699,7 @@ function doLogout(){
   state.activity=[]; state._boundUser=null;
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem("cal_admin_on");
+  localStorage.removeItem(FAMILY_DEVICE_KEY);
   $("app").classList.add("hidden");
   var _ac=$("adminChoice"); if(_ac) _ac.classList.add("hidden");
   var _ap=$("adminPanel"); if(_ap) _ap.classList.add("hidden");
@@ -2044,7 +2050,7 @@ function openCalManager(){
 
   let html=_box("📅 我的行事曆", calInner)
     + _box("🔔 提醒", notiInner)
-    + (state.user && !state.isAdmin ? _box("👨‍👩‍👧 邀請家人", inviteInner) : "")
+    + (state.user && !state.isAdmin && !isFamilyDevice() ? _box("👨‍👩‍👧 邀請家人", inviteInner) : "")
     + _box("💾 資料備份", backInner)
     + _box("📤 分享", shareInner);
 
