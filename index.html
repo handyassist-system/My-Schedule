@@ -1352,6 +1352,16 @@ async function completeEmailLinkSignIn(){
     return false;
   }
 }
+// 等待 Firebase 把「這台裝置的驗證記憶」讀取完成，避免頁面剛開啟時查詢過快誤判成新裝置
+var _authReadyPromise=null;
+function waitAuthReady(){
+  if(!auth) return Promise.resolve(null);
+  if(_authReadyPromise) return _authReadyPromise;
+  _authReadyPromise=new Promise(function(resolve){
+    var unsub=auth.onAuthStateChanged(function(u){ try{ unsub(); }catch(e){} resolve(u); });
+  });
+  return _authReadyPromise;
+}
 async function doLogin(){
   loginMsg.textContent="";
   const input=codeInput.value.trim();
@@ -1376,7 +1386,8 @@ async function doLogin(){
     return;
   }
   // 這台裝置的瀏覽器已經驗證過同一個信箱（就算App裡登出過）→ 不用再寄信
-  if(auth && auth.currentUser && auth.currentUser.email && auth.currentUser.email.toLowerCase()===input.toLowerCase()){
+  var _fbUser = auth ? await waitAuthReady() : null;
+  if(_fbUser && _fbUser.email && _fbUser.email.toLowerCase()===input.toLowerCase()){
     await finishCustomerLogin(input);
     return;
   }
