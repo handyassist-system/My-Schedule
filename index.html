@@ -590,6 +590,7 @@
             <option value="pending">未完成</option>
             <option value="done">已完成</option>
             <option value="all">全部</option>
+            <option value="log">📌 純紀錄</option>
           </select>
         </div>
         <div class="field"><label>分類</label><select id="ovCategory"><option value="all">全部分類</option></select></div>
@@ -2670,19 +2671,18 @@ function renderOverview(){
     if(catF!=="all" && r.category!==catF) return false;   // 全部分類含採購；選特定分類才篩
     if(whoF!=="all" && !(r.assignees||[]).includes(whoF)) return false;
     const k=recKind(r);
+    if(statusF==="log") return k==="log" && overviewDateMatch(r);   // 明確查詢「純紀錄」：只顯示純紀錄，忽略完成狀態
+    if(k==="log") return false;   // 預設不顯示純紀錄，避免混進待辦/行程裡
     if(inQuick){
-      // 今天／本週／本月：一律「未完成 ＋ 逾期」。已完成不顯示；純紀錄限期間內才顯示
+      // 今天／本週／本月：一律「未完成 ＋ 逾期」。已完成不顯示
       if(k==="done") return false;
-      if(k==="log"){ const rg=recRange(r); return !!(rg && _ovInPeriod(rg[0])); }
       const rg=recRange(r);
       if(!rg) return r.category!=="shopping";   // 無日期 🎒百寶袋
       return rg[0] < today || _ovInPeriod(rg[0]);   // 逾期 或 期間內
     }
     if(!overviewDateMatch(r)) return false;   // 無日期者一律顯示；有日期(含預期日)依篩選
-    if(k!=="log"){                            // 純紀錄不分未完成/已完成，一律顯示
-      if(statusF==="pending" && k==="done") return false;
-      if(statusF==="done" && k!=="done") return false;
-    }
+    if(statusF==="pending" && k==="done") return false;
+    if(statusF==="done" && k!=="done") return false;
     return true;
   });
 
