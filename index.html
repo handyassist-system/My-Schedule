@@ -1132,18 +1132,24 @@ async function verifyCustomer(email){
   var effPlan = expired ? "free" : (sub.plan||"free");   // 過期→陽春free；否則照方案
   return { ok:true, plan:effPlan, expiry:sub.expiry, expired:!!expired };
 }
+// 共用的自訂通知彈窗（取代 alert()，排版完全自己控制，不受瀏覽器原生彈窗限制）
+function showInfoSheet(emoji, title, bodyHtml, btnText){
+  var root=document.getElementById("modalRoot");
+  root.innerHTML=
+    '<div class="overlay" id="ovl" style="align-items:center"><div class="sheet" id="sheet" style="border-radius:20px;max-width:400px;margin:0 16px;padding:26px 22px;max-height:80vh;overflow-y:auto">'+
+      '<div style="text-align:center;font-size:44px;line-height:1;margin-bottom:10px">'+emoji+'</div>'+
+      '<div style="text-align:center;font-size:19px;font-weight:900;color:#2E2E33;margin-bottom:12px">'+title+'</div>'+
+      '<div style="font-size:13.5px;color:#5A5A62;line-height:1.85">'+bodyHtml+'</div>'+
+      '<button id="infoSheetOk" style="width:100%;border:none;background:#3E9B8E;color:#fff;border-radius:12px;padding:13px;font-size:15px;font-weight:800;margin-top:20px">'+(btnText||"知道了")+'</button>'+
+    '</div></div>';
+  document.getElementById("infoSheetOk").addEventListener("click", closeSheet);
+}
 function showTrialWelcome(expiry){
-  try{
-    alert("🎉 歡迎使用智能行事曆！\n\n"
-      +"已開啟 21 天全功能免費試用\n"
-      +"到期日："+expiry+"\n\n"
-      +"───────────────\n\n"
-      +"👪 試試「全家共用」\n"
-      +"到「設定」→「邀請家人」產生邀請碼\n"
-      +"把碼給家人，一人記錄，大家都看得到！\n"
-      +"（試用期最多 2 台裝置）\n\n"
-      +"到期後仍可使用基本行事曆 😊");
-  }catch(e){}
+  showInfoSheet("🎉", "歡迎使用智能行事曆！",
+    '已開啟 <b style="color:#3E9B8E">21 天全功能免費試用</b><br>到期日：'+expiry
+    +'<div style="margin:16px 0;border-top:1px dashed #E3DED4"></div>'
+    +'<b>👪 試試「全家共用」</b><br>到「設定」→「邀請家人」產生邀請碼，把碼給家人，一人記錄，大家都看得到！<br><span style="color:#8A8A93;font-size:12.5px">（試用期最多 2 台裝置）</span>'
+    +'<div style="margin-top:14px;color:#8A8A93">到期後仍可使用基本行事曆 😊</div>');
 }
 
 function checkExpiryReminder(res, force){
@@ -1329,18 +1335,18 @@ async function finishCustomerLogin(email){
 }
 // 試用期到期、降級成免費版時的提示（只在「剛從有方案變免費」那次跳，不會每次登入都跳）
 function showTrialExpired(){
-  try{
-    alert("⏳ 試用期已結束\n\n21 天全功能試用已到期，目前僅能使用基本行事曆功能\n\n"
-      +"升級可解鎖：總覽、目標追蹤、多本行事曆、家人共用...\n\n"
-      +"透過「智在生活」官方 LINE 即可升級 😊");
-  }catch(e){}
+  showInfoSheet("⏳", "試用期已結束",
+    '21 天全功能試用已到期，目前僅能使用基本行事曆功能'
+    +'<div style="margin:14px 0;border-top:1px dashed #E3DED4"></div>'
+    +'升級可解鎖：總覽、目標追蹤、多本行事曆、家人共用...'
+    +'<div style="margin-top:14px;color:#8A8A93">透過「智在生活」官方 LINE 即可升級 😊</div>');
 }
 // 剛升級成功時的歡迎訊息
 function showUpgradeSuccess(newPlan){
   var name = (newPlan==="full"||newPlan==="family") ? "家庭版" : "個人版";
-  try{
-    alert("🎉 升級成功！\n\n感謝支持「智在生活」\n您現在是"+name+"用戶，功能已全部解鎖\n\n祝使用愉快 😊");
-  }catch(e){}
+  showInfoSheet("🎉", "升級成功！",
+    '感謝支持「智在生活」<br>您現在是 <b style="color:#3E9B8E">'+name+'</b> 用戶，功能已全部解鎖'
+    +'<div style="margin-top:14px;color:#8A8A93">祝使用愉快 😊</div>');
 }
 // 新裝置第一次登入：完成 Firebase Email 連結驗證後，接續原本的方案/裝置檢查
 async function completeEmailLinkSignIn(){
