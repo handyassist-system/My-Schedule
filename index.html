@@ -1159,7 +1159,7 @@ function checkExpiryReminder(res, force){
   var planName=isTrial?"試用":(res.plan==="full"?"家庭版":(res.plan==="basic"?"個人版":"方案"));
   var trialMsg="到期後，以下功能將無法繼續使用：\n"
     +"━━━━━━━━━━━━━━━\n"
-    +"📊 一頁總覽\n🎯 目標追蹤\n📖 多本行事曆\n⏱️ 急迫、倒數提醒\n💾 資料備份\n"
+    +"📊 一頁總覽\n🎯 目標追蹤\n🗂️ 多本行事曆\n⏱️ 急迫、倒數提醒\n💾 資料備份\n"
     +"👪 全家共用（僅剩 1 台裝置）\n"
     +"━━━━━━━━━━━━━━━\n\n"
     +"到期後仍可使用基本行事曆功能\n\n"
@@ -1253,7 +1253,7 @@ function openUpgradeSheet(feat){
     +incl("涵蓋基本功能")
     +ft("➕ 📋","一頁總覽","行程、待辦、記事集中看，不再忘東忘西")
     +ft("➕ 🎯","目標追蹤（3 種方式）","每週運動、存旅遊基金、考證照，都不半途而廢")
-    +ft("➕ 🗂️","多本行事曆","工作家庭分開管，不再混在一起")
+    +ft("➕ 🗂️","多本行事曆（私人專用）","工作、生活分開記，想開幾本都可以")
     +ft("➕ ⏳","急迫標記、倒數提醒","重要的事排最前，還剩幾天一眼看到")
     +ft("➕ 💾","資料備份","換手機也不怕資料不見")
     +planTag("basic")+'</div>';
@@ -1263,6 +1263,7 @@ function openUpgradeSheet(feat){
         +priceBox("3,388","2,388","199","1,000")
     +'<div style="text-align:center;background:#FDEEE7;color:#E8735C;font-weight:800;font-size:12.5px;padding:8px;border-radius:10px;margin-bottom:4px">💡 比個人版每月只要多 $100，全家一起用</div>'
     +incl("涵蓋個人版全部功能")
+    +ft("➕ 🗂️","行事曆可自訂私人或共享","想私藏的設私人，想全家看的設共享，彈性切換")
     +ft("➕ 👪","3 台裝置共用","產生邀請碼，家人立即加入，不用共用帳密")
     +ft("➕ 🛒","採購 × 庫存自動連動","買完打勾自動入庫，不再重複買、快過期會提醒")
     +ft("➕ 📅","採購一鍵排進行事曆","想到要買，順手就安排好")
@@ -1992,13 +1993,20 @@ function openMyApps(){
   }).join("")+'</div>';
   openSheet("📱 我的 App", html, null, null, "關閉");
 }
+function calVisible(c){
+  if(!c) return false;
+  if(c.shared===false) return c.deviceId===_devId();   // 私人本：只有建立的那台裝置看得到
+  return true;                                          // 共享本（含舊資料，預設視為共享）
+}
+function visibleCalIds(){ return Object.keys(state.calendars).filter(function(id){ return calVisible(state.calendars[id]); }); }
 function ensureDefaultCalendar(){
   if(!state.calendars || Object.keys(state.calendars).length===0){
-    state.calendars={ main:{ name:"我的行事曆", createdAt:Date.now() } };
+    state.calendars={ main:{ name:"我的行事曆", createdAt:Date.now(), shared:true } };
     if(LOCAL_MODE) lsSaveCalendars(); else uref("calendars/main").set(state.calendars.main);
   }
-  if(!state.currentCal || !state.calendars[state.currentCal]){
-    state.currentCal = state.calendars["main"] ? "main" : Object.keys(state.calendars)[0];
+  var vis=visibleCalIds();
+  if(!state.currentCal || !state.calendars[state.currentCal] || !calVisible(state.calendars[state.currentCal])){
+    state.currentCal = vis.indexOf("main")>=0 ? "main" : vis[0];
     try{ localStorage.setItem("cal_current", state.currentCal); }catch(e){}
   }
 }
@@ -2014,7 +2022,7 @@ function setCurrentCal(id){
   toast("已切換到「"+calName(id)+"」");
 }
 function openCalManager(){
-  const ids=Object.keys(state.calendars);
+  const ids=visibleCalIds();
   var _box=function(title, inner){
     return '<div style="margin-bottom:20px">'
       +'<div style="font-size:15px;font-weight:900;color:var(--ink);margin:0 2px 8px;letter-spacing:.3px">'+title+'</div>'
@@ -2023,14 +2031,31 @@ function openCalManager(){
   };
 
   // 我的行事曆
-  var calInner='<p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.6">點名稱可切換。每本資料各自獨立；用同一組帳號登入的家人會看到同樣的行事曆。</p>';
+  var calDesc = canFull()
+    ? "點名稱可切換。🔒私人本只有這台裝置看得到；🌐共享本用同一組帳號登入的家人都看得到。"
+    : (canAdvanced()
+        ? "點名稱可切換。目前可新增多本行事曆，皆為 🔒私人（只有這台裝置看得到）。升級家庭版可選擇設為 🌐共享，讓家人也看得到。"
+        : "升級個人版可新增多本行事曆（私人專用）；升級家庭版還能選擇設為共享，讓家人也看得到。");
+  var calInner='<p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.6">'+calDesc+'</p>';
   calInner+='<div id="calList">'+ids.map(id=>{
     const on=id===state.currentCal;
-    return '<div class="cal-row'+(on?" on":"")+'"><span class="cal-name" data-cal="'+id+'">'+(on?"✓ ":"")+esc(calName(id))+'</span>'+
+    const c=state.calendars[id];
+    const isPriv=c && c.shared===false;
+    return '<div class="cal-row'+(on?" on":"")+'"><span class="cal-name" data-cal="'+id+'">'+(on?"✓ ":"")+(isPriv?"🔒 ":"🌐 ")+esc(calName(id))+'</span>'+
+      (isPriv?'<button type="button" class="cal-share" data-share="'+id+'" style="border:none;background:none;color:var(--primary);font-size:12px;font-weight:700;margin-right:6px">設為共享</button>':'')+
       '<button type="button" class="cal-del" data-del="'+id+'">🗑</button></div>';
   }).join("")+'</div>';
   if(canAdvanced()){
     calInner+='<div class="chip-add" style="margin-top:10px"><input id="calNewName" autocomplete="off" placeholder="新行事曆名稱（如：家庭、工作）"><button id="calAddBtn" type="button">＋ 新增</button></div>';
+    if(canFull()){
+      calInner+='<div style="display:flex;gap:8px;margin-top:8px">'
+        +'<label style="flex:1;display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--muted)"><input type="radio" name="calNewShared" value="0" checked>🔒 私人（只有這台裝置看得到）</label>'
+        +'</div><div style="display:flex;gap:8px;margin-top:4px">'
+        +'<label style="flex:1;display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--muted)"><input type="radio" name="calNewShared" value="1">🌐 共享（家人都看得到）</label>'
+        +'</div>';
+    } else {
+      calInner+='<div style="font-size:12px;color:var(--faint);margin-top:6px">💡 個人版新增的行事曆為私人專用；升級家庭版可選擇與家人共享</div>';
+    }
   } else {
     calInner+='<button id="calAddLocked" type="button" style="width:100%;margin-top:10px;padding:12px;border:1.5px dashed var(--line);background:var(--bg);color:var(--muted);border-radius:12px;font-size:14px;font-weight:600;font-family:inherit">🔒 新增行事曆（升級個人版解鎖）</button>';
   }
@@ -2115,8 +2140,14 @@ function openCalManager(){
   if($("logoutFromSettings")) $("logoutFromSettings").addEventListener("click", function(){ closeSheet(); doLogout(); });
   $("calList").querySelectorAll(".cal-name").forEach(s=>s.addEventListener("click", ()=>setCurrentCal(s.getAttribute("data-cal"))));
   $("calList").querySelectorAll(".cal-del").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); deleteCalendar(b.getAttribute("data-del")); }));
+  $("calList").querySelectorAll(".cal-share").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); makeCalShared(b.getAttribute("data-share")); }));
   var _cab=$("calAddBtn");
-  if(_cab) _cab.addEventListener("click", ()=>{ const nm=$("calNewName").value.trim(); if(nm){ addCalendar(nm); } else { toast("請輸入名稱"); } });
+  if(_cab) _cab.addEventListener("click", ()=>{
+    const nm=$("calNewName").value.trim();
+    if(!nm){ toast("請輸入名稱"); return; }
+    const sel=document.querySelector('input[name="calNewShared"]:checked');
+    addCalendar(nm, sel && sel.value==="1");
+  });
   var _cal2=$("calAddLocked");
   if(_cal2) _cal2.addEventListener("click", function(){ closeSheet(); showUpgrade("多本行事曆"); });
   if($("backupExport")) $("backupExport").addEventListener("click", exportBackup);
@@ -2186,19 +2217,33 @@ function doImport(data){
     }
   }catch(e){ console.error(e); toast("還原失敗"); }
 }
-function addCalendar(name){
+function addCalendar(name, shared){
   if(!canAdvanced()){ showUpgrade("多本行事曆"); return; }   // 個人版以上才可多本
   if(!requireAuth()) return;
+  if(!canFull()) shared=false;   // 個人版沒有家人可共享，一律強制私人（保險，不管前端傳什麼）
   const id=genId();
-  const c={ name, createdAt:Date.now() };
+  const c={ name, createdAt:Date.now(), shared:!!shared };
+  if(!shared) c.deviceId=_devId();
   if(LOCAL_MODE){ state.calendars[id]=c; lsSaveCalendars(); }
   else uref("calendars/"+id).set(c);
   state.calendars[id]=c;
   setCurrentCal(id);
 }
+// 私人本切換成共享（單向，避免共享出去後又收回造成困惑）
+function makeCalShared(id){
+  if(!canFull()){ showUpgrade("共享行事曆"); return; }   // 個人版沒有家人可共享
+  const c=state.calendars[id]; if(!c || c.shared!==false) return;
+  if(!confirm("把「"+c.name+"」切換成共享嗎？\n切換後，家人的裝置也會看得到這本，且無法再改回私人。")) return;
+  const patch={ shared:true };
+  if(LOCAL_MODE){ Object.assign(state.calendars[id], patch); lsSaveCalendars(); }
+  else uref("calendars/"+id).update(patch);
+  Object.assign(state.calendars[id], patch);
+  openCalManager();
+  toast("已切換成共享");
+}
 function deleteCalendar(id){
   if(!requireAuth()) return;
-  if(Object.keys(state.calendars).length<=1){ toast("至少保留一本行事曆"); return; }
+  if(visibleCalIds().length<=1){ toast("至少保留一本行事曆"); return; }
   const recs=Object.entries(state.records).filter(([rid,r])=>(r.cal||"main")===id);
   openConfirm("刪除行事曆",
     "確定要刪除行事曆「<b>"+esc(calName(id))+"</b>」嗎？",
@@ -2220,7 +2265,7 @@ function doDeleteCalendar(id, recs){
     db.ref(userBase()).update(updates);
     recs.forEach(([rid])=>delete state.records[rid]); delete state.calendars[id];
   }
-  if(state.currentCal===id){ state.currentCal=Object.keys(state.calendars)[0]; try{ localStorage.setItem("cal_current", state.currentCal); }catch(e){} }
+  if(state.currentCal===id){ const vis=visibleCalIds(); state.currentCal=vis[0]; try{ localStorage.setItem("cal_current", state.currentCal); }catch(e){} }
   renderCalBar(); closeSheet(); renderAll(); toast("已刪除行事曆");
 }
 
