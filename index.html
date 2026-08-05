@@ -515,7 +515,7 @@
     <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-shrink:1;overflow:hidden">
       <span style="width:4px;height:20px;background:var(--primary);border-radius:2px;flex-shrink:0"></span>
       <div class="title" id="barTitle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">智能行事曆</div>
-      <span style="font-size:10px;color:#aaa;font-weight:normal;white-space:nowrap;flex-shrink:0">v1.1(2026)</span>
+      <span style="font-size:10px;color:#aaa;font-weight:normal;white-space:nowrap;flex-shrink:0">v1.0(2026)</span>
     </div>
     <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
       <button class="logout icobtn" id="activityBtn" style="position:relative">🔔<span id="activityBadge" class="act-badge" style="display:none"></span></button>
@@ -691,7 +691,7 @@ let formAssignees = new Set();   // 編輯記事時暫存已選執行人
 const CAT_ORDER = ["life","work","shopping","finance","activity","health","travel","study","side","other"];
 const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
 const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
-const APP_VER = "v1.1(2026)";
+const APP_VER = "v1.0(2026)";
 const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
 const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
 // 庫存 16 小類 → 行事曆 6 大類（衣物／旅遊備品庫存沒有，只能手動）
@@ -3218,14 +3218,60 @@ function dayBefore(ds){ const d=new Date(ds+"T00:00:00"); d.setDate(d.getDate()-
 function deleteRecord(id, title, occDate){
   if(!requireAuth()) return;
   if(!id){ toast("缺少資料 ID"); return; }
-  const doFull = function(){
+  const r=state.records[id];
+  const doOne = function(){
     if(!LOCAL_MODE){ uref("records/"+id).remove().catch(e=>{ console.error(e); toast("雲端刪除失敗"); }); }
     delete state.records[id];
     if(LOCAL_MODE) lsSaveRecords();
     closeSheet(); renderAll(); toast("已刪除");
   };
-  // 重複記事現在各自獨立生成、各自一筆資料，刪除只會刪這一筆，不會影響其他已產生的筆
-  openConfirm("刪除記事", "確定刪除「<b>"+esc(title||"此記事")+"</b>」嗎？", doFull, "確定刪除");
+  // 屬於重複系列的記事 → 問要刪這一筆，還是這筆及之後全部刪
+  if(r && r.seriesId){
+    const doSeries = function(){
+      const sid=r.seriesId, from=r.dateStart;
+      const until=dayBefore(from);
+      const toDel=[], toStop=[];
+      Object.entries(state.records).forEach(([rid,rr])=>{
+        if(!rr || rr.seriesId!==sid) return;
+        if(rr.dateStart>=from) toDel.push(rid); else toStop.push(rid);
+      });
+      if(!LOCAL_MODE){
+        const updates={};
+        toDel.forEach(rid=>updates["records/"+rid]=null);
+        toStop.forEach(rid=>updates["records/"+rid+"/repeatUntil"]=until);
+        db.ref(userBase()).update(updates).catch(e=>{ console.error(e); toast("雲端刪除失敗"); });
+      } else {
+        toStop.forEach(rid=>{ state.records[rid].repeatUntil=until; });
+      }
+      toDel.forEach(rid=>delete state.records[rid]);
+      if(LOCAL_MODE) lsSaveRecords();
+      closeSheet(); renderAll(); toast("已刪除 "+toDel.length+" 筆");
+    };
+    openDeleteRepeatChoice(title, doOne, doSeries);
+    return;
+  }
+  // 非系列重複（單筆、採購、純紀錄...）→ 一般刪除
+  openConfirm("刪除記事", "確定刪除「<b>"+esc(title||"此記事")+"</b>」嗎？", doOne, "確定刪除");
+}
+// 重複記事刪除三選一：取消 / 只刪這一筆 / 這筆及之後全部刪
+function openDeleteRepeatChoice(title, onOne, onSeries){
+  let root=$("confirmRoot");
+  if(!root){ root=document.createElement("div"); root.id="confirmRoot"; document.body.appendChild(root); }
+  root.innerHTML=
+    '<div class="overlay" id="cfmOvl" style="z-index:80"><div class="sheet" id="cfmSheet">'+
+      '<h3>刪除重複記事</h3>'+
+      '<p style="font-size:14px;color:var(--ink);line-height:1.6;margin:0 0 18px">「<b>'+esc(title||"此記事")+'</b>」是重複系列的一筆，要刪除哪個範圍？</p>'+
+      '<div style="display:flex;flex-direction:column;gap:10px">'+
+        '<button class="btn-danger" id="cfmOne" style="width:100%">只刪這一筆</button>'+
+        '<button class="btn-danger" id="cfmSeries" style="width:100%">這筆及之後全部刪</button>'+
+        '<button class="btn-ghost" id="cfmCancel" style="width:100%">取消</button>'+
+      '</div>'+
+    '</div></div>';
+  const close=()=>{ root.innerHTML=""; };
+  $("cfmCancel").addEventListener("click", close);
+  $("cfmOvl").addEventListener("click", e=>{ if(e.target.id==="cfmOvl") close(); });
+  $("cfmOne").addEventListener("click", ()=>{ close(); if(onOne) onOne(); });
+  $("cfmSeries").addEventListener("click", ()=>{ close(); if(onSeries) onSeries(); });
 }
 
 /* ============================================================
