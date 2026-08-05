@@ -853,20 +853,14 @@ function occursOn(r, dateStr){
   if(u==="week") return diff%(7*n)===0;
   return diff%n===0;                                  // day
 }
-// 某「發生日」這個記事是否已完成（重複的一般記事看 doneDates；其餘看整筆）
+// 某「發生日」這個記事是否已完成（重複記事各自獨立生成，直接看整筆狀態）
 function isDoneOn(r, dateStr){
   if(!r || r.isLog) return false;                       // 純紀錄無完成
-  if(hasRepeat(r) && r.category!=="shopping" && r.dateStart){
-    return Array.isArray(r.doneDates) && r.doneDates.indexOf(dateStr)>=0;
-  }
-  return isDone(r);                                      // 非重複 / 採購：整筆完成
+  return isDone(r);
 }
 // 某「發生日」這個記事的顯示類別（log / done / scheduled / …）
 function kindOn(r, dateStr){
   if(r && r.isLog) return "log";
-  if(hasRepeat(r) && r.category!=="shopping" && r.dateStart){
-    return isDoneOn(r, dateStr) ? "done" : "scheduled";
-  }
   return recKind(r);
 }
 // 在某日期(YYYY-MM-DD)往後加一個間隔
@@ -900,13 +894,27 @@ function buildNextRecord(r, baseDate){
   return copy;
 }
 function writeRecord(rec){
-  if(LOCAL_MODE){ const key=genId(); state.records[key]=rec; lsSaveRecords(); }
-  else { const key=uref("records").push().key; uref("records/"+key).set(rec); }
+  if(LOCAL_MODE){ const key=genId(); state.records[key]=rec; lsSaveRecords(); return Promise.resolve(key); }
+  else { const key=uref("records").push().key; return uref("records/"+key).set(rec).then(()=>key); }
 }
-// 純紀錄(log)+重複：日期過了 → 生下一筆未來的，舊的留著當歷史（生日）
+// 新建重複記事時，批次預先生成接下來 N 筆獨立記事（同一組 seriesId，各自獨立、不互相影響）
+function preGenerateSeries(rootId, rootRec, count){
+  let base = rootRec.dateStart;
+  let cur = Object.assign({}, rootRec, {id:rootId});
+  for(let i=0;i<count;i++){
+    const next = buildNextRecord(cur, base);
+    next.seriesId = rootId;
+    writeRecord(next);
+    base = next.dateStart;
+    cur = Object.assign({}, next);
+  }
+}
+// 一般重複記事(非採購)：維持每個系列「未來至少3筆」，時間推進時自動補新的一筆（不綁完成，忘記勾也不會斷）；純紀錄＝永久重複，改用「算的」顯示，不再生成資料
+var _spawnLock = new Set();
 function processRecurrences(){
   const today=ymd(new Date());
   let changed=false;
+  const seriesMap={};
   curEntries().forEach(([id,r])=>{
     if(!hasRepeat(r)) return;
     if(r.isLog) return;   // 純紀錄＝永久重複，改用「算的」顯示，不再生成資料
@@ -914,7 +922,24 @@ function processRecurrences(){
     if(isDone(r) && r.dateStart && r.dateStart > today){
       if(LOCAL_MODE){ const rr=state.records[id]; rr.status="pending"; rr.kind="scheduled"; delete rr.doneDate; changed=true; }
       else { uref("records/"+id).update({ status:"pending", kind:"scheduled", doneDate:null }); }
+      return;
     }
+    if(r.category==="shopping" || !r.dateStart) return;
+    const sid = r.seriesId || id;
+    (seriesMap[sid]=seriesMap[sid]||[]).push({id,r});
+  });
+  Object.keys(seriesMap).forEach(sid=>{
+    if(_spawnLock.has(sid)) return;
+    const arr=seriesMap[sid];
+    let latest=arr[0];
+    arr.forEach(item=>{ if(item.r.dateStart > latest.r.dateStart) latest=item; });
+    if(latest.r.repeatUntil && latest.r.dateStart >= latest.r.repeatUntil) return;   // 已停止此系列的重複
+    const futureCount = arr.filter(item=>item.r.dateStart >= today).length;
+    if(futureCount >= 3) return;
+    _spawnLock.add(sid);
+    const next = buildNextRecord(Object.assign({}, latest.r, {id:latest.id}), latest.r.dateStart);
+    next.seriesId = sid;
+    writeRecord(next).then(()=>{ _spawnLock.delete(sid); }).catch(()=>{ _spawnLock.delete(sid); });
   });
   if(changed && LOCAL_MODE){ lsSaveRecords(); }
 }
@@ -1594,7 +1619,7 @@ function _todayTimedEvents(){
     curValues().forEach(function(r){
       if(isDone(r)) return;
       if(r.category==="shopping") return;
-      if(!(dayInRange(r,t) || occursOn(r,t))) return;
+      if(!(dayInRange(r,t) || r.dateStart===t)) return;
       out.push(r);
     });
   }catch(e){}
@@ -2303,7 +2328,7 @@ function dotsForDay(dateStr){
   const cats=[]; let urgent=false, log=false;
   curValues().forEach(r=>{
     if(r && isDone(r) && !r.dateStart) return;   // 已完成且無日期 → 不上行事曆（總覽仍可查）
-    if(r && (dayInRange(r,dateStr) || occursOn(r,dateStr))){
+    if(r && (dayInRange(r,dateStr) || r.dateStart===dateStr)){
       if(recKind(r)==="log") log=true;
       else if(cats.indexOf(r.category)<0) cats.push(r.category);
       if(r.urgent) urgent=true;
@@ -2345,7 +2370,7 @@ function renderCalendar(){
 function renderDayEvents(){
   const wrap=$("dayEvents");
   const list=curEntries()
-    .filter(([id,r])=>!(isDone(r) && !r.dateStart) && (dayInRange(r, state.selected) || occursOn(r, state.selected)))
+    .filter(([id,r])=>!(isDone(r) && !r.dateStart) && (dayInRange(r, state.selected) || r.dateStart===state.selected))
     .map(([id,r])=>Object.assign({id},r))
     .sort((a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0) return u; return (a.start||"").localeCompare(b.start||""); });
 
@@ -2608,29 +2633,8 @@ function occInMonth(r, y, m){
   return out;
 }
 function buildOverviewRows(){
-  const inQuick=(ovQuickKind==="week"||ovQuickKind==="month");
   const out=[];
-  curEntries().forEach(([id,r])=>{
-    const rep = hasRepeat(r) && r.category!=="shopping" && r.dateStart;
-    if(!rep){ out.push(Object.assign({id}, r)); return; }
-    let occs=[];
-    if(inQuick){
-      // 期間內發生日 ＋ 逾期（期間之前最近一筆未完成；純紀錄不算逾期）
-      if(ovQuickKind==="month"){
-        const n=new Date(), cy=n.getFullYear(), cm=n.getMonth()+1;
-        occs = occInMonth(r, cy, cm);
-      } else {
-        occs = occInOvPeriod(r);   // 今天／本週：已支援 ovWeekRange
-      }
-      if(!r.isLog){
-        const od = latestPendingOccUpTo(r, dayBefore(_ovPeriodStart()));
-        if(od && occs.indexOf(od)<0) occs.push(od);
-      }
-    } else {
-      occs = occInOvPeriod(r);
-    }
-    occs.forEach(dd=>out.push(Object.assign({id}, r, { dateStart:dd, _occ:dd, kind: kindOn(r,dd) })));
-  });
+  curEntries().forEach(([id,r])=>{ out.push(Object.assign({id}, r)); });
   return out;
 }
 
@@ -2759,18 +2763,9 @@ function toggleDoneOn(id, dateStr){
   if(!requireAuth()) return;
   const r=state.records[id]; if(!r) return;
   if(r.isLog) return;                                  // 純紀錄無完成
-  if(!hasRepeat(r) || r.category==="shopping"){        // 非重複 或 採購 → 整筆完成
-    return toggleDoneWhole(id);
-  }
-  // 非採購的重複記事 → 只切換 dateStr 這一次（存在 doneDates，不生成資料）
-  const d = dateStr || r.dateStart;
-  const dd = Array.isArray(r.doneDates) ? r.doneDates.slice() : [];
-  const i = dd.indexOf(d);
-  if(i>=0) dd.splice(i,1); else dd.push(d);
-  if(LOCAL_MODE){ state.records[id].doneDates = dd; lsSaveRecords(); renderAll(); return; }
-  uref("records/"+id+"/doneDates").set(dd).catch(e=>{ console.error(e); toast("更新失敗"); });
+  return toggleDoneWhole(id);                           // 所有記事（含重複）→ 整筆完成，重複的另外生成獨立下一筆
 }
-// 整筆完成（非重複記事、採購）；採購重複仍生成下一筆
+// 整筆完成；有設定重複的記事（含採購、含一般記事）完成時各自獨立生成下一筆，彼此不互相影響
 function toggleDoneWhole(id){
   if(!requireAuth()) return;
   const r=state.records[id]; if(!r) return;
@@ -2796,7 +2791,7 @@ function toggleDoneWhole(id){
           ack.push({ item_name: it.name, qty_added: (cb.qty_added||1) });
           localStorage.setItem('inv_update_ack', JSON.stringify(ack));
        行事曆收到後就會自動跳「✅ 回傳成功：○○ +N」，無需再改行事曆。*/
-    // 採購重複 → 以完成日往後推，生成下一筆（只生一次）
+    // 採購重複 → 以完成日往後推，生成獨立的下一筆（買了才需要下一筆提醒）
     if(hasRepeat(r) && r.category==="shopping" && !r.spawned){
       patch.spawned=true;
       const base = r.dateStart || patch.doneDate;
@@ -3142,9 +3137,8 @@ function saveRecord(id, prev){
   if(isLog && !dateStart){ toast("純紀錄要有日期（會列入行事曆）"); return; }
   const ru = $("rec_repeatUnit").value;
   const repeating = !!(ru && ru!=="none");
-  const isRepTask = repeating && !isLog && !isShop;     // 重複的一般記事 → 完成改逐次(doneDates)
-  const done = isLog ? false : (isRepTask ? false : !!(prev && (prev.status==="done" || prev.doneDate)));
-  // 狀態由「有無日期 + 是否完成」自動推得；純紀錄為 log；重複的一般記事保持 scheduled，完成逐次記
+  const done = isLog ? false : !!(prev && (prev.status==="done" || prev.doneDate));
+  // 狀態由「有無日期 + 是否完成」自動推得；純紀錄為 log
   const kind = isLog ? "log" : (done ? "done" : (dateStart ? "scheduled" : "todo"));
 
   const data={
@@ -3184,20 +3178,26 @@ function saveRecord(id, prev){
   } else {
     data.repeat=null;
   }
-  if(isRepTask){ data.doneDates = (prev && Array.isArray(prev.doneDates)) ? prev.doneDates : []; }
   data.spawned = !!(prev && prev.spawned);   // 沿用，避免重複生成
   data.cal = (prev && prev.cal) || state.currentCal;   // 歸到目前行事曆
+  data.seriesId = (prev && prev.seriesId) ? prev.seriesId : null;   // 屬於哪一組重複系列（新建時補上）
+
+  // 新建的一般重複記事（非採購/純紀錄）→ 建立當下就先把接下來幾筆獨立生成好，方便立即看到、各自獨立
+  const isNewGeneralRepeat = !id && repeating && !isLog && !isShop;
 
   if(LOCAL_MODE){
     const key=id||genId();
+    if(isNewGeneralRepeat) data.seriesId=key;
     const merged=Object.assign({}, state.records[key]||{}, data);
     if(data.subcategory===null) delete merged.subcategory;
     if(data.qty===null) delete merged.qty;
     if(data.amount===null) delete merged.amount;
     if(data.doneDate===null) delete merged.doneDate;
     if(data.repeat===null) delete merged.repeat;
+    if(data.seriesId===null) delete merged.seriesId;
     state.records[key]=merged;
     lsSaveRecords();
+    if(isNewGeneralRepeat) preGenerateSeries(key, merged, 5);
     if(dateStart) state.selected=dateStart;
     closeSheet(); renderAll(); toast(id?"已更新":"已新增");
     return;
@@ -3205,8 +3205,10 @@ function saveRecord(id, prev){
   (async()=>{
     try{
       const key=id||uref("records").push().key;
+      if(isNewGeneralRepeat) data.seriesId=key;
       await uref("records/"+key).update(data);
       if(!id) pushActivity(title, kind);
+      if(isNewGeneralRepeat) preGenerateSeries(key, Object.assign({},data), 5);
       if(dateStart) state.selected=dateStart;
       closeSheet(); toast(id?"已更新":"已新增");
     }catch(err){ console.error(err); toast("儲存失敗"); }
@@ -3216,33 +3218,13 @@ function dayBefore(ds){ const d=new Date(ds+"T00:00:00"); d.setDate(d.getDate()-
 function deleteRecord(id, title, occDate){
   if(!requireAuth()) return;
   if(!id){ toast("缺少資料 ID"); return; }
-  const r=state.records[id];
-  const isRep = r && hasRepeat(r) && r.category!=="shopping" && r.dateStart;
   const doFull = function(){
     if(!LOCAL_MODE){ uref("records/"+id).remove().catch(e=>{ console.error(e); toast("雲端刪除失敗"); }); }
     delete state.records[id];
     if(LOCAL_MODE) lsSaveRecords();
     closeSheet(); renderAll(); toast("已刪除");
   };
-  // 重複記事，刪「後面某一筆」→ 刪此筆及之後、保留之前
-  if(isRep && occDate && occDate > r.dateStart){
-    openConfirm("刪除重複記事",
-      "「<b>"+esc(title||"此記事")+"</b>」是重複記事。<br>將刪除 <b>"+esc(occDate)+"</b> 及之後的重複，<b>先前的紀錄會保留</b>。",
-      function(){
-        const until=dayBefore(occDate);
-        if(LOCAL_MODE){ state.records[id].repeatUntil=until; lsSaveRecords(); closeSheet(); renderAll(); toast("已停止此筆之後的重複"); return; }
-        uref("records/"+id+"/repeatUntil").set(until).then(()=>{ closeSheet(); toast("已停止此筆之後的重複"); }).catch(e=>{ console.error(e); toast("更新失敗"); });
-      }, "確定刪除");
-    return;
-  }
-  // 重複記事，刪「原始那筆」或整筆刪 → 移除整個重複
-  if(isRep){
-    openConfirm("刪除整個重複",
-      "「<b>"+esc(title||"此記事")+"</b>」是重複記事的第一筆。<br>刪除會移除<b>整個重複（所有日期，包含未來）</b>，確定嗎？",
-      doFull, "確定刪除");
-    return;
-  }
-  // 非重複 / 採購 → 一般刪除
+  // 重複記事現在各自獨立生成、各自一筆資料，刪除只會刪這一筆，不會影響其他已產生的筆
   openConfirm("刪除記事", "確定刪除「<b>"+esc(title||"此記事")+"</b>」嗎？", doFull, "確定刪除");
 }
 
