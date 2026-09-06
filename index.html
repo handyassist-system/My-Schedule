@@ -889,11 +889,9 @@ function scanDuplicateRecords(){
   Object.keys(state.records).forEach(function(id){
     var r=state.records[id]; if(!r) return;
     if(r.category==="shopping") return;                    // 採購另計，不動
-    // 重複行程：同標題+分類+重複規則 = 重複（起始日不同也算，因為重複規則會自動長出各月）
-    // 非重複行程：仍要含日期（不同天的單次記事是各自獨立的）
+    // 重複行程 & 一般行程：都要「完整起始日期」一模一樣才算重複（最保守，不誤刪）
     var repSig = r.repeat ? (r.repeat.unit+"_"+(r.repeat.every||1)) : "";
-    var datePart = repSig ? "" : (r.dateStart||"");        // 有重複規則→不看日期
-    var key=[(r.cal||"main"),(r.title||"").trim(),(r.category||""),datePart,(repSig||"no")].join("|");
+    var key=[(r.cal||"main"),(r.title||"").trim(),(r.category||""),(r.dateStart||""),(repSig||"no")].join("|");
     if(!groups[key]) groups[key]=[];
     groups[key].push(id);
   });
@@ -2766,7 +2764,7 @@ function openRecordForm(rec, presets, asCopy){
         '<div class="field"><label>價格（選填）</label><input id="rec_price" type="number" inputmode="numeric" value="'+(isShop&&r.amount!=null?r.amount:"")+'" placeholder="例如 3990"></div>'+
       '</div>'+
     '</div>'+
-    '<div class="field"><label>日期（可空，填了就上月曆）</label><input id="rec_dateStart" type="date" value="'+(ds||"")+'">'+
+    '<div class="field"><label>日期（可空，填了就上月曆）<span class="clr-btn" data-clr="rec_dateStart" style="float:right;font-size:11.5px;color:#A8A8B0;cursor:pointer;font-weight:600">✕ 清除</span></label><input id="rec_dateStart" type="date" value="'+(ds||"")+'">'+
       '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">'+
         '<button type="button" class="btn-ghost" id="rec_dm1" style="padding:5px 11px;font-size:12px">−1天</button>'+
         '<button type="button" class="btn-ghost" id="rec_dp1" style="padding:5px 11px;font-size:12px">＋1天</button>'+
@@ -2774,7 +2772,7 @@ function openRecordForm(rec, presets, asCopy){
         ((!!rec&&!asCopy)?'<button type="button" class="btn-ghost" id="rec_dup" style="padding:5px 11px;font-size:12px">📋 複製</button>':'')+
         '<span id="rec_datewk" style="align-self:center;font-size:13px;font-weight:700;margin-left:4px"></span>'+
       '</div></div>'+
-    '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><div class="label-row"><label>結束日期（可空）</label><span class="clr-btn" data-clr="rec_dateEnd" style="float:right;font-size:11.5px;color:#A8A8B0;cursor:pointer;font-weight:600;display:none">✕ 清除</span></div><input id="rec_dateEnd" type="date" value='+JSON.stringify(r.dateEnd||"")+'></div>'+
+    '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><div class="label-row"><label>結束日期（可空）</label><span class="clr-btn" data-clr="rec_dateEnd" style="float:right;font-size:11.5px;color:#A8A8B0;cursor:pointer;font-weight:600">✕ 清除</span></div><input id="rec_dateEnd" type="date" value='+JSON.stringify(r.dateEnd||"")+'></div>'+
     '<div class="two" id="rec_timebox"'+(isShop?' style="display:none"':'')+'>'+
       '<div class="field"><div class="label-row"><label>開始時間</label></div><input id="rec_start" type="time" value='+JSON.stringify(r.start||"")+'></div>'+
       '<div class="field"><div class="label-row"><label>結束時間</label></div><input id="rec_end" type="time" value='+JSON.stringify(r.end||"")+'></div>'+
@@ -2810,10 +2808,16 @@ function openRecordForm(rec, presets, asCopy){
   // 日期/時間欄位「✕ 清除」
   document.querySelectorAll('#sheet .clr-btn').forEach(function(b){
     var el=$(b.getAttribute('data-clr'));
-    var sync=function(){ b.style.display = (el && el.value) ? 'inline' : 'none'; };   // 有值才顯示
-    if(el){ sync(); el.addEventListener('change', sync); el.addEventListener('input', sync); }
     b.addEventListener('click', function(){
-      if(el){ el.value=""; sync(); }
+      if(el){ el.value=""; }
+      // 清開始日期 → 一併把重複改成「不重複」(重複需要起始日,否則資料矛盾)
+      if(b.getAttribute('data-clr')==="rec_dateStart"){
+        var ru=$("rec_repeatUnit");
+        if(ru && ru.value && ru.value!=="none"){
+          ru.value="none";
+          if(typeof toast==="function") toast("已清除日期，重複也一併取消");
+        }
+      }
     });
   }); },
     isEdit?function(){ deleteRecord(r.id, r.title); }:null);
