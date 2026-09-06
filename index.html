@@ -900,10 +900,20 @@ function scanDuplicateRecords(){
   Object.keys(state.records).forEach(function(id){
     var r=state.records[id]; if(!r) return;
     if(r.category==="shopping") return;                    // 採購另計，不動
-    var key=[(r.cal||"main"),(r.title||"").trim(),(r.category||""),(r.dateStart||""),
-             (r.repeat?(r.repeat.unit+"_"+(r.repeat.every||1)):"no")].join("|");
+    // 重複行程：同標題+分類+重複規則 = 重複（起始日不同也算，因為重複規則會自動長出各月）
+    // 非重複行程：仍要含日期（不同天的單次記事是各自獨立的）
+    var repSig = r.repeat ? (r.repeat.unit+"_"+(r.repeat.every||1)) : "";
+    var datePart = repSig ? "" : (r.dateStart||"");        // 有重複規則→不看日期
+    var key=[(r.cal||"main"),(r.title||"").trim(),(r.category||""),datePart,(repSig||"no")].join("|");
     if(!groups[key]) groups[key]=[];
     groups[key].push(id);
+  });
+  // 重複組：保留「起始日最早」的那筆
+  Object.keys(groups).forEach(function(k){
+    var ids=groups[k];
+    if(ids.length>1){
+      ids.sort(function(a,b){ return String(state.records[a].dateStart||"").localeCompare(String(state.records[b].dateStart||"")); });
+    }
   });
   Object.keys(groups).forEach(function(k){
     var ids=groups[k];
@@ -933,7 +943,24 @@ function cleanDuplicateRecords(){
     }
     alert(diag); return;
   }
-  if(!confirm("🧹 找到 "+dup.length+" 筆重複記事\n\n每組相同的記事會保留 1 筆，\n刪除其餘 "+dup.length+" 筆。\n\n確定清除？（無法復原）")) return;
+  // 列出各組摘要
+  var summary={};
+  Object.keys(state.records).forEach(function(id){
+    var r=state.records[id]; if(!r||r.category==="shopping") return;
+    var repSig=r.repeat?(r.repeat.unit+"_"+(r.repeat.every||1)):"";
+    var dp=repSig?"":(r.dateStart||"");
+    var key=[(r.cal||"main"),(r.title||"").trim(),(r.category||""),dp,(repSig||"no")].join("|");
+    summary[key]=(summary[key]||0)+1;
+  });
+  var lines=[];
+  Object.keys(summary).forEach(function(k){
+    if(summary[k]>1){ var t=k.split("|")[1]; lines.push("・"+t+"（"+summary[k]+"筆 → 留1筆）"); }
+  });
+  var msg="🧹 找到 "+dup.length+" 筆重複\n\n";
+  msg+=lines.slice(0,8).join("\n");
+  if(lines.length>8) msg+="\n…等 "+lines.length+" 組";
+  msg+="\n\n每組保留最早 1 筆，刪除其餘 "+dup.length+" 筆。\n確定清除？（無法復原）";
+  if(!confirm(msg)) return;
   if(LOCAL_MODE){
     dup.forEach(function(id){ delete state.records[id]; });
     lsSaveRecords(); renderAll();
