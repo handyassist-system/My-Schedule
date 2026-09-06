@@ -874,11 +874,59 @@ function buildNextRecord(r, baseDate){
   copy.createdAt=Date.now();
   return copy;
 }
+function _recSig(r){   // 記事識別碼：完全相同的視為重複
+  return [(r.cal||"main"),(r.title||"").trim(),(r.category||""),(r.dateStart||""),
+          (r.repeat?(r.repeat.unit+"_"+(r.repeat.every||1)):"no")].join("|");
+}
 function writeRecord(rec){
+  // 源頭防重複：已存在完全相同的（非採購）→ 不再生成
+  try{
+    if(rec && rec.category!=="shopping"){
+      var sig=_recSig(rec);
+      var dup=Object.keys(state.records||{}).some(function(id){
+        var r=state.records[id];
+        return r && r.category!=="shopping" && _recSig(r)===sig;
+      });
+      if(dup) return;   // 已有相同的，直接略過，避免累積
+    }
+  }catch(e){}
   if(LOCAL_MODE){ const key=genId(); state.records[key]=rec; lsSaveRecords(); }
   else { const key=uref("records").push().key; uref("records/"+key).set(rec); }
 }
 // 純紀錄(log)+重複：日期過了 → 生下一筆未來的，舊的留著當歷史（生日）
+// 一鍵清除重複記事（標題+分類+日期+重複規則完全相同 → 只留一筆）
+function scanDuplicateRecords(){
+  var groups={}, dupIds=[];
+  Object.keys(state.records).forEach(function(id){
+    var r=state.records[id]; if(!r) return;
+    if(r.category==="shopping") return;                    // 採購另計，不動
+    var key=[(r.cal||"main"),(r.title||"").trim(),(r.category||""),(r.dateStart||""),
+             (r.repeat?(r.repeat.unit+"_"+(r.repeat.every||1)):"no")].join("|");
+    if(!groups[key]) groups[key]=[];
+    groups[key].push(id);
+  });
+  Object.keys(groups).forEach(function(k){
+    var ids=groups[k];
+    if(ids.length>1){ dupIds=dupIds.concat(ids.slice(1)); }  // 每組保留第一筆
+  });
+  return dupIds;
+}
+function cleanDuplicateRecords(){
+  if(!state.isAdmin){ toast("此功能限管理員"); return; }
+  var dup=scanDuplicateRecords();
+  if(!dup.length){ alert("✅ 沒有發現重複記事"); return; }
+  if(!confirm("🧹 找到 "+dup.length+" 筆重複記事\n\n每組相同的記事會保留 1 筆，\n刪除其餘 "+dup.length+" 筆。\n\n確定清除？（無法復原）")) return;
+  if(LOCAL_MODE){
+    dup.forEach(function(id){ delete state.records[id]; });
+    lsSaveRecords(); renderAll();
+    alert("✅ 已清除 "+dup.length+" 筆重複");
+  } else {
+    var ups={};
+    dup.forEach(function(id){ ups["records/"+id]=null; });
+    uref("").update(ups).then(function(){ alert("✅ 已清除 "+dup.length+" 筆重複"); })
+      .catch(function(){ alert("清除失敗，請重試"); });
+  }
+}
 function processRecurrences(){
   const today=ymd(new Date());
   let changed=false;
@@ -962,7 +1010,7 @@ async function fbMigrateIfNeeded(){
 }
 
 /* ============================================================
-   3. 授權碼登入（共用碼模式，保留離線測試）
+   3. Email 登入（家人用同一 email 共用；保留離線測試）
    ============================================================ */
 const AUTH_KEY    = "cal_auth";
 const AUTH_FB_KEY = "cal_v1_auth";
@@ -1909,7 +1957,7 @@ function openCalManager(){
     + _box("📤 分享", shareInner);
 
   if(state.isAdmin){
-    html+=_box("🔧 管理", '<button id="goAdminFromCal" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">🔧 管理後台</button>');
+    html+=_box("🔧 管理", '<button id="goAdminFromCal" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">🔧 管理後台</button>'+'<button id="cleanDupBtn" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit;margin-top:8px">🧹 清除重複記事</button>');
   }
 
   openSheet("⚙️ 設定", html, null, null);
@@ -1934,6 +1982,7 @@ function openCalManager(){
   }
   if($("shareAppBtn")) $("shareAppBtn").addEventListener("click", shareApp);
   if($("goAdminFromCal")) $("goAdminFromCal").addEventListener("click", function(){ closeSheet(); openAdminPanel(); });
+  if($("cleanDupBtn")) $("cleanDupBtn").addEventListener("click", cleanDuplicateRecords);
   if($("logoutFromSettings")) $("logoutFromSettings").addEventListener("click", function(){ closeSheet(); doLogout(); });
   $("calList").querySelectorAll(".cal-name").forEach(s=>s.addEventListener("click", ()=>setCurrentCal(s.getAttribute("data-cal"))));
   $("calList").querySelectorAll(".cal-del").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); deleteCalendar(b.getAttribute("data-del")); }));
@@ -2691,10 +2740,10 @@ function openRecordForm(rec, presets, asCopy){
         ((!!rec&&!asCopy)?'<button type="button" class="btn-ghost" id="rec_dup" style="padding:5px 11px;font-size:12px">📋 複製</button>':'')+
         '<span id="rec_datewk" style="align-self:center;font-size:13px;font-weight:700;margin-left:4px"></span>'+
       '</div></div>'+
-    '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><div class="label-row"><label>結束日期（可空）</label><span class="clr-btn" data-clr="rec_dateEnd">✕ 清除</span></div><input id="rec_dateEnd" type="date" value='+JSON.stringify(r.dateEnd||"")+'></div>'+
+    '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><div class="label-row"><label>結束日期（可空）</label><span class="clr-btn" data-clr="rec_dateEnd" style="float:right;font-size:11.5px;color:#A8A8B0;cursor:pointer;font-weight:600;display:none">✕ 清除</span></div><input id="rec_dateEnd" type="date" value='+JSON.stringify(r.dateEnd||"")+'></div>'+
     '<div class="two" id="rec_timebox"'+(isShop?' style="display:none"':'')+'>'+
-      '<div class="field"><div class="label-row"><label>開始時間</label><span class="clr-btn" data-clr="rec_start">✕ 清除</span></div><input id="rec_start" type="time" value='+JSON.stringify(r.start||"")+'></div>'+
-      '<div class="field"><div class="label-row"><label>結束時間</label><span class="clr-btn" data-clr="rec_end">✕ 清除</span></div><input id="rec_end" type="time" value='+JSON.stringify(r.end||"")+'></div>'+
+      '<div class="field"><div class="label-row"><label>開始時間</label></div><input id="rec_start" type="time" value='+JSON.stringify(r.start||"")+'></div>'+
+      '<div class="field"><div class="label-row"><label>結束時間</label></div><input id="rec_end" type="time" value='+JSON.stringify(r.end||"")+'></div>'+
     '</div>'+
     '<div class="field"><label>重複</label>'+
       '<div class="two">'+
@@ -2726,8 +2775,11 @@ function openRecordForm(rec, presets, asCopy){
     function(){ saveRecord(isEdit?r.id:null, asCopy?null:r);
   // 日期/時間欄位「✕ 清除」
   document.querySelectorAll('#sheet .clr-btn').forEach(function(b){
+    var el=$(b.getAttribute('data-clr'));
+    var sync=function(){ b.style.display = (el && el.value) ? 'inline' : 'none'; };   // 有值才顯示
+    if(el){ sync(); el.addEventListener('change', sync); el.addEventListener('input', sync); }
     b.addEventListener('click', function(){
-      var el=$(this.getAttribute('data-clr')); if(el){ el.value=""; }
+      if(el){ el.value=""; sync(); }
     });
   }); },
     isEdit?function(){ deleteRecord(r.id, r.title); }:null);
@@ -3624,7 +3676,7 @@ window.addEventListener('appinstalled', function(){
   });
 })();
 if(!_firebaseReady){
-  loginMsg.textContent="（離線測試模式：輸入預設密碼即可進入，資料存在本機）";
+  loginMsg.textContent="（目前連線異常，請檢查網路後重新整理）";
 }
 </script>
 </body>
