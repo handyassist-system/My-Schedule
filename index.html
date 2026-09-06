@@ -879,17 +879,6 @@ function _recSig(r){   // 記事識別碼：完全相同的視為重複
           (r.repeat?(r.repeat.unit+"_"+(r.repeat.every||1)):"no")].join("|");
 }
 function writeRecord(rec){
-  // 源頭防重複：已存在完全相同的（非採購）→ 不再生成
-  try{
-    if(rec && rec.category!=="shopping"){
-      var sig=_recSig(rec);
-      var dup=Object.keys(state.records||{}).some(function(id){
-        var r=state.records[id];
-        return r && r.category!=="shopping" && _recSig(r)===sig;
-      });
-      if(dup) return;   // 已有相同的，直接略過，避免累積
-    }
-  }catch(e){}
   if(LOCAL_MODE){ const key=genId(); state.records[key]=rec; lsSaveRecords(); }
   else { const key=uref("records").push().key; uref("records/"+key).set(rec); }
 }
