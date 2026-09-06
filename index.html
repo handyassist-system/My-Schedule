@@ -913,8 +913,26 @@ function scanDuplicateRecords(){
 }
 function cleanDuplicateRecords(){
   if(!state.isAdmin){ toast("此功能限管理員"); return; }
+  var total=Object.keys(state.records||{}).length;
+  // 診斷：統計同標題+同日期的筆數
+  var byTitleDate={};
+  Object.keys(state.records||{}).forEach(function(id){
+    var r=state.records[id]; if(!r||r.category==="shopping") return;
+    var k=(r.title||"").trim()+" @ "+(r.dateStart||"無日期");
+    byTitleDate[k]=(byTitleDate[k]||0)+1;
+  });
+  var multi=Object.keys(byTitleDate).filter(function(k){ return byTitleDate[k]>1; });
   var dup=scanDuplicateRecords();
-  if(!dup.length){ alert("✅ 沒有發現重複記事"); return; }
+  if(!dup.length){
+    var diag="✅ 判重掃描：沒有完全相同的重複\n\n";
+    diag+="總記事數："+total+" 筆\n";
+    if(multi.length){
+      diag+="\n⚠️ 但發現同標題同日期的多筆：\n";
+      multi.slice(0,5).forEach(function(k){ diag+="・"+k+"（"+byTitleDate[k]+"筆）\n"; });
+      diag+="\n這些可能是重複規則不同，無法自動判定。\n要我用「標題+日期」清除嗎？請截圖給開發者。";
+    }
+    alert(diag); return;
+  }
   if(!confirm("🧹 找到 "+dup.length+" 筆重複記事\n\n每組相同的記事會保留 1 筆，\n刪除其餘 "+dup.length+" 筆。\n\n確定清除？（無法復原）")) return;
   if(LOCAL_MODE){
     dup.forEach(function(id){ delete state.records[id]; });
@@ -1876,7 +1894,7 @@ function openMyApps(){
     {ico:"📦", name:"庫存管理", url:"./inventory.html", dev:false},
     {ico:"✈️", name:"日本旅遊計畫", url:"https://handyassist-system.github.io/My-Japan-travel/", dev:true},
     {ico:"🍽️", name:"食光地圖", url:"https://handyassist-system.github.io/My-Food-Map/", dev:true},
-    {ico:"🏠", name:"居家服務 CRM", url:"https://handyassist-system.github.io/MY-CRM/", dev:true},
+    {ico:"🏠", name:"居家服務 CRM", url:"https://handyassist-system.github.io/My-CRM/", dev:true},
     {ico:"🌍", name:"造訪足跡", url:"https://handyassist-system.github.io/My-Visited-Country/", dev:true}
   ];
   var _isAdminNow = state.isAdmin!==false && !!(state.user && (String(state.user).toLowerCase()===ADMIN_EMAIL || state.user===DEFAULT_CODE));
