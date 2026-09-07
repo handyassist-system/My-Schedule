@@ -2804,25 +2804,21 @@ function openRecordForm(rec, presets, asCopy){
     '<div class="field"><label>備註（可選）</label><textarea id="rec_note" placeholder="補充說明">'+esc(r.note||"")+'</textarea></div>';
 
   openSheet(isShop?(isEdit?"編輯採購":"新增採購"):(isEdit?"編輯記事":"新增記事"), html,
-    function(){ saveRecord(isEdit?r.id:null, asCopy?null:r);
-  // 日期/時間欄位「✕ 清除」
-  document.querySelectorAll('#sheet .clr-btn').forEach(function(b){
-    var el=$(b.getAttribute('data-clr'));
-    b.addEventListener('click', function(){
-      if(el){ el.value=""; }
-      // 清開始日期 → 一併把重複改成「不重複」(重複需要起始日,否則資料矛盾)
-      if(b.getAttribute('data-clr')==="rec_dateStart"){
-        var ru=$("rec_repeatUnit");
-        if(ru && ru.value && ru.value!=="none"){
-          ru.value="none";
-          if(typeof toast==="function") toast("已清除日期，重複也一併取消");
-        }
-      }
-    });
-  }); },
+    function(){ saveRecord(isEdit?r.id:null, asCopy?null:r); },
     isEdit?function(){ deleteRecord(r.id, r.title); }:null);
 
   (function(){
+    // 日期欄位「✕ 清除」(表單建立後立即綁定)
+    document.querySelectorAll('#sheet .clr-btn').forEach(function(b){
+      var el=$(b.getAttribute('data-clr'));
+      b.addEventListener('click', function(){
+        if(el){ el.value=""; try{ el.dispatchEvent(new Event('change')); }catch(e){} }
+        if(b.getAttribute('data-clr')==="rec_dateStart"){
+          var ru=$("rec_repeatUnit");
+          if(ru && ru.value && ru.value!=="none"){ ru.value="none"; if(typeof toast==="function") toast("已清除日期，重複也一併取消"); }
+        }
+      });
+    });
     function _wkLbl(){ var el=$("rec_dateStart"), lab=$("rec_datewk"); if(!lab) return; lab.innerHTML = (el&&el.value)? mdWk(el.value) : ""; }
     function _shift(n){ var el=$("rec_dateStart"); if(!el) return; var base=el.value?_ymdToDate(el.value):new Date(); base.setDate(base.getDate()+n); el.value=ymd(base); _wkLbl(); }
     if($("rec_dateStart")) $("rec_dateStart").addEventListener("change", _wkLbl);
