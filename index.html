@@ -2800,7 +2800,7 @@ function openRecordForm(rec, presets, asCopy){
         '</select>'+
         '<input id="rec_repeatEvery" type="number" min="1" value="'+repEvery+'" placeholder="間隔數">'+
       '</div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">勾「重複」：這筆會自動出現在每個重複日（每天／每週／每月／每年），不用每次重建。</div>'+
+      '<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">「每…週／月／年」搭配右邊數字：例如每 2 年就填 2、每 3 個月就填 3。填 1 就是每週／每月／每年。</div>'+
     '</div>'+
     '<div id="rec_amountbox"'+(isShop?' style="display:none"':'')+'><div class="field"><label>金額（選填）</label>'+
       '<input id="rec_amount" type="number" inputmode="numeric" value="'+(r.amount!=null?r.amount:"")+'" placeholder="例如 1200"></div></div>'+
@@ -3047,7 +3047,9 @@ function saveRecord(id, prev){
       await uref("records/"+key).update(data);
       if(!id) pushActivity(title, kind);
       if(dateStart) state.selected=dateStart;
-      closeSheet(); toast(id?"已更新":"已新增");
+      closeSheet();
+      if(data.repeat){ toast("已存:重複="+data.repeat.unit+" 起="+data.dateStart+" 到="+(data.repeatUntil||"無")); }
+      else { toast(id?"已更新":"已新增"); }
     }catch(err){ console.error(err); toast("儲存失敗"); }
   })();
 }
