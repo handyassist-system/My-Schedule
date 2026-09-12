@@ -2208,7 +2208,13 @@ function renderDayEvents(){
     .filter(([id,r])=>!(isDone(r) && !r.dateStart) && (dayInRange(r, state.selected) || occursOn(r, state.selected)))
     .filter(([id,r])=>{ if(_seen[id]) return false; _seen[id]=1; return true; })   // 同一筆只顯示一次(修重複bug)
     .map(([id,r])=>Object.assign({id},r))
-    .sort((a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0) return u; return (a.start||"").localeCompare(b.start||""); });
+    .sort((a,b)=>{
+      const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0) return u;   // 1.急迫置頂
+      const ca=(a.category||"other"), cb=(b.category||"other");
+      if(ca!==cb) return ca.localeCompare(cb);                      // 2.同分類聚一起
+      const ha=a.start?0:1, hb=b.start?0:1; if(ha!==hb) return ha-hb; // 3.有時間的在前
+      return (a.start||"").localeCompare(b.start||"");              // 4.時間早的在上
+    });
 
   const sel=new Date(state.selected+"T00:00:00");
   var _dp=String(state.selected).split("-"), _dwd=_WD[_wdOf(state.selected)];
@@ -2782,12 +2788,12 @@ function openRecordForm(rec, presets, asCopy){
         ((!!rec&&!asCopy)?'<button type="button" class="btn-ghost" id="rec_dup" style="padding:5px 11px;font-size:12px">📋 複製</button>':'')+
         '<span id="rec_datewk" style="align-self:center;font-size:13px;font-weight:700;margin-left:4px"></span>'+
       '</div></div>'+
-    '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><div class="label-row"><label>結束日期（可空）</label><span class="clr-btn" data-clr="rec_dateEnd" style="float:right;font-size:11.5px;color:#A8A8B0;cursor:pointer;font-weight:600">✕ 清除</span></div><input id="rec_dateEnd" type="date" value='+JSON.stringify(r.dateEnd||"")+'></div>'+
+    '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><div class="label-row"><label id="rec_endlabel">結束日期（可空）</label><span class="clr-btn" data-clr="rec_dateEnd" style="float:right;font-size:11.5px;color:#A8A8B0;cursor:pointer;font-weight:600">✕ 清除</span></div><input id="rec_dateEnd" type="date" value='+JSON.stringify(r.dateEnd||r.repeatUntil||"")+'><div id="rec_endhint" style="font-size:11.5px;color:var(--muted);margin-top:4px"></div></div>'+
     '<div class="two" id="rec_timebox"'+(isShop?' style="display:none"':'')+'>'+
       '<div class="field"><div class="label-row"><label>開始時間</label></div><input id="rec_start" type="time" value='+JSON.stringify(r.start||"")+'></div>'+
       '<div class="field"><div class="label-row"><label>結束時間</label></div><input id="rec_end" type="time" value='+JSON.stringify(r.end||"")+'></div>'+
     '</div>'+
-    '<div class="field"><label>重複</label>'+
+    '<div class="field" id="rec_repeatbox"><label>重複</label>'+
       '<div class="two">'+
         '<select id="rec_repeatUnit">'+
           ['none|不重複','day|每…天','week|每…週','month|每…月','year|每…年'].map(o=>{const v=o.split("|")[0],t=o.split("|")[1];return '<option value="'+v+'"'+(repUnit===v?" selected":"")+'>'+t+'</option>';}).join("")+
@@ -2818,6 +2824,31 @@ function openRecordForm(rec, presets, asCopy){
     isEdit?function(){ deleteRecord(r.id, r.title); }:null);
 
   (function(){
+    // 把「重複」欄位搬到「日期」正下方(在結束日期之前)
+    try{
+      var repBox=$("rec_repeatbox"), endBox=$("rec_endbox");
+      var dateInput=$("rec_dateStart");
+      var dateField=dateInput?dateInput.closest(".field"):null;
+      if(repBox && dateField && dateField.parentNode){
+        dateField.parentNode.insertBefore(repBox, dateField.nextSibling);  // 重複緊接日期後
+        if(endBox) repBox.parentNode.insertBefore(endBox, repBox.nextSibling); // 結束日期接在重複後
+      }
+    }catch(e){}
+    // 依「重複與否」讓結束日期欄位變身：不重複→結束日期(跨天)；有重複→重複到期日
+    function _morphEnd(){
+      var ru=$("rec_repeatUnit"), lab=$("rec_endlabel"), hint=$("rec_endhint");
+      if(!ru||!lab) return;
+      var isRep = ru.value && ru.value!=="none";
+      if(isRep){
+        lab.textContent="重複到期日（可空，不填=一直重複）";
+        if(hint) hint.textContent="設了就重複到這天為止";
+      } else {
+        lab.textContent="結束日期（可空）";
+        if(hint) hint.textContent="跨天活動用（例如旅遊 3 天）";
+      }
+    }
+    var _ru=$("rec_repeatUnit");
+    if(_ru){ _ru.addEventListener("change", _morphEnd); _morphEnd(); }
     // 日期欄位「✕ 清除」(表單建立後立即綁定)
     document.querySelectorAll('#sheet .clr-btn').forEach(function(b){
       var el=$(b.getAttribute('data-clr'));
@@ -2939,8 +2970,13 @@ function saveRecord(id, prev){
   const category=$("rec_category").value;
   const isShop=category==="shopping";
   const dateStart=$("rec_dateStart").value||"";
-  const dateEnd=$("rec_dateEnd").value||"";
+  var _endVal=$("rec_dateEnd").value||"";
+  var _ruVal=$("rec_repeatUnit").value;
+  var _isRep=_ruVal && _ruVal!=="none";
+  const dateEnd = _isRep ? "" : _endVal;              // 不重複 → 結束日期(跨天)
+  const repeatUntil = _isRep ? _endVal : "";          // 有重複 → 重複到期日
   if(dateStart && dateEnd && dateEnd<dateStart){ toast("結束日期不能早於開始日期"); return; }
+  if(dateStart && repeatUntil && repeatUntil<dateStart){ toast("重複到期日不能早於開始日期"); return; }
   const isLog = !isShop && (($("rec_isLog")||{}).checked||false);
   if(isLog && !dateStart){ toast("純紀錄要有日期（會列入行事曆）"); return; }
   const ru = $("rec_repeatUnit").value;
@@ -2953,7 +2989,7 @@ function saveRecord(id, prev){
   const data={
     kind, title, category,
     isLog,
-    dateStart, dateEnd,
+    dateStart, dateEnd, repeatUntil,
     start: $("rec_start").value||"",
     end:   $("rec_end").value||"",
     assignees: Array.from(formAssignees),
