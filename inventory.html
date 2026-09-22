@@ -374,7 +374,7 @@ input:checked+.slider:before{transform:translateX(18px)}
 // ══════════════════════════════════
 // 版本號規則（智在生活 Standard）：APP_VER 對客人顯示，販售後正式改版才往上加；
 // BUILD_ID 每次交付的更新編號，只有管理員看得到（跟行事曆同一個編號）
-var APP_VER="v1.0", BUILD_ID="0922-4";
+var APP_VER="v1.0", BUILD_ID="0922-5";
 function renderInvVerTag(email){
   try{
     var _vt=document.getElementById("appVerTag");
@@ -1826,6 +1826,39 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSheet()
     else if(!settled){
       setTimeout(function(){ if(!settled){ settled=true; try{ unsub(); }catch(e){} showLogin(); } }, 800);
     }
+  });
+})();
+
+// 庫存：返回鍵一層一層往回的順序
+function appHandleBack(){
+  var eo=document.getElementById('editOverlay');
+  if(eo && eo.classList.contains('open')){ closeSheet(); return true; }       // 編輯視窗
+  var aw=document.getElementById('appWrap');
+  if(!aw || aw.style.display==='none') return false;                           // 登入提示頁／鎖定畫面 → 離開
+  var pi=document.getElementById('pageInv');
+  if(pi && !pi.classList.contains('active')){ switchTab('inv'); return true; } // 其他分頁 → 回庫存
+  return false;                                                                // 首頁 → 提示再按一次離開
+}
+
+/* ===== D9 手機返回鍵（智在生活 Standard，三支 App 同一套）=====
+   開 App 時先放一層「守門」紀錄，按手機返回鍵（或 iPhone 左緣滑動）時
+   會先被這層接住，交給 appHandleBack() 一層一層往回：
+   關彈窗 → 回上一頁 → 回首頁。已經在首頁時提示「再按一次離開」，
+   2 秒內再按才真的離開；超過 2 秒就重新放回守門，避免誤觸跳出。 */
+(function(){
+  if(!window.history || !history.pushState) return;
+  var _exitArmed=false, _exitTimer=null;
+  function pushGuard(){ try{ history.pushState({haGuard:1}, ''); }catch(e){} }
+  pushGuard();
+  window.addEventListener('popstate', function(){
+    if(_exitArmed) return;                       // 提示後 2 秒內再按：讓瀏覽器照常離開
+    var handled=false;
+    try{ handled = appHandleBack(); }catch(e){ handled=false; }
+    if(handled){ pushGuard(); return; }
+    _exitArmed=true;
+    try{ showToast('再按一次返回鍵離開', 2000); }catch(e){}
+    clearTimeout(_exitTimer);
+    _exitTimer=setTimeout(function(){ _exitArmed=false; pushGuard(); }, 2000);
   });
 })();
 </script>

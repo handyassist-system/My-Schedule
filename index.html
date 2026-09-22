@@ -693,7 +693,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "0922-4";
+const BUILD_ID = "0922-5";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -3913,6 +3913,45 @@ window.addEventListener('appinstalled', function(){
 if(!_firebaseReady){
   loginMsg.textContent="（目前連線異常，請檢查網路後重新整理）";
 }
+
+// 行事曆：返回鍵一層一層往回的順序
+function appHandleBack(){
+  var cr=document.getElementById('confirmRoot');
+  if(cr && cr.innerHTML.trim()!==''){ cr.innerHTML=''; return true; }          // 確認視窗
+  var mr=$("modalRoot");
+  if(mr && mr.innerHTML.trim()!==''){ closeSheet(); return true; }            // 彈窗（新增記事等）
+  var cp=$("consentPage");
+  if(cp && cp.style.display && cp.style.display!=='none'){ cp.style.display='none'; return true; }   // 條款頁
+  var ap=$("adminPanel");
+  if(ap && !ap.classList.contains('hidden')){ var bb=$("adminBackBtn"); if(bb) bb.click(); else ap.classList.add('hidden'); return true; }
+  var app=$("app");
+  if(!app || app.classList.contains('hidden')) return false;                   // 登入頁 → 離開
+  var tc=$("tabCal");
+  if(tc && tc.classList.contains('hidden')){ switchTab('cal'); return true; }  // 其他分頁 → 回行事曆
+  return false;                                                                // 行事曆首頁 → 提示再按一次離開
+}
+
+/* ===== D9 手機返回鍵（智在生活 Standard，三支 App 同一套）=====
+   開 App 時先放一層「守門」紀錄，按手機返回鍵（或 iPhone 左緣滑動）時
+   會先被這層接住，交給 appHandleBack() 一層一層往回：
+   關彈窗 → 回上一頁 → 回首頁。已經在首頁時提示「再按一次離開」，
+   2 秒內再按才真的離開；超過 2 秒就重新放回守門，避免誤觸跳出。 */
+(function(){
+  if(!window.history || !history.pushState) return;
+  var _exitArmed=false, _exitTimer=null;
+  function pushGuard(){ try{ history.pushState({haGuard:1}, ''); }catch(e){} }
+  pushGuard();
+  window.addEventListener('popstate', function(){
+    if(_exitArmed) return;                       // 提示後 2 秒內再按：讓瀏覽器照常離開
+    var handled=false;
+    try{ handled = appHandleBack(); }catch(e){ handled=false; }
+    if(handled){ pushGuard(); return; }
+    _exitArmed=true;
+    try{ toast("再按一次返回鍵離開"); }catch(e){}
+    clearTimeout(_exitTimer);
+    _exitTimer=setTimeout(function(){ _exitArmed=false; pushGuard(); }, 2000);
+  });
+})();
 </script>
 <script>
 // 防白屏保險：若 3 秒後登入頁和 App 都沒顯示，強制顯示登入頁
