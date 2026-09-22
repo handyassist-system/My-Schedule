@@ -1,5 +1,5 @@
 // 智能行事曆 Service Worker
-const CACHE_NAME = 'cal-cache-v5';
+const CACHE_NAME = 'cal-cache-v6';
 const CORE = [
   './',
   './index.html',
@@ -34,8 +34,12 @@ self.addEventListener('fetch', function(e){
   if (url.indexOf('firebaseio.com') >= 0 || url.indexOf('googleapis.com') >= 0 || url.indexOf('gstatic.com') >= 0) {
     return; // 交給瀏覽器直接連網，不攔截
   }
+  // 頁面本身（index.html、inventory.html）一律跳過瀏覽器快取直接向伺服器拿，
+  // 不然 GitHub 的 10 分鐘快取會讓 App 內切頁（例如行事曆→庫存）拿到舊版
+  var isPage = e.request.mode === 'navigate' || /\.html($|\?)/.test(url) || /\/$/.test(url.split('?')[0].split('#')[0]);
+  var netReq = isPage ? fetch(e.request.url, { cache:'no-store', credentials:'same-origin' }) : fetch(e.request);
   e.respondWith(
-    fetch(e.request).then(function(res){
+    netReq.then(function(res){
       var copy = res.clone();
       caches.open(CACHE_NAME).then(function(c){ c.put(e.request, copy).catch(function(){}); });
       return res;
