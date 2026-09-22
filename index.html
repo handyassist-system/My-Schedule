@@ -65,6 +65,14 @@
   .login-msg{margin-top:14px;min-height:18px;font-size:13px;color:var(--important)}
   .link-btn{margin-top:18px;background:transparent;color:var(--muted);font-size:13px;text-decoration:underline;padding:6px}
   .code-hint{margin-top:8px;font-size:12px;color:var(--faint);letter-spacing:.3px}
+  /* 管理員登入（次要按鈕：有框線、無底色）與家人登入說明 */
+  .btn-secondary{width:100%;margin-top:14px;padding:13px;border-radius:12px;background:transparent;
+    color:var(--primary);font-size:15px;font-weight:600;border:1.5px solid var(--primary)}
+  .admin-input{width:100%;box-sizing:border-box;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;
+    font-size:16px;outline:none;margin-top:8px}
+  .admin-input:focus{border-color:var(--primary)}
+  .family-hint{margin-top:12px;font-size:12px;line-height:1.7;color:var(--muted);text-align:left;
+    background:var(--bg);border-radius:10px;padding:9px 11px}
 
   /* ---------- App shell ---------- */
   #app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
@@ -430,6 +438,14 @@
     <label class="login-consent"><input type="checkbox" id="agreeChk"> <span>我已閱讀並同意 <a id="termsLink" style="color:var(--primary);text-decoration:underline">《服務條款與隱私政策》</a></span></label>
     <button id="loginBtn" class="btn-primary">登入</button>
     <div id="loginMsg" class="login-msg"></div>
+    <div class="family-hint">👨‍👩‍👧 家人共用同一帳號：帳號主人登入後，把收到的登入信轉寄給家人，在家人手機點連結就能登入</div>
+    <button id="adminLoginToggle" type="button" class="btn-secondary">🔧 管理員登入</button>
+    <div id="adminLoginBox" style="display:none;margin-top:14px;text-align:left">
+      <input id="adminEmailInput" class="admin-input" type="email" inputmode="email" autocomplete="username" placeholder="管理員 Email">
+      <input id="adminPwInput" class="admin-input" type="password" autocomplete="current-password" placeholder="密碼">
+      <button id="adminLoginBtn" type="button" class="btn-primary" style="margin-top:10px">管理員登入</button>
+      <div id="adminLoginMsg" class="login-msg" style="text-align:center"></div>
+    </div>
     <button id="installHintBtn" type="button" style="display:none;margin-top:14px;width:100%;background:var(--primary-soft);color:var(--primary);font-weight:600;font-size:14px;padding:12px;border-radius:12px;border:1px solid var(--primary)">📲 安裝到手機桌面</button>
     <div id="installHelp" style="display:none;margin-top:10px;font-size:12px;color:var(--muted);line-height:1.7;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 13px;text-align:left"></div>
   </div>
@@ -621,6 +637,7 @@
 <!-- Firebase compat SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 /* ============================================================
    智能行事曆　個人記事系統（記事 records + 人員 people）
@@ -676,7 +693,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "0922-3";
+const BUILD_ID = "0922-4";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1064,7 +1081,6 @@ async function fbMigrateIfNeeded(){
    ============================================================ */
 const AUTH_KEY    = "cal_auth";
 const AUTH_FB_KEY = "cal_v1_auth";
-const DEFAULT_CODE = "0430";
 const ADMIN_EMAIL = "mp65p@hotmail.com";
 
 const codeInput=$("codeInput"), loginBtn=$("loginBtn"), loginMsg=$("loginMsg");
@@ -1072,11 +1088,10 @@ loginBtn.addEventListener("click", doLogin);
 codeInput.addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
 
 function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
-// ===== 使用者資料隔離：每個 email 一個空間；0430後門用共用根空間 =====
+// ===== 使用者資料隔離：每個 email 一個空間 =====
 function emailKey(e){ return String(e||"").toLowerCase().replace(/[.#$\[\]]/g,"_"); }
 function userBase(){
   var u=state.user||"";
-  if(u===DEFAULT_CODE) return "";                    // 0430 後門 → 共用根空間(維持舊行為)
   if(isEmail(u)) return "users/"+emailKey(u)+"/";     // email → 各自空間
   return "";
 }
@@ -1367,6 +1382,8 @@ function _addEndPreview(b){
   b.innerHTML=b.textContent+'　<span onclick="endPreview()" style="text-decoration:underline;cursor:pointer">結束預覽</span>';
 }
 function endPreview(){                      // 結束預覽，回管理員
+  var _u=auth&&auth.currentUser;              // 只有真的用管理員帳號登入的人才能恢復管理員
+  if(!_u || String(_u.email||"").toLowerCase()!==ADMIN_EMAIL){ var _b=document.getElementById("previewBanner"); if(_b) _b.style.display="none"; return; }
   state.plan="full"; state.isAdmin=true;    // 恢復管理員
   var b=document.getElementById("previewBanner"); if(b) b.style.display="none";
   var app=$("app"); if(app) app.style.paddingTop="";
@@ -1374,6 +1391,61 @@ function endPreview(){                      // 結束預覽，回管理員
   enterApp();
 }
 
+/* ===== D1 登入（智在生活 Standard）=====
+   客戶：輸入 Email → 寄登入連結 → 點信完成登入（Firebase 驗證信箱擁有者）
+   管理員：Email＋密碼（密碼存在 Firebase，程式裡沒有任何後門碼）
+   開 App 時一律以 Firebase 的登入身分為準，手機裡存的 email 只當顯示與
+   庫存管理共用，不再拿來判斷身分。 */
+var auth=null;
+try{ if(_firebaseReady && firebase.auth) auth=firebase.auth(); }catch(e){ auth=null; }
+var EMAIL_FOR_SIGNIN_KEY="calEmailForSignIn";
+var _authReadyPromise=null;
+function waitAuthReady(){
+  if(!auth) return Promise.resolve(null);
+  if(_authReadyPromise) return _authReadyPromise;
+  _authReadyPromise=new Promise(function(resolve){
+    var settled=false;
+    var unsub=auth.onAuthStateChanged(function(u){
+      if(u){ if(!settled){ settled=true; try{ unsub(); }catch(e){} resolve(u); } }
+      else if(!settled){
+        // 剛載入時 Firebase 可能先送一次「暫時沒登入」，等 800 毫秒看有沒有補正確狀態
+        setTimeout(function(){ if(!settled){ settled=true; try{ unsub(); }catch(e){} resolve(null); } }, 800);
+      }
+    });
+  });
+  return _authReadyPromise;
+}
+function _showLoginPage(){ var l=$("login"); if(l){ l.classList.remove("hidden"); l.style.display="flex"; } }
+
+// 通過 Firebase 驗證後的共同流程：管理員直接進；客戶走方案驗證＋裝置管制
+async function proceedLogin(email, manual){
+  email=String(email||"");
+  if(email.toLowerCase()===ADMIN_EMAIL){
+    state.isAdmin=true; state.user=email; state.plan="full";
+    localStorage.setItem(AUTH_KEY,email);
+    enterApp(); return true;
+  }
+  var res;
+  try{ res=await verifyCustomer(email); }catch(e){ res={ok:true,plan:planFromCache(email),offline:true}; }
+  if(!res.ok){
+    try{ localStorage.removeItem(AUTH_KEY); }catch(e){}
+    try{ if(auth) await auth.signOut(); }catch(e){} _authReadyPromise=null;
+    _showLoginPage(); loginMsg.textContent=res.msg||"無法登入，請聯繫客服";
+    return true;
+  }
+  var _dev = res.offline ? {ok:true} : await checkDevice(email, res.plan);   // 裝置管制（沒網路無法檢查就放行）
+  if(!_dev.ok){ _showLoginPage(); showDeviceLimit(email, res.plan, _dev.limit); return true; }
+  state.isAdmin=false; state.user=email; state.plan=res.plan;
+  localStorage.setItem(AUTH_KEY,email);
+  if(!res.offline){
+    try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
+    if(res.newTrial){ showTrialWelcome(res.expiry); } else { checkExpiryReminder(res, !!manual); }
+  }
+  enterApp();
+  return true;
+}
+
+// 客戶登入：寄登入連結（已經是同一個 email 的登入狀態就直接進）
 async function doLogin(){
   loginMsg.textContent="";
   const input=codeInput.value.trim();
@@ -1381,27 +1453,73 @@ async function doLogin(){
   var _agree=document.getElementById("agreeChk");
   if(_agree && !_agree.checked){ loginMsg.textContent="請先勾選同意服務條款與隱私政策"; return; }
   try{ localStorage.setItem("agreedTerms","1"); }catch(e){}
-  // 後門：0430 → 當管理員
-  if(input===DEFAULT_CODE){ state.isAdmin=true; state.user=DEFAULT_CODE; state.plan="full"; localStorage.setItem(AUTH_KEY,DEFAULT_CODE); enterApp(); return; }
   if(!isEmail(input)){ loginMsg.textContent="Email 格式不正確"; return; }
-  // 管理員 email → 選擇畫面（但有待帶入採購時直接進行事曆，不打斷）
-  if(input.toLowerCase()===ADMIN_EMAIL){ state.isAdmin=true; state.user=input; state.plan="full"; localStorage.setItem(AUTH_KEY,input); enterApp(); return; }
-  // 一般客戶 → 驗證 / 自動開試用
-  loginBtn.disabled=true; loginBtn.textContent="驗證中…";
-  var res;
-  try{ res=await verifyCustomer(input); }catch(e){ res={ok:true,plan:planFromCache(input),offline:true}; }
-  loginBtn.disabled=false; loginBtn.textContent="登入";
-  if(!res.ok){ loginMsg.textContent=res.msg||"無法登入，請聯繫客服"; return; }
-  var _dev = res.offline ? {ok:true} : await checkDevice(input, res.plan);   // 裝置管制（沒網路無法檢查就放行）
-  if(!_dev.ok){ showDeviceLimit(input, res.plan, _dev.limit); return; }
-  state.isAdmin=false; state.user=input; state.plan=res.plan;
-  localStorage.setItem(AUTH_KEY,input);
-  if(!res.offline){
-    try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
-    if(res.newTrial){ showTrialWelcome(res.expiry); } else { checkExpiryReminder(res, true); }
+  if(!auth){ loginMsg.textContent="登入服務暫時無法使用，請確認網路後再試"; return; }
+  var u=await waitAuthReady();
+  if(u && u.email && u.email.toLowerCase()===input.toLowerCase()){ await proceedLogin(u.email, true); return; }
+  loginBtn.disabled=true; loginBtn.textContent="寄送中…";
+  try{
+    await auth.sendSignInLinkToEmail(input, { url: location.href.split('#')[0].split('?')[0], handleCodeInApp:true });
+    try{ localStorage.setItem(EMAIL_FOR_SIGNIN_KEY, input); }catch(e){}
+    loginMsg.textContent="📧 登入連結已寄到 "+input+"，請到信箱點擊連結完成登入（找不到請看垃圾郵件夾）";
+  }catch(e){
+    loginMsg.textContent="寄送失敗："+((e&&e.message)?e.message:"請稍後再試");
   }
-  enterApp();
+  loginBtn.disabled=false; loginBtn.textContent="登入";
 }
+
+// 點了信裡的連結回到 App：完成登入。家人用轉寄的信在別台手機開啟時，
+// 手機沒存過 email，會請他輸入帳號主人的 email
+async function completeEmailLinkSignIn(){
+  try{ if(!auth || !auth.isSignInWithEmailLink(window.location.href)) return false; }catch(e){ return false; }
+  var email; try{ email=localStorage.getItem(EMAIL_FOR_SIGNIN_KEY); }catch(e){}
+  if(!email){ email=prompt("請輸入收到這封登入信的 Email\n（家人共用請輸入帳號主人的 Email）："); }
+  if(!email){ _showLoginPage(); return true; }
+  try{
+    var cred=await auth.signInWithEmailLink(email.trim(), window.location.href);
+    try{ localStorage.removeItem(EMAIL_FOR_SIGNIN_KEY); }catch(e){}
+    try{ history.replaceState(null,'',location.pathname); }catch(e){}
+    _authReadyPromise=null;
+    await proceedLogin((cred&&cred.user&&cred.user.email)||email.trim(), true);
+    return true;
+  }catch(e){
+    try{ history.replaceState(null,'',location.pathname); }catch(e2){}
+    _showLoginPage();
+    loginMsg.textContent="😕 登入連結無效或已過期，請重新登入一次";
+    return true;
+  }
+}
+
+// 管理員登入：Email＋密碼
+async function adminLogin(){
+  var em=$("adminEmailInput").value.trim(), pw=$("adminPwInput").value, msg=$("adminLoginMsg"), btn=$("adminLoginBtn");
+  msg.textContent="";
+  if(!em || !pw){ msg.textContent="請輸入 Email 和密碼"; return; }
+  if(!auth){ msg.textContent="登入服務暫時無法使用，請確認網路後再試"; return; }
+  btn.disabled=true; btn.textContent="登入中…";
+  try{
+    var cred=await auth.signInWithEmailAndPassword(em, pw);
+    if(!cred.user || String(cred.user.email||"").toLowerCase()!==ADMIN_EMAIL){
+      try{ await auth.signOut(); }catch(e){}
+      msg.textContent="這個帳號不是管理員";
+    } else {
+      _authReadyPromise=null; $("adminPwInput").value="";
+      await proceedLogin(cred.user.email, true);
+    }
+  }catch(e){
+    var c=(e&&e.code)||"";
+    msg.textContent = (c==="auth/wrong-password"||c==="auth/invalid-credential"||c==="auth/user-not-found"||c==="auth/invalid-login-credentials") ? "Email 或密碼錯誤"
+      : (c==="auth/too-many-requests") ? "嘗試次數太多，請稍後再試"
+      : "登入失敗，請確認網路後再試";
+  }
+  btn.disabled=false; btn.textContent="管理員登入";
+}
+(function(){
+  var t=$("adminLoginToggle"), box=$("adminLoginBox");
+  if(t && box) t.addEventListener("click", function(){ box.style.display = box.style.display==="none" ? "block" : "none"; });
+  var b=$("adminLoginBtn"); if(b) b.addEventListener("click", adminLogin);
+  var pwi=$("adminPwInput"); if(pwi) pwi.addEventListener("keydown", function(e){ if(e.key==="Enter") adminLogin(); });
+})();
 function openAdminPanel(){
   if(!state.isAdmin){ try{ toast("無管理員權限"); }catch(e){} return; }   // 守衛：非管理員一律擋下
   $("adminChoice").classList.add("hidden");
@@ -1531,39 +1649,17 @@ $("goCalBtn").addEventListener("click", ()=>{ $("adminChoice").classList.add("hi
 $("goAdminBtn").addEventListener("click", openAdminPanel);
 $("adminBackBtn").addEventListener("click", ()=>{ $("adminPanel").classList.add("hidden"); enterApp(); });
 
+// 開 App 自動登入：以 Firebase 的登入身分為準（不再相信手機裡存的 email 或網址參數）
 async function autoLogin(){
-  var saved; try{ saved=localStorage.getItem(AUTH_KEY); }catch(e){ saved=null; }
-  try{ var _hm=(location.hash||'').match(/[#&]u=([^&]+)/); if(_hm&&_hm[1]){ var _hu=decodeURIComponent(_hm[1]); if(_hu){ saved=_hu; try{ localStorage.setItem(AUTH_KEY,_hu); }catch(e){} try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} } } }catch(e){}   // 從網址接收登入(跨App直接進,不跳登入頁)
-  if(!saved) return false;                                   // 沒記住 → 顯示登入頁
-  state.user=saved;
-  var isAdmin=(saved===DEFAULT_CODE)||(String(saved).toLowerCase()===ADMIN_EMAIL);
-  state.isAdmin=isAdmin;
-  if(isAdmin){
-    state.plan="full";
-    enterApp();                 // 已登入 → 切回/重載直接進App(順暢切換；管理後台從📱我的App進)
-    return true;
+  if(!auth){
+    // Firebase 沒載入（多半是完全沒網路）→ 用上次登入的帳號進入離線模式，方案走 3 天寬限
+    var saved; try{ saved=localStorage.getItem(AUTH_KEY); }catch(e){ saved=null; }
+    if(!saved || !isEmail(saved)) return false;
+    return proceedLogin(saved, false);
   }
-  // 客戶 → 重新驗證(每次開啟抓到期，伺服器時間)
-  var res;
-  try{ res=await verifyCustomer(saved); }catch(e){ res={ok:true, plan:planFromCache(saved), offline:true}; }
-  if(!res.ok){                                               // 被停用 → 回登入頁
-    try{ localStorage.removeItem(AUTH_KEY); }catch(e){}
-    if(loginMsg) loginMsg.textContent=res.msg||"";
-    return false;
-  }
-  var _dev = res.offline ? {ok:true} : await checkDevice(saved, res.plan);   // 裝置管制（沒網路無法檢查就放行）
-  if(!_dev.ok){
-    var _lg=$("login"); if(_lg){ _lg.classList.remove("hidden"); _lg.style.display="flex"; }
-    showDeviceLimit(saved, res.plan, _dev.limit);
-    return true;
-  }
-  state.plan=res.plan;
-  if(!res.offline){
-    try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
-    checkExpiryReminder(res);
-  }
-  enterApp();
-  return true;
+  var u=await waitAuthReady();
+  if(!u || !u.email) return false;                          // 沒有登入狀態 → 顯示登入頁
+  return proceedLogin(u.email, false);
 }
 
 // ===== 本地通知：今日行程提醒（方案B）=====
@@ -1651,9 +1747,9 @@ function maybeNotifyToday(force){
 
 function enterApp(){
   renderVerTag();   // 登入後才知道是不是管理員，這時再決定要不要顯示更新編號
-  var _newUser = localStorage.getItem(AUTH_KEY) || DEFAULT_CODE;
+  var _newUser = localStorage.getItem(AUTH_KEY) || state.user;
   if(state._boundUser && state._boundUser !== _newUser && !LOCAL_MODE){   // 換帳號 → 斷開舊綁定、清狀態
-    var ob = (state._boundUser===DEFAULT_CODE) ? "" : (isEmail(state._boundUser) ? "users/"+emailKey(state._boundUser)+"/" : "");
+    var ob = isEmail(state._boundUser) ? "users/"+emailKey(state._boundUser)+"/" : "";
     try{ ["records","people","calendars","goals","activity"].forEach(function(p){ db.ref(ob+p).off(); }); }catch(e){}
     state.recordsBound=false; state.peopleBound=false; state.calendarsBound=false; state.goalsBound=false; state.activityBound=false;
     state.records={}; state.people={}; state.goals={}; state.calendars={}; state.activity=[];
@@ -1695,6 +1791,10 @@ function doLogout(){
   state.activity=[]; state._boundUser=null;
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem("cal_admin_on");
+  try{ if(auth) auth.signOut(); }catch(e){}   // 登出 Firebase，下次要重新驗證
+  _authReadyPromise=null;
+  var _ab=$("adminLoginBox"); if(_ab) _ab.style.display="none";
+  var _ap2=$("adminPwInput"); if(_ap2) _ap2.value="";
   $("app").classList.add("hidden");
   var _ac=$("adminChoice"); if(_ac) _ac.classList.add("hidden");
   var _ap=$("adminPanel"); if(_ap) _ap.classList.add("hidden");
@@ -1963,8 +2063,8 @@ function openMyApps(){
     {ico:"🏠", name:"居家服務 CRM", url:"https://handyassist-system.github.io/My-CRM/", dev:true},
     {ico:"🌍", name:"造訪足跡", url:"https://handyassist-system.github.io/My-Visited-Country/", dev:true}
   ];
-  var _isAdminNow = state.isAdmin!==false && !!(state.user && (String(state.user).toLowerCase()===ADMIN_EMAIL || state.user===DEFAULT_CODE));
-  var _authTok=''; try{ var _cu=localStorage.getItem(AUTH_KEY); if(_cu) _authTok='#u='+encodeURIComponent(_cu); }catch(e){}   // 帶登入身分,跨App免再登入
+  var _isAdminNow = state.isAdmin===true && !!(state.user && String(state.user).toLowerCase()===ADMIN_EMAIL);
+  var _authTok='';   // 不再用網址帶登入身分（任何人都能偽造）；庫存同網域會自動沿用 Firebase 登入
   const html='<div class="app-list">'+apps.filter(function(a){ return _isAdminNow || !a.dev; }).map(function(a){
     if(a.dev && !_isAdminNow){              // 開發中 → 非管理員鎖住
       return '<a class="app-row" href="javascript:void(0)" style="opacity:.45" onclick="alert(\'開發中，敬請期待 🙏\')"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">開發中</span></a>';
@@ -3711,7 +3811,11 @@ function openConfirm(title, messageHtml, onConfirm, confirmLabel){
    ============================================================ */
 // ===== 啟動 =====
 function _startAppFlow(){
-  autoLogin().then(function(ok){ if(!ok){ var l=document.getElementById("login"); if(l) l.style.display="flex"; } }).catch(function(){ var l=document.getElementById("login"); if(l) l.style.display="flex"; });
+  function _fallback(){ var l=document.getElementById("login"); if(l) l.style.display="flex"; }
+  completeEmailLinkSignIn().then(function(done){
+    if(done) return;
+    autoLogin().then(function(ok){ if(!ok) _fallback(); }).catch(_fallback);
+  }).catch(function(){ autoLogin().then(function(ok){ if(!ok) _fallback(); }).catch(_fallback); });
 }
 _startAppFlow();
 
@@ -3735,12 +3839,15 @@ if('serviceWorker' in navigator){
         });
       });
     }).catch(function(){});
-    var _reloaded=false;
+    // 只有按了「立即更新」才重載：第一次裝 sw.js 也會觸發 controllerchange，
+    // 無條件重載可能打斷收信登入（登入連結只能用一次）
+    var _reloaded=false, _updateAsked=false;
     navigator.serviceWorker.addEventListener('controllerchange', function(){
-      if(_reloaded) return; _reloaded=true; window.location.reload();   // 新版接管 → 重載一次拿新頁面
+      if(!_updateAsked || _reloaded) return; _reloaded=true; window.location.reload();   // 新版接管 → 重載一次拿新頁面
     });
     var ubtn=document.getElementById('updateBtn');
     if(ubtn) ubtn.addEventListener('click', function(){
+      _updateAsked=true;
       navigator.serviceWorker.getRegistration().then(function(reg){
         if(reg && reg.waiting) reg.waiting.postMessage('SKIP_WAITING');   // 叫等待中的新版接管
       });

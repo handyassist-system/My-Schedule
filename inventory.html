@@ -367,20 +367,26 @@ input:checked+.slider:before{transform:translateX(18px)}
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 // ══════════════════════════════════
 //  常數
 // ══════════════════════════════════
 // 版本號規則（智在生活 Standard）：APP_VER 對客人顯示，販售後正式改版才往上加；
 // BUILD_ID 每次交付的更新編號，只有管理員看得到（跟行事曆同一個編號）
-var APP_VER="v1.0", BUILD_ID="0922-3";
-try{
-  var _vt=document.getElementById("appVerTag");
-  var _ca=null; try{ _ca=localStorage.getItem('cal_auth'); }catch(e){}
-  var _adm=(_ca && String(_ca).toLowerCase()==="mp65p@hotmail.com") || localStorage.getItem('inv_auth')==='1';
-  if(_vt) _vt.textContent = APP_VER + (_adm ? " · "+BUILD_ID : "");
-}catch(e){}
-var AUTH_CODE='0430',AUTH_KEY='inv_auth',DATA_KEY='inv_v7';
+var APP_VER="v1.0", BUILD_ID="0922-4";
+function renderInvVerTag(email){
+  try{
+    var _vt=document.getElementById("appVerTag");
+    var _adm=!!email && String(email).toLowerCase()==="mp65p@hotmail.com";
+    if(_vt) _vt.textContent = APP_VER + (_adm ? " · "+BUILD_ID : "");
+  }catch(e){}
+}
+renderInvVerTag(null);
+// D1：庫存沒有自己的登入，沿用行事曆的 Firebase 登入身分（同網域自動共用）。
+// 不再有 0430、網址參數等後門；_invUserEmail 只由 Firebase 驗證過的帳號設定
+var DATA_KEY='inv_v7';
+var _invUserEmail=null;
 var LOC_KEY='inv_locs',CAT_KEY='inv_cats',FAV_KEY='inv_favs';
 // ── Firebase 雲端同步（共用行事曆專案 my-project-c89db；密碼0430空間）──
 var FB_READY=false, db=null, _lastBlob=null, _cloudStarted=false;
@@ -388,7 +394,7 @@ var FB_PATH="inventory/space_0430/blob";
 var ADMIN_EMAIL_INV="mp65p@hotmail.com";
 function emailKey(e){ return String(e||"").toLowerCase().replace(/[.#$\[\]]/g,"_"); }
 function _resolveFbPath(){
-  var cal=null; try{ cal=localStorage.getItem('cal_auth'); }catch(e){}
+  var cal=_invUserEmail;
   if(cal && cal.indexOf('@')>=0){ return "inventory/"+emailKey(cal)+"/blob"; }  // email 客戶 → 各自空間
   return "inventory/space_0430/blob";                                            // 0430 後門/舊 → 沿用
 }
@@ -406,7 +412,7 @@ function _ensureInvOwner(){                       // 換帳號 → 清本機快�
   }
 }
 function migrateInvIfNeeded(cb){
-  var cal=null; try{ cal=localStorage.getItem('cal_auth'); }catch(e){}
+  var cal=_invUserEmail;
   // 只有管理員 mp65p 才把舊 space_0430 搬到自己的 email 空間
   if(!cal || cal.toLowerCase()!==ADMIN_EMAIL_INV || FB_PATH==="inventory/space_0430/blob" || !db){ cb&&cb(); return; }
   db.ref(FB_PATH).once("value").then(function(snap){
@@ -448,9 +454,9 @@ function _invSavePlanCache(email, plan, expiry){
   try{ localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify({ email:String(email||"").toLowerCase(), plan:plan, expiry:expiry||"", verifiedAt:Date.now() })); }catch(e){}
 }
 function verifyInvAccess(allow, deny){
-  var cal=null; try{ cal=localStorage.getItem('cal_auth'); }catch(e){}
-  if((cal && cal.toLowerCase()===ADMIN_EMAIL_INV) || localStorage.getItem(AUTH_KEY)==='1'){ allow(); return; }  // 管理員/0430
-  if(!cal || cal.indexOf('@')<0){ allow(); return; }   // 0430 舊登入（D1 登入改版時一併處理）
+  var cal=_invUserEmail;
+  if(cal && cal.toLowerCase()===ADMIN_EMAIL_INV){ allow(); return; }   // 管理員
+  if(!cal || cal.indexOf('@')<0){ deny("free"); return; }             // 沒有驗證過的登入 → 擋
   function fromCache(){ var p=_invPlanFromCache(cal); if(_invIsFullPlan(p)){ allow(); } else { deny(p); } }
   if(!db){ fromCache(); return; }   // Firebase 沒載入（多半是沒網路）→ 走寬限
   _invWithTimeout(db.ref("subscribers/"+emailKey(cal)).once("value"), VERIFY_TIMEOUT_MS).then(function(snap){
@@ -774,18 +780,7 @@ function _enterInventory(){
     migrateInvIfNeeded(function(){ loadData();initLocTabs();renderAll();startCloudSync(); });
   }, function(plan){ showInvUpgrade(plan); });   // 其他 → 擋
 }
-function doLogin(){
-  var code=document.getElementById('authInput').value.trim();
-  if(code===AUTH_CODE){
-    localStorage.setItem(AUTH_KEY,'1');
-    _enterInventory();
-  } else {
-    document.getElementById('authErr').textContent='授權碼錯誤';
-    document.getElementById('authInput').value='';
-    document.getElementById('authInput').focus();
-  }
-}
-var _ai=document.getElementById('authInput'); if(_ai) _ai.addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+
 
 // ══════════════════════════════════
 //  Data
@@ -1774,8 +1769,7 @@ function deleteItemById(id){
 //  Tab
 // ══════════════════════════════════
 function goCalendar(){
-  var u=''; try{ u=localStorage.getItem('cal_auth')||''; }catch(e){}
-  location.href='./index.html'+(u?('#u='+encodeURIComponent(u)):'');
+  location.href='./index.html';   // 同網域，行事曆會自動沿用 Firebase 登入
 }
 function switchTab(tab){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
@@ -1810,20 +1804,30 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSheet()
 // ══════════════════════════════════
 //  Init
 // ══════════════════════════════════
-var _sharedLogin=null; try{ _sharedLogin=localStorage.getItem('cal_auth'); }catch(e){}
-try{ var _hm=(location.hash||'').match(/[#&]u=([^&]+)/); if(_hm&&_hm[1]){ var _hu=decodeURIComponent(_hm[1]); if(_hu){ _sharedLogin=_hu; try{ localStorage.setItem('cal_auth',_hu); }catch(e){} } } }catch(e){}  // 從網址接收登入身分(跨App保險)
-try{ if(location.search.indexOf('code=0430')>=0){ localStorage.setItem(AUTH_KEY,'1'); _sharedLogin='0430'; } }catch(e){}  // 隱藏後路(自己用)
-if(localStorage.getItem(AUTH_KEY)==='1' || _sharedLogin){
-  document.getElementById('loginPage').style.display='none';
-  document.getElementById('appWrap').style.display='block';
-  FB_PATH=_resolveFbPath();                                  // 依登入 email 決定各自空間
-  _ensureInvOwner();
-  verifyInvAccess(function(){                                // 完整版/試用/管理員 → 進入
-    migrateInvIfNeeded(function(){ loadData();initLocTabs();renderAll();startCloudSync(); });
-  }, function(plan){ showInvUpgrade(plan); });               // 其他 → 擋
-} else {
-  document.getElementById('loginPage').style.display='flex';  // 沒登入行事曆 → 提示前往行事曆
-}
+// 啟動：等 Firebase 告訴我們目前登入的是誰（行事曆登入後同網域自動共用）
+(function(){
+  var _invAuth=null;
+  try{ if(FB_READY && firebase.auth) _invAuth=firebase.auth(); }catch(e){ _invAuth=null; }
+  function showLogin(){ document.getElementById('loginPage').style.display='flex'; }
+  function start(email){
+    _invUserEmail=email;
+    renderInvVerTag(email);
+    _enterInventory();
+  }
+  if(!_invAuth){
+    // Firebase 沒載入（多半完全沒網路）→ 用行事曆上次登入的帳號看本機資料，權限走 3 天寬限
+    var last=null; try{ last=localStorage.getItem('cal_auth'); }catch(e){}
+    if(last && last.indexOf('@')>=0){ start(last); } else { showLogin(); }
+    return;
+  }
+  var settled=false;
+  var unsub=_invAuth.onAuthStateChanged(function(u){
+    if(u && u.email){ if(!settled){ settled=true; try{ unsub(); }catch(e){} start(u.email); } }
+    else if(!settled){
+      setTimeout(function(){ if(!settled){ settled=true; try{ unsub(); }catch(e){} showLogin(); } }, 800);
+    }
+  });
+})();
 </script>
 </body>
 </html>
