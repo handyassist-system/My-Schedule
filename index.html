@@ -672,7 +672,7 @@ let formAssignees = new Set();   // 編輯記事時暫存已選執行人
 const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
 const CAT_LABEL = { life:"生活", work:"工作", health:"健康", travel:"旅遊", study:"學習", shopping:"購物", finance:"財務", activity:"活動", side:"副業", other:"其他" };
 const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#17BECF", study:"#9467BD", shopping:"#E377C2", finance:"#BCBD22", activity:"#FF7F0E", side:"#8C564B", other:"#7F7F7F" };
-const APP_VER = "v1.0(2026)";
+const APP_VER = "v1.2(2026.09.22)";
 const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
 const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
 // 庫存 16 小類 → 行事曆 6 大類（衣物／旅遊備品庫存沒有，只能手動）
@@ -1152,19 +1152,47 @@ async function kickOtherDevices(email){
   var only={}; only[id]={ name:_devName(), last:now, first:now };
   try{ await db.ref("subscribers/"+key+"/devices").set(only); return true; }catch(e){ return false; }
 }
+/* ===== D2 離線寬限（智在生活 Standard）=====
+   每次成功連上雲端確認方案，就記下「方案＋到期日＋確認時間」（cal_plan_cache，
+   庫存管理同網域也讀這份）。連不上時：被拒絕 → 免費版；沒網路 → 上次確認
+   3 天內且沒過到期日才沿用，否則降為免費版。Firebase 沒網路時讀取會一直等，
+   所以最多等 8 秒就當沒網路。 */
+var PLAN_CACHE_KEY="cal_plan_cache", PLAN_GRACE_MS=3*86400000, VERIFY_TIMEOUT_MS=8000;
+function withTimeout(p, ms){
+  return Promise.race([p, new Promise(function(_, rej){
+    setTimeout(function(){ var e=new Error("timeout"); e.code="TIMEOUT"; rej(e); }, ms);
+  })]);
+}
+function isPermissionDenied(e){
+  var c=String((e&&e.code)||"").toUpperCase(), m=String((e&&e.message)||"");
+  return c.indexOf("PERMISSION")>=0 || /permission/i.test(m);
+}
+function savePlanCache(email, plan, expiry){
+  try{ localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify({ email:String(email||"").toLowerCase(), plan:plan, expiry:expiry||"", verifiedAt:Date.now() })); }catch(e){}
+}
+function planFromCache(email){
+  var c=null; try{ c=JSON.parse(localStorage.getItem(PLAN_CACHE_KEY)||"null"); }catch(e){}
+  if(!c || c.email!==String(email||"").toLowerCase() || !c.verifiedAt) return "free";
+  var now=Date.now();
+  if(now < c.verifiedAt || now - c.verifiedAt > PLAN_GRACE_MS) return "free";
+  if(c.expiry){ var exp=Date.parse(c.expiry+"T23:59:59"); if(exp && now>exp) return "free"; }
+  return c.plan || "free";
+}
 async function verifyCustomer(email){
   var key=emailKey(email);
   var now=await getServerTime();
   var snap;
-  try{ snap=await db.ref("subscribers/"+key).once("value"); }
-  catch(e){ // 連不上雲端 → 用本機快取的方案寬容放行(離線可用)
-    return { ok:true, plan: (localStorage.getItem("cal_plan")||"free") };
+  try{ snap=await withTimeout(db.ref("subscribers/"+key).once("value"), VERIFY_TIMEOUT_MS); }
+  catch(e){
+    if(isPermissionDenied(e)) return { ok:true, plan:"free", offline:true };
+    return { ok:true, plan:planFromCache(email), offline:true };
   }
   var sub=snap.val();
   if(!sub){                                   // 新客戶 → 自動開 21 天試用
     var expTs=now+21*86400000;
     var rec={ email:email, plan:"trial", expiry:_ymdTs(expTs), status:"active", deviceLimit:2, createdAt:now, lastSeen:now, devices:{} };
     try{ await db.ref("subscribers/"+key).set(rec); }catch(e){}
+    savePlanCache(email, "trial", rec.expiry);
     return { ok:true, plan:"trial", expiry:rec.expiry, newTrial:true };
   }
   if(sub.status==="disabled") return { ok:false, msg:"此帳號已停用，請聯繫客服升級" };
@@ -1172,6 +1200,7 @@ async function verifyCustomer(email){
   var expMs = sub.expiry ? Date.parse(sub.expiry+"T23:59:59") : 0;
   var expired = expMs && now>expMs;
   var effPlan = expired ? "free" : (sub.plan||"free");   // 過期→陽春free；否則照方案
+  savePlanCache(email, effPlan, sub.expiry);
   return { ok:true, plan:effPlan, expiry:sub.expiry, expired:!!expired };
 }
 function showTrialWelcome(expiry){
@@ -1348,15 +1377,17 @@ async function doLogin(){
   // 一般客戶 → 驗證 / 自動開試用
   loginBtn.disabled=true; loginBtn.textContent="驗證中…";
   var res;
-  try{ res=await verifyCustomer(input); }catch(e){ res={ok:true,plan:"free"}; }
+  try{ res=await verifyCustomer(input); }catch(e){ res={ok:true,plan:planFromCache(input),offline:true}; }
   loginBtn.disabled=false; loginBtn.textContent="登入";
   if(!res.ok){ loginMsg.textContent=res.msg||"無法登入，請聯繫客服"; return; }
-  var _dev=await checkDevice(input, res.plan);                       // 裝置管制
+  var _dev = res.offline ? {ok:true} : await checkDevice(input, res.plan);   // 裝置管制（沒網路無法檢查就放行）
   if(!_dev.ok){ showDeviceLimit(input, res.plan, _dev.limit); return; }
   state.isAdmin=false; state.user=input; state.plan=res.plan;
   localStorage.setItem(AUTH_KEY,input);
-  try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
-  if(res.newTrial){ showTrialWelcome(res.expiry); } else { checkExpiryReminder(res, true); }
+  if(!res.offline){
+    try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
+    if(res.newTrial){ showTrialWelcome(res.expiry); } else { checkExpiryReminder(res, true); }
+  }
   enterApp();
 }
 function openAdminPanel(){
@@ -1502,21 +1533,23 @@ async function autoLogin(){
   }
   // 客戶 → 重新驗證(每次開啟抓到期，伺服器時間)
   var res;
-  try{ res=await verifyCustomer(saved); }catch(e){ res={ok:true, plan:(localStorage.getItem("cal_plan")||"free")}; }
+  try{ res=await verifyCustomer(saved); }catch(e){ res={ok:true, plan:planFromCache(saved), offline:true}; }
   if(!res.ok){                                               // 被停用 → 回登入頁
     try{ localStorage.removeItem(AUTH_KEY); }catch(e){}
     if(loginMsg) loginMsg.textContent=res.msg||"";
     return false;
   }
-  var _dev=await checkDevice(saved, res.plan);                    // 裝置管制
+  var _dev = res.offline ? {ok:true} : await checkDevice(saved, res.plan);   // 裝置管制（沒網路無法檢查就放行）
   if(!_dev.ok){
     var _lg=$("login"); if(_lg){ _lg.classList.remove("hidden"); _lg.style.display="flex"; }
     showDeviceLimit(saved, res.plan, _dev.limit);
     return true;
   }
   state.plan=res.plan;
-  try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
-  checkExpiryReminder(res);
+  if(!res.offline){
+    try{ localStorage.setItem("cal_plan",res.plan); }catch(e){}
+    checkExpiryReminder(res);
+  }
   enterApp();
   return true;
 }
