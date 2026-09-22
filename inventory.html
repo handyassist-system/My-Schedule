@@ -267,7 +267,7 @@ input:checked+.slider:before{transform:translateX(18px)}
     <div class="header-inner">
       <div class="logo" style="white-space:nowrap;display:flex;align-items:center;gap:8px">
         <span style="width:4px;height:20px;background:var(--accent);border-radius:2px;flex-shrink:0"></span>
-        庫存管理 <span style="font-size:10px;color:#aaa;font-weight:normal;white-space:nowrap">v1.0(2026)</span>
+        庫存管理 <span id="appVerTag" style="font-size:10px;color:#aaa;font-weight:normal;white-space:nowrap">v1.0</span>
       </div>
       <div class="header-right">
         <span class="chip chip-warn" id="hWarn" style="display:none"></span>
@@ -371,6 +371,15 @@ input:checked+.slider:before{transform:translateX(18px)}
 // ══════════════════════════════════
 //  常數
 // ══════════════════════════════════
+// 版本號規則（智在生活 Standard）：APP_VER 對客人顯示，販售後正式改版才往上加；
+// BUILD_ID 每次交付的更新編號，只有管理員看得到（跟行事曆同一個編號）
+var APP_VER="v1.0", BUILD_ID="0922-3";
+try{
+  var _vt=document.getElementById("appVerTag");
+  var _ca=null; try{ _ca=localStorage.getItem('cal_auth'); }catch(e){}
+  var _adm=(_ca && String(_ca).toLowerCase()==="mp65p@hotmail.com") || localStorage.getItem('inv_auth')==='1';
+  if(_vt) _vt.textContent = APP_VER + (_adm ? " · "+BUILD_ID : "");
+}catch(e){}
 var AUTH_CODE='0430',AUTH_KEY='inv_auth',DATA_KEY='inv_v7';
 var LOC_KEY='inv_locs',CAT_KEY='inv_cats',FAV_KEY='inv_favs';
 // ── Firebase 雲端同步（共用行事曆專案 my-project-c89db；密碼0430空間）──
@@ -413,20 +422,51 @@ function _invServerNow(cb){
   try{ db.ref(".info/serverTimeOffset").once("value").then(function(s){ cb(Date.now()+(s.val()||0)); }).catch(function(){ cb(Date.now()); }); }
   catch(e){ cb(Date.now()); }
 }
+/* ===== D2 離線寬限（智在生活 Standard，與行事曆共用同一份確認紀錄）=====
+   連得上 → 照雲端方案，並更新紀錄；被拒絕 → 擋；沒網路（等 8 秒）→ 讀行事曆
+   記下的 cal_plan_cache，3 天內且沒過到期日才放行，否則顯示完整版鎖定畫面。 */
+var PLAN_CACHE_KEY="cal_plan_cache", PLAN_GRACE_MS=3*86400000, VERIFY_TIMEOUT_MS=8000;
+function _invIsFullPlan(p){ return p==="full" || p==="family" || p==="trial"; }
+function _invWithTimeout(p, ms){
+  return Promise.race([p, new Promise(function(_, rej){
+    setTimeout(function(){ var e=new Error("timeout"); e.code="TIMEOUT"; rej(e); }, ms);
+  })]);
+}
+function _invIsPermissionDenied(e){
+  var c=String((e&&e.code)||"").toUpperCase(), m=String((e&&e.message)||"");
+  return c.indexOf("PERMISSION")>=0 || /permission/i.test(m);
+}
+function _invPlanFromCache(email){
+  var c=null; try{ c=JSON.parse(localStorage.getItem(PLAN_CACHE_KEY)||"null"); }catch(e){}
+  if(!c || c.email!==String(email||"").toLowerCase() || !c.verifiedAt) return "free";
+  var now=Date.now();
+  if(now < c.verifiedAt || now - c.verifiedAt > PLAN_GRACE_MS) return "free";
+  if(c.expiry){ var exp=Date.parse(c.expiry+"T23:59:59"); if(exp && now>exp) return "free"; }
+  return c.plan || "free";
+}
+function _invSavePlanCache(email, plan, expiry){
+  try{ localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify({ email:String(email||"").toLowerCase(), plan:plan, expiry:expiry||"", verifiedAt:Date.now() })); }catch(e){}
+}
 function verifyInvAccess(allow, deny){
   var cal=null; try{ cal=localStorage.getItem('cal_auth'); }catch(e){}
   if((cal && cal.toLowerCase()===ADMIN_EMAIL_INV) || localStorage.getItem(AUTH_KEY)==='1'){ allow(); return; }  // 管理員/0430
-  if(!cal || cal.indexOf('@')<0 || !db){ allow(); return; }   // 異常 → 放行避免誤擋
-  db.ref("subscribers/"+emailKey(cal)).once("value").then(function(snap){
+  if(!cal || cal.indexOf('@')<0){ allow(); return; }   // 0430 舊登入（D1 登入改版時一併處理）
+  function fromCache(){ var p=_invPlanFromCache(cal); if(_invIsFullPlan(p)){ allow(); } else { deny(p); } }
+  if(!db){ fromCache(); return; }   // Firebase 沒載入（多半是沒網路）→ 走寬限
+  _invWithTimeout(db.ref("subscribers/"+emailKey(cal)).once("value"), VERIFY_TIMEOUT_MS).then(function(snap){
     var s=snap.val();
     if(!s){ deny("free"); return; }
     _invServerNow(function(now){
       var expMs = s.expiry ? Date.parse(s.expiry+"T23:59:59") : 0;
       var expired = expMs && now>expMs;
       var plan = expired ? "free" : (s.plan||"free");
-      if(plan==="full" || plan==="trial"){ allow(); } else { deny(plan); }
+      _invSavePlanCache(cal, plan, s.expiry);
+      if(_invIsFullPlan(plan)){ allow(); } else { deny(plan); }
     });
-  }).catch(function(){ allow(); });   // 讀取失敗 → 放行(不誤擋付費客戶)
+  }).catch(function(e){
+    if(_invIsPermissionDenied(e)){ deny("free"); return; }
+    fromCache();                     // 沒網路 → 3 天寬限
+  });
 }
 function showInvUpgrade(plan){
   var wrap=document.getElementById('appWrap'); if(wrap) wrap.style.display='none';
