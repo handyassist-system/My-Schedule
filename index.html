@@ -65,7 +65,7 @@
   .btn-primary:disabled{opacity:.55;cursor:default}
   .login-msg{margin-top:14px;min-height:18px;font-size:13px;color:var(--important)}
   .link-btn{margin-top:18px;background:transparent;color:var(--muted);font-size:13px;text-decoration:underline;padding:6px}
-  .code-hint{margin-top:8px;font-size:12px;color:var(--faint);letter-spacing:.3px}
+  .code-hint{margin-top:10px;font-size:12.5px;color:var(--muted);letter-spacing:0;text-align:center}
   /* 管理員登入（次要按鈕：有框線、無底色）與家人登入說明 */
   .btn-secondary{width:100%;margin-top:14px;padding:13px;border-radius:12px;background:transparent;
     color:var(--primary);font-size:15px;font-weight:600;border:1.5px solid var(--primary)}
@@ -404,7 +404,7 @@
   .consent-check{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--ink);margin:14px 2px 12px;line-height:1.5;cursor:pointer}
   .consent-check input{width:20px;height:20px;flex:none;margin-top:1px}
   #consentBtn{width:100%}
-  .login-consent{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--muted);line-height:1.5;margin:4px 2px 12px;text-align:left;cursor:pointer}
+  .login-consent{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--muted);line-height:1.7;margin:12px 2px 0;text-align:left;cursor:pointer}
   .login-consent input{width:18px;height:18px;flex:none;margin-top:1px}
 </style>
 </head>
@@ -721,7 +721,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "0924-5";
+const BUILD_ID = "0924-6";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
