@@ -441,7 +441,8 @@ function _invServerNow(cb){
    連得上 → 照雲端方案，並更新紀錄；被拒絕 → 擋；沒網路（等 8 秒）→ 讀行事曆
    記下的 cal_plan_cache，3 天內且沒過到期日才放行，否則顯示完整版鎖定畫面。 */
 var PLAN_CACHE_KEY="cal_plan_cache", PLAN_GRACE_MS=3*86400000, VERIFY_TIMEOUT_MS=8000;
-function _invIsFullPlan(p){ return p==="full" || p==="family" || p==="trial"; }
+// 庫存已從家庭版下放到個人版：basic 以上都放行
+function _invIsFullPlan(p){ return p==="basic" || p==="full" || p==="family" || p==="trial" || p==="admin"; }
 function _invWithTimeout(p, ms){
   return Promise.race([p, new Promise(function(_, rej){
     setTimeout(function(){ var e=new Error("timeout"); e.code="TIMEOUT"; rej(e); }, ms);
@@ -483,6 +484,42 @@ function verifyInvAccess(allow, deny){
     fromCache();                     // 沒網路 → 3 天寬限
   });
 }
+// ── 唯讀模式：沒有方案的人看得到自己的庫存，但不能改 ──
+var INV_READONLY = false;
+
+function invLocked(){
+  if(!INV_READONLY) return false;
+  showInvToast('🔒 升級個人版即可編輯庫存');
+  return true;
+}
+
+function showInvToast(msg){
+  var t=document.getElementById('invRoToast');
+  if(!t){
+    t=document.createElement('div'); t.id='invRoToast';
+    t.style.cssText='position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:#2c3e50;color:#fff;'
+      +'padding:11px 20px;border-radius:10px;font-size:13.5px;z-index:99999;max-width:80%;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.25)';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg; t.style.display='block';
+  clearTimeout(t._t); t._t=setTimeout(function(){ t.style.display='none'; }, 2200);
+}
+
+function showInvReadonlyBar(){
+  var b=document.getElementById('invRoBar');
+  if(!b){
+    b=document.createElement('div'); b.id='invRoBar';
+    b.style.cssText='position:sticky;top:0;z-index:50;background:#FDF3E3;border-bottom:1px solid #F0DFC0;'
+      +'padding:10px 14px;font-size:13px;color:#8A6112;display:flex;align-items:center;gap:10px;line-height:1.5';
+    b.innerHTML='<span style="flex:1">🔒 升級個人版可繼續管理庫存</span>'
+      +'<a href="https://line.me/R/ti/p/@373pfdee" target="_blank" rel="noopener" '
+      +'style="flex:0 0 auto;background:#06C755;color:#fff;padding:6px 12px;border-radius:8px;text-decoration:none;font-weight:700;font-size:12.5px">升級</a>';
+    var wrap=document.getElementById('appWrap');
+    if(wrap && wrap.firstChild) wrap.insertBefore(b, wrap.firstChild); else if(wrap) wrap.appendChild(b);
+  }
+  b.style.display='flex';
+}
+
 function showInvUpgrade(plan){
   var wrap=document.getElementById('appWrap'); if(wrap) wrap.style.display='none';
   var lp=document.getElementById('loginPage'); if(lp) lp.style.display='none';
@@ -785,9 +822,14 @@ function _enterInventory(){
   document.getElementById('appWrap').style.display='block';
   FB_PATH=_resolveFbPath();
   _ensureInvOwner();
-  verifyInvAccess(function(){        // 完整版/試用/管理員 → 進入
+  verifyInvAccess(function(){        // 個人版以上／試用／管理員 → 完整使用
+    INV_READONLY=false;
     migrateInvIfNeeded(function(){ loadData();initLocTabs();renderAll();startCloudSync(); });
-  }, function(plan){ showInvUpgrade(plan); });   // 其他 → 擋
+  }, function(plan){                 // 免費版 → 進得去，但只能看
+    INV_READONLY=true;
+    showInvReadonlyBar();
+    migrateInvIfNeeded(function(){ loadData();initLocTabs();renderAll();startCloudSync(); });
+  });
 }
 
 
@@ -1046,7 +1088,11 @@ function renderGrid(){
     return it.cat===curCat;
   });
   if(filtered.length===0){
-    grid.innerHTML='<div class="empty-hint" style="grid-column:1/-1"><span class="eico">📦</span>此區域尚無商品<span class="esub">點右下「＋」開始建立庫存</span></div>';
+    grid.innerHTML='<div class="empty-hint" style="grid-column:1/-1"><span class="eico">📦</span>此區域尚無商品<span class="esub">'
+      +(INV_READONLY
+        ? '記錄家裡有什麼、剩多少、何時到期，採購完成自動入庫。'
+        : '點右下「＋」開始建立庫存')
+      +'</span></div>';
     return;
   }
   grid.innerHTML=filtered.map(itemCardHTML).join('');
@@ -1216,20 +1262,24 @@ function toggleSG(head){
 }
 
 function delZone(li,zi){
+  if(invLocked()) return;
   if(items.some(function(it){return it.location===locations[li].name&&it.zone===locations[li].zones[zi];})){showToast('⚠️ 有商品在此子位置');return;}
   locations[li].zones.splice(zi,1);saveData();renderLocSettings();renderZoneTabs();
 }
 function addZone(li){
+  if(invLocked()) return;
   var inp=document.getElementById('nz_'+li);
   var val=(inp?inp.value:'').trim();if(!val)return;
   if(locations[li].zones.indexOf(val)>=0){showToast('子位置已存在');return;}
   locations[li].zones.push(val);saveData();renderLocSettings();renderZoneTabs();
 }
 function delLocation(li){
+  if(invLocked()) return;
   if(items.some(function(it){return it.location===locations[li].name;})){showToast('⚠️ 有商品在此區域');return;}
   locations.splice(li,1);saveData();renderLocSettings();initLocTabs();
 }
 function addLocationGroup(){
+  if(invLocked()) return;
   var name=prompt('新增區域名稱：');if(!name||!name.trim())return;name=name.trim();
   if(locations.find(function(l){return l.name===name;})){showToast('區域已存在');return;}
   locations.push({id:'u_'+uid(),name:name,zones:[]});saveData();renderLocSettings();
@@ -1245,12 +1295,14 @@ function _renderCatBody(ci){
     +'<div class="add-inline"><input placeholder="新增商品" id="nci_'+ci+'" onkeydown="if(event.key===\'Enter\')addCatItem('+ci+')"><button class="btn-add-sm" onclick="addCatItem('+ci+')">新增</button></div>';
 }
 function delCatItem(ci,ii){
+  if(invLocked()) return;
   if(items.some(function(it){return it.name===categories[ci].items[ii]&&it.cat===categories[ci].id;})){showToast('⚠️ 庫存中有此商品');return;}
   categories[ci].items.splice(ii,1);saveData();
   _renderCatBody(ci);   // 只更新這個分類，畫面不跳、不收合
   renderAll();
 }
 function addCatItem(ci){
+  if(invLocked()) return;
   var inp=document.getElementById('nci_'+ci);
   var val=(inp?inp.value:'').trim();if(!val)return;
   if(categories[ci].items.indexOf(val)>=0){showToast('商品已存在');return;}
@@ -1297,10 +1349,12 @@ function moveCategory(ci, delta){
   saveData(); renderCatSettings();
 }
 function delCategory(ci){
+  if(invLocked()) return;
   if(items.some(function(it){return it.cat===categories[ci].id;})){showToast('⚠️ 有商品使用此分類');return;}
   categories.splice(ci,1);saveData();renderCatSettings();
 }
 function addCategoryGroup(){
+  if(invLocked()) return;
   var name=prompt('新增分類名稱：');if(!name||!name.trim())return;name=name.trim();
   var icon=prompt('分類圖示（emoji）：','📦');if(!icon)icon='📦';
   categories.push({id:'u_'+uid(),icon:icon.trim(),name:name,items:[]});
@@ -1360,6 +1414,7 @@ function toggleNeed(id){
   saveData(); renderAll();
 }
 function updateQty(id,delta){
+  if(invLocked()) return;
   var it=items.find(function(m){return m.id===id;});if(!it)return;
   it.qty=Math.max(0,it.qty+delta);
   saveData();renderAll();
@@ -1372,6 +1427,7 @@ function bumpBuy(id,d){
   el.value=Math.max(1,(parseInt(el.value,10)||1)+d);
 }
 function addToCalendar(id){
+  if(invLocked()) return;
   var it=items.find(function(m){return m.id===id;});if(!it||it.is3c)return;
   var qty = (it.trackQty===false) ? 1 : Math.max(1,(it.threshold||0)-(it.qty||0));   // 狀態品項固定1；數量品項補到安全量(防NaN)
   var el=document.getElementById('buyqty_'+id);    // 若待補貨頁有調整購買數量，以它為準
@@ -1572,6 +1628,7 @@ function elecFields(it){
 }
 
 function openAdd(){
+  if(invLocked()) return;
   editId=null;
   document.getElementById('sheetTitle').textContent='新增商品';
   document.getElementById('btnDelete').style.display='none';
@@ -1653,6 +1710,7 @@ function closeSheet(){document.getElementById('editOverlay').classList.remove('o
 
 function _toggleQtyFields(){ var c=document.getElementById('fTrackQty'),b=document.getElementById('qtyFields'); if(b&&c) b.style.display=c.checked?'':'none'; }
 function saveItem(){
+  if(invLocked()) return;
   var loc=(document.getElementById('fLoc')||{}).value||'';
   var zone=(document.getElementById('fZone')||{}).value||'';
   var fav=document.getElementById('fFav')&&document.getElementById('fFav').checked;
@@ -1728,6 +1786,7 @@ function saveItem(){
 }
 
 function deleteItem(){
+  if(invLocked()) return;
   if(!editId)return;
   var it=items.find(function(m){return m.id===editId;});
   var name=it?it.name:'';
@@ -1766,6 +1825,7 @@ function pressMove(ev){
 function pressEnd(ev){ if(_lpTimer){clearTimeout(_lpTimer);_lpTimer=null;} if(_lpEl){_lpEl.classList.remove('lp-active');} }
 function cardClick(ev,id){ var f=_lpFired; _lpFired=false; if(f)return; openEdit(id); }
 function deleteItemById(id){
+  if(invLocked()) return;
   var it=items.find(function(m){return m.id===id;}); if(!it)return;
   var nm=it.name;
   items=items.filter(function(m){return m.id!==id;});

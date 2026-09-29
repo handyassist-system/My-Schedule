@@ -251,6 +251,29 @@
   .card.urgent-card{box-shadow:0 0 0 1.5px rgba(239,68,68,.45),var(--shadow)}
   .countdown{display:inline-block;margin-top:5px;font-size:12px;font-weight:600;
     color:#B45309;background:#FEF3E2;padding:2px 9px;border-radius:999px}
+  /* ── 記事表單：待辦／純紀錄、何時區塊、更多選項 ── */
+  .kind-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .field .kind-pick label.kind-opt{display:grid;grid-template-columns:auto 1fr;align-items:center;
+    gap:8px;padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:var(--bg);
+    cursor:pointer;font-size:14px;margin:0;color:var(--ink);font-weight:400}
+  .field .kind-pick label.kind-opt input[type=radio]{width:17px;height:17px;padding:0;margin:0;border-radius:50%}
+  .kind-opt span{display:block;line-height:1.3}
+  .kind-opt b{display:block;font-size:14px;font-weight:700;color:var(--ink)}
+  .kind-opt small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px;font-weight:400}
+  .kind-opt:has(input:checked){border-color:var(--accent,#5B8DEF);background:rgba(91,141,239,.07)}
+
+  .whenbox{border:1px solid var(--line);border-radius:14px;padding:12px 12px 10px;margin-bottom:13px;background:var(--bg)}
+  .whenbox-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:9px}
+  .whenbox .field{margin-bottom:8px}
+  .whenbox .wk{font-size:11.5px;font-weight:700;color:var(--muted);margin-top:3px;min-height:15px}
+  .when-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .when-btns .btn-ghost{padding:5px 11px;font-size:12px}
+
+  .more-toggle{width:100%;background:none;border:none;color:var(--accent,#5B8DEF);font-family:inherit;
+    font-size:14px;font-weight:600;padding:10px 0;text-align:left;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .more-dot{width:7px;height:7px;border-radius:50%;background:#E8A33D;display:inline-block}
+  .morebox{border-top:1px solid var(--line);padding-top:12px;margin-bottom:6px}
+
   .toggle-row{display:flex;align-items:center;justify-content:space-between;
     padding:11px 2px;border-top:1px solid var(--line);font-size:14px;color:var(--ink)}
   .toggle-row:first-of-type{border-top:none}
@@ -420,12 +443,12 @@
   <div class="consent-card">
     <img src="data:image/jpeg;base64,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" alt="智在生活" draggable="false" oncontextmenu="return false" style="width:100%;max-width:300px;display:block;margin:0 auto 10px;border-radius:14px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;pointer-events:none">
     <h1 style="font-size:18px;margin:0 0 4px;text-align:center">服務條款與隱私權政策</h1>
-    <p style="font-size:12px;color:var(--muted);margin:0 0 12px;text-align:center">智在生活 · 請閱讀後同意再開始使用</p>
+    <p id="consentSub" style="font-size:12px;color:var(--muted);margin:0 0 12px;text-align:center">智在生活 · 請閱讀後同意再開始使用</p>
     <div class="consent-body" id="consentBody">
       <h3>服務說明</h3>
       <p>本服務（智能行事曆、庫存管理）為「智在生活」提供之個人／家庭事務管理工具，以電子郵件登入使用。</p>
       <h3>訂閱與付款</h3>
-      <p>提供免費試用及付費訂閱，方案與價格以 App 內公告為準。付款採 LINE Pay 或轉帳等人工方式，確認後開通。數位服務一經開通原則上不退款，特殊情形請透過官方 LINE 協商。</p>
+      <p>提供免費試用及付費訂閱，方案與價格以 App 內公告為準。付款方式以 App 內公告為準，完成後由客服開通。數位服務一經開通原則上不退款，特殊情形請透過官方 LINE 協商。</p>
       <h3>使用者義務</h3>
       <p>不得利用本服務從事違法、侵權行為，不得破解、干擾或攻擊本服務，不得上傳違法或侵害他人權益之內容。帳號請妥善保管，勿提供他人使用。</p>
       <h3>服務變更與資料備份</h3>
@@ -721,7 +744,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "0924-6";
+const BUILD_ID = "0924-7";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1299,7 +1322,7 @@ function planRank(){
   return 0;
 }
 function canAdvanced(){ return planRank()>=1; }   // 總覽 / 目標 / 進階記事
-function canFull(){ return planRank()>=2; }        // 採購 / 庫存連動 / 任務指派
+function canFull(){ return planRank()>=2; }        // 家庭版專屬：任務指派 / 多人目標 / 3 台裝置
 // 升級申請：流程說明頁（點「立即升級」後跳出）
 function _stepCard(ico,title,desc){
   return '<div style="background:#F7F6F3;border-radius:14px;padding:15px 16px;display:flex;align-items:center;gap:14px">'
@@ -1368,12 +1391,14 @@ function openUpgradeSheet(feat){
   var c1='<div style="border:2px solid #E7E3DC;border-radius:18px;padding:18px;margin-top:14px;background:#fff">'
     +'<div style="font-size:24px;font-weight:900;color:#2E2E33">個人版</div>'
     +priceBox("1,999","999","83","1,000")
-    +incl("涵蓋基本功能")
+    +incl("涵蓋基本功能（記事、百寶袋、備份匯出匯入免費版就有）")
     +ft("➕ 📋","一頁總覽","行程、待辦、記事集中看，不再忘東忘西")
     +ft("➕ 🎯","目標追蹤（3 種方式）","每週運動、存旅遊基金、考證照，都不半途而廢")
     +ft("➕ 🗂️","多本行事曆","工作家庭分開管，不再混在一起")
     +ft("➕ ⏳","急迫標記、倒數提醒","重要的事排最前，還剩幾天一眼看到")
-    +ft("➕ 💾","資料備份","換手機也不怕資料不見")
+    +ft("➕ 🛒","採購清單","想到要買就記下，買完打勾")
+    +ft("➕ 📦","庫存管理","家裡剩多少、何時到期，一目了然")
+    +ft("➕ 🔄","採購 × 庫存自動連動","買完打勾自動入庫，不再重複買")
     +planTag("basic")+'</div>';
   var c2='<div style="border:2.5px solid #E8735C;border-radius:18px;padding:18px;margin-top:20px;background:#fff;position:relative">'
     +'<div style="position:absolute;top:-11px;left:18px;background:#E8735C;color:#fff;font-size:12px;font-weight:900;padding:3px 12px;border-radius:20px">⭐ 最推薦</div>'
@@ -1381,8 +1406,6 @@ function openUpgradeSheet(feat){
         +priceBox("3,999","1,999","166","2,000")
     +incl("涵蓋個人版全部功能")
     +ft("➕ 👪","3 台裝置共用","一人記錄，大家同步，不用再一直轉述")
-    +ft("➕ 🛒","採購 × 庫存自動連動","買完打勾自動入庫，不再重複買、快過期會提醒")
-    +ft("➕ 📅","採購一鍵排進行事曆","想到要買，順手就安排好")
     +ft("➕ 🏆","多人共同目標","全家一起存旅遊基金、一起運動，進度互相看得到")
     +ft("➕ ✅","家事分工指派","誰負責什麼一目了然")
     +planTag("full")+'</div>';
@@ -1732,14 +1755,10 @@ function _showNotif(title, body){
   }catch(e){}
 }
 // 桌面 App 圖示紅點：今天未完成筆數
+// 桌面圖示紅點已移除：App 關著時數字不會更新，隔天看到的是舊數字，反而誤導。
+// 保留一個清除用的空函式，開 App 時把殘留的紅點清掉。
 function updateAppBadge(){
-  try{
-    var n=_todayTimedEvents().length;
-    if(navigator.setAppBadge){
-      if(n>0) navigator.setAppBadge(n).catch(function(){});
-      else navigator.clearAppBadge().catch(function(){});
-    }
-  }catch(e){}
+  try{ if(navigator.clearAppBadge) navigator.clearAppBadge().catch(function(){}); }catch(e){}
 }
 function _slotNow(){                       // 時段：早(0-12)/午(12-18)/晚(18-24)
   var h=new Date().getHours();
@@ -1795,13 +1814,13 @@ function enterApp(){
   try{ setTimeout(maybeNotifyToday, 2500); }catch(e){}   // 開App推今日行程(資料載入後,一天一次)
 }
 function applyPlanLocks(){
-  var adv=canAdvanced(), full=canFull();
+  var adv=canAdvanced();
   var ov=$("navOverview");                              // 總覽：個人版以上
   if(ov){ ov.innerHTML='<span class="ic">📋</span>總覽'+(adv?'':' 🔒'); ov.style.opacity=adv?"":"0.5"; }
   var sh=$("navShop");                                  // 待購可看→不放🔒
   if(sh){ sh.innerHTML='<span class="ic">🛒</span>待購'; sh.style.opacity=""; }
-  var ai=$("addItemBtn");                               // 新增待購：家庭版
-  if(ai){ ai.textContent=full?"＋ 新增待購":"🔒 家庭版解鎖新增待購"; }
+  var ai=$("addItemBtn");                               // 新增待購：個人版以上
+  if(ai){ ai.textContent=adv?"＋ 新增待購":"🔒 升級個人版解鎖新增待購"; }
   var ag=$("addGoalBtn");                               // 新增目標：個人版以上
   if(ag){ ag.textContent=adv?"＋ 新增目標":"🔒 升級解鎖新增目標"; }
   var ub=$("upgradeBtn"); if(ub) ub.style.display=(state.plan!=="full"&&state.plan!=="admin")?"":"none";  // 家庭版/admin外都顯示升級(含試用)
@@ -1894,7 +1913,7 @@ function importPendingPurchase(){
   if(typeof switchTab==="function") switchTab("shop");
 }
 function pushInvDone(itemId, qty, name, opts){
-  if(!canFull()) return;               // 家庭版才與庫存連動
+  if(!canAdvanced()) return;           // 個人版以上才與庫存連動
   opts=opts||{};
   if(!itemId && !opts.create) return;
   try{
@@ -2101,7 +2120,7 @@ function openMyApps(){
     if(_isAdminNow){                        // 管理員：全部可切換
       return '<a class="app-row" href="'+a.url+_authTok+'" rel="noopener"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">↗</span></a>';
     }
-    return !canFull()                           // 庫存：家庭版才可切換
+    return !canAdvanced()                       // 庫存：個人版以上才可切換
       ? '<a class="app-row" href="javascript:void(0)" onclick="showUpgrade(\''+esc(a.name)+'\')"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">🔒</span></a>'
       : '<a class="app-row" href="'+a.url+_authTok+'" rel="noopener"><span class="app-ico">'+a.ico+'</span><span class="app-name">'+esc(a.name)+'</span><span class="app-go">↗</span></a>';
   }).join("")+'</div>';
@@ -2184,11 +2203,16 @@ function openCalManager(){
   var _btn='width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit';
   var supInner='<button id="supportBtn" type="button" style="'+_btn+'">💬 聯繫客服</button>'
     +'<button id="termsBtnSet" type="button" style="'+_btn+';margin-top:8px">📄 服務條款與隱私政策</button>';
+  // 應用程式：安裝到桌面（已是桌面 App 開啟就不顯示）
+  var _standalone=false;
+  try{ _standalone=(window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true; }catch(e){}
+  var appInner = _standalone ? '' : '<button id="installFromSettings" type="button" style="'+_btn+'">📲 安裝到手機桌面</button>';
 
   let html=_box("📅 我的行事曆", calInner)
     + _box("🔔 提醒", notiInner)
     + _box("💾 資料備份", backInner)
     + _box("📤 分享", shareInner)
+    + (appInner ? _box("📱 應用程式", appInner) : "")
     + _box("💬 支援", supInner);
 
   if(state.isAdmin){
@@ -2218,7 +2242,14 @@ function openCalManager(){
   }
   if($("shareAppBtn")) $("shareAppBtn").addEventListener("click", shareApp);
   if($("supportBtn")) $("supportBtn").addEventListener("click", function(){ window.open(LINE_URL,"_blank","noopener"); });
-  if($("termsBtnSet")) $("termsBtnSet").addEventListener("click", function(){ closeSettingsPage(); var cp=$("consentPage"); if(cp) cp.style.display="flex"; });
+  if($("installFromSettings")) $("installFromSettings").addEventListener("click", function(){
+    if(_deferredPrompt){ _deferredPrompt.prompt(); _deferredPrompt.userChoice.then(function(){ _deferredPrompt=null; }); return; }
+    var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+    alert("安裝到手機桌面\n\n"+(isIOS
+      ? "1. 請改用 Safari 開啟本頁\n2. 點下方「分享」⬆️\n3. 選「加入主畫面」"
+      : "1. 請改用 Chrome 開啟本頁\n2. 點瀏覽器選單（⋮）\n3. 選「安裝應用程式／加到主畫面」"));
+  });
+  if($("termsBtnSet")) $("termsBtnSet").addEventListener("click", function(){ closeSettingsPage(); var cs=$("consentSub"); if(cs) cs.textContent="智在生活"; var cp=$("consentPage"); if(cp) cp.style.display="flex"; });
   if($("goAdminFromCal")) $("goAdminFromCal").addEventListener("click", function(){ closeSettingsPage(); openAdminPanel(); });
   if($("cleanDupBtn")) $("cleanDupBtn").addEventListener("click", cleanDuplicateRecords);
   if($("logoutFromSettings")) $("logoutFromSettings").addEventListener("click", function(){ closeSettingsPage(); doLogout(); });
@@ -2250,7 +2281,7 @@ function shareApp(){
   }
 }
 function exportBackup(){
-  if(!canAdvanced()){ showUpgrade("資料備份"); return; }   // 個人版以上才可備份
+  // 備份匯出開放所有方案：那是使用者自己的資料，降級也要能帶走
   const data={ type:"calendar-backup", version:2, exportedAt:new Date().toISOString(),
     calendars:state.calendars||{}, records:state.records||{}, goals:state.goals||{}, people:state.people||{} };
   try{
@@ -2814,7 +2845,7 @@ function toggleDoneWhole(id){
 /* ============================================================
    7. 待購清單（購物類未完成，依子分類分組）
    ============================================================ */
-$("addItemBtn").addEventListener("click", ()=>{ if(!canFull()){ showUpgrade("採購清單"); return; } openRecordForm(null, { category:"shopping", dateStart:"" }); });
+$("addItemBtn").addEventListener("click", ()=>{ if(!canAdvanced()){ showUpgrade("採購清單"); return; } openRecordForm(null, { category:"shopping", dateStart:"" }); });
 
 function renderShop(){
   const wrap=$("shopList");
@@ -2890,7 +2921,7 @@ function toggleShopDone(id){
 /* 依記事類型開對應表單：採購→完整(購物)、無日期→百寶袋極簡、有日期→行程完整 */
 function openEditor(r){
   if(!r) return;
-  if(r.category==="shopping"){ if(!canFull()){ showUpgrade("採購清單"); return; } return openRecordForm(r); }
+  if(r.category==="shopping"){ if(!canAdvanced()){ showUpgrade("採購清單"); return; } return openRecordForm(r); }
   if(!r.dateStart) return openPocketForm(r);     // 無排定日 → 百寶袋極簡
   return openRecordForm(r);
 }
@@ -2959,7 +2990,32 @@ function openRecordForm(rec, presets, asCopy){
   formAssignees=new Set(r.assignees||[]);
   const rep=r.repeat||{}; const repUnit=rep.unit||"none"; const repEvery=rep.every||1;
 
+  const showKind = !isShop;
+  const isLog0 = !!r.isLog;
+  // 「執行人」擺哪：家庭版且已建過人員 → 主畫面；否則收進更多選項
+  const hasPeople = Object.keys(state.people || {}).length > 0;
+  const assignOnMain = canFull() && hasPeople && !isShop;
+
+  const assignHtml = (!canFull()
+    ? '<div class="field" style="opacity:.55;cursor:pointer" onclick="showUpgrade(\'任務指派家人（家庭版）\')"><div class="label-row"><label>執行人（可複選） 🔒</label></div><div style="font-size:12px;color:#888;padding:4px 0">升級家庭版，可指派家人任務</div></div>'
+    : '<div class="field"><div class="label-row"><label id="rec_assignlabel">執行人（可複選）</label><span class="manage-link" id="rec_manage">管理人員</span></div>'
+      + '<div class="chips" id="rec_assignees"></div>'
+      + '<div class="chip-add"><input id="rec_newperson" autocomplete="off" placeholder="新增人員名稱"><button id="rec_addperson" type="button">＋ 新增</button></div>'
+      + '</div>');
+
   const html=
+    // ── 這則記事是（待辦／純紀錄）：所有方案都能用 ──
+    (showKind
+      ? '<div class="field" id="rec_kindbox"><label>這則記事是</label>'
+        + '<div class="kind-pick">'
+        +   '<label class="kind-opt"><input type="radio" name="rec_kind" value="task"'+(isLog0?'':' checked')+'>'
+        +     '<span><b>待辦</b><small>完成時要打勾</small></span></label>'
+        +   '<label class="kind-opt"><input type="radio" name="rec_kind" value="log"'+(isLog0?' checked':'')+'>'
+        +     '<span><b>純紀錄</b><small>已發生的事，不用打勾</small></span></label>'
+        + '</div>'
+        + '<input type="checkbox" id="rec_isLog" style="display:none"'+(isLog0?' checked':'')+'>'
+        + '</div>'
+      : '')+
     '<div class="field" id="rec_titlebox"'+(isShop?' style="display:none"':'')+'><label>標題 <span style="color:var(--faint);font-weight:400">🕐 可選用過的</span></label>'+
       '<input id="rec_title" list="rec_title_hist" autocomplete="off" value="'+esc(r.title||"")+'" placeholder="標題">'+
       '<datalist id="rec_title_hist">'+titleHistoryOptions()+'</datalist></div>'+
@@ -2980,106 +3036,187 @@ function openRecordForm(rec, presets, asCopy){
         '<div class="field"><label>價格（選填）</label><input id="rec_price" type="number" inputmode="numeric" value="'+(isShop&&r.amount!=null?r.amount:"")+'" placeholder="例如 3990"></div>'+
       '</div>'+
     '</div>'+
-    '<div class="field"><label>日期（可空，填了就上月曆）<span class="clr-btn" data-clr="rec_dateStart" style="float:right;font-size:11.5px;color:#A8A8B0;cursor:pointer;font-weight:600">✕ 清除</span></label><input id="rec_dateStart" type="date" value="'+(ds||"")+'">'+
-      '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">'+
-        '<button type="button" class="btn-ghost" id="rec_dm1" style="padding:5px 11px;font-size:12px">−1天</button>'+
-        '<button type="button" class="btn-ghost" id="rec_dp1" style="padding:5px 11px;font-size:12px">＋1天</button>'+
-        '<button type="button" class="btn-ghost" id="rec_dp7" style="padding:5px 11px;font-size:12px">＋7天</button>'+
-        ((!!rec&&!asCopy)?'<button type="button" class="btn-ghost" id="rec_dup" style="padding:5px 11px;font-size:12px">📋 複製</button>':'')+
-        '<span id="rec_datewk" style="align-self:center;font-size:13px;font-weight:700;margin-left:4px"></span>'+
-      '</div></div>'+
-    '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><div class="label-row"><label id="rec_endlabel">結束日期（可空）</label><span class="clr-btn" data-clr="rec_dateEnd" style="float:right;font-size:11.5px;color:#A8A8B0;cursor:pointer;font-weight:600">✕ 清除</span></div><input id="rec_dateEnd" type="date" value='+JSON.stringify(r.dateEnd||r.repeatUntil||"")+'><div id="rec_endhint" style="font-size:11.5px;color:var(--muted);margin-top:4px"></div></div>'+
-    '<div class="two" id="rec_timebox"'+(isShop?' style="display:none"':'')+'>'+
-      '<div class="field"><div class="label-row"><label>開始時間</label></div><input id="rec_start" type="time" value='+JSON.stringify(r.start||"")+'></div>'+
-      '<div class="field"><div class="label-row"><label>結束時間</label></div><input id="rec_end" type="time" value='+JSON.stringify(r.end||"")+'></div>'+
-    '</div>'+
-    '<div class="field" id="rec_repeatbox"><label>重複</label>'+
+
+    // ── 何時：開始 / 結束 / 時間 收在同一塊 ──
+    '<div class="whenbox" id="rec_whenbox">'+
+      '<div class="whenbox-title">何時</div>'+
       '<div class="two">'+
-        '<select id="rec_repeatUnit">'+
-          ['none|不重複','day|每…天','week|每…週','month|每…月','year|每…年'].map(o=>{const v=o.split("|")[0],t=o.split("|")[1];return '<option value="'+v+'"'+(repUnit===v?" selected":"")+'>'+t+'</option>';}).join("")+
-        '</select>'+
-        '<input id="rec_repeatEvery" type="number" min="1" value="'+repEvery+'" placeholder="間隔數">'+
+        '<div class="field"><label>開始</label><input id="rec_dateStart" type="date" value="'+(ds||"")+'"><div class="wk" id="rec_datewk"></div></div>'+
+        '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><label id="rec_endlabel">結束</label><input id="rec_dateEnd" type="date" value='+JSON.stringify(r.dateEnd||r.repeatUntil||"")+'><div class="wk" id="rec_datewk2"></div></div>'+
       '</div>'+
-      '<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">「每…週／月／年」搭配右邊數字：例如每 2 年就填 2、每 3 個月就填 3。填 1 就是每週／每月／每年。</div>'+
+      '<div id="rec_endhint" style="font-size:11.5px;color:var(--muted);margin:-2px 0 8px"></div>'+
+      '<div class="when-btns">'+
+        '<button type="button" class="btn-ghost" id="rec_dp1">＋1天</button>'+
+        '<button type="button" class="btn-ghost" id="rec_dp7">＋7天</button>'+
+        ((!!rec&&!asCopy)?'<button type="button" class="btn-ghost" id="rec_dup">📋 複製</button>':'')+
+        '<span class="clr-btn" data-clr="rec_dateStart" style="margin-left:auto;font-size:11.5px;color:#A8A8B0;cursor:pointer;font-weight:600;align-self:center">✕ 清除</span>'+
+      '</div>'+
+      '<div class="two" id="rec_timebox"'+(isShop?' style="display:none"':'')+'>'+
+        '<div class="field"><label>開始時間</label><input id="rec_start" type="time" value='+JSON.stringify(r.start||"")+'></div>'+
+        '<div class="field"><label>結束時間</label><input id="rec_end" type="time" value='+JSON.stringify(r.end||"")+'></div>'+
+      '</div>'+
+      '<div style="font-size:11.5px;color:var(--muted)">留空＝整天</div>'+
     '</div>'+
-    '<div id="rec_amountbox"'+(isShop?' style="display:none"':'')+'><div class="field"><label>金額（選填）</label>'+
-      '<input id="rec_amount" type="number" inputmode="numeric" value="'+(r.amount!=null?r.amount:"")+'" placeholder="例如 1200"></div></div>'+
-    (!canFull()
-      ? '<div class="field" style="opacity:.55;cursor:pointer" onclick="showUpgrade(\'任務指派家人（家庭版）\')"><div class="label-row"><label>執行人（可複選） 🔒</label></div><div style="font-size:12px;color:#888;padding:4px 0">升級家庭版，可指派家人任務</div></div>'
-      : ('<div class="field"><div class="label-row"><label>執行人（可複選）</label><span class="manage-link" id="rec_manage">管理人員</span></div>'+
-      '<div class="chips" id="rec_assignees"></div>'+
-      '<div class="chip-add"><input id="rec_newperson" autocomplete="off" placeholder="新增人員名稱"><button id="rec_addperson" type="button">＋ 新增</button></div>'+
-    '</div>')
-    )+
-    (!canAdvanced()
-      ? '<div class="toggle-row" style="opacity:.55;cursor:pointer" onclick="showUpgrade(\'進階記事（急迫・倒數・純記事）\')"><span>❗️⏳📌 急迫・倒數・純記事</span><span style="font-size:18px">🔒</span></div>'
-      : ('<div class="toggle-row"><span>❗️ 急迫（排在最上面）</span><label class="switch"><input type="checkbox" id="rec_urgent"'+(r.urgent?" checked":"")+'><span class="slider"></span></label></div>'+
-    '<div class="toggle-row" id="rec_cdbox"'+(isShop?' style="display:none"':'')+'><span>⏳ 顯示倒數天數</span><label class="switch"><input type="checkbox" id="rec_countdown"'+(r.countdown?" checked":"")+'><span class="slider"></span></label></div>'+
-    '<div class="toggle-row" id="rec_logbox"'+(isShop?' style="display:none"':'')+'><span>📌 純紀錄（已發生／要記的事，免打勾）</span><label class="switch"><input type="checkbox" id="rec_isLog"'+(r.isLog?" checked":"")+'><span class="slider"></span></label></div>')
-    )+
-    '<div class="field"><label>備註（可選）</label><textarea id="rec_note" placeholder="補充說明">'+esc(r.note||"")+'</textarea></div>';
+
+    // ── 執行人（符合條件才放主畫面）──
+    (assignOnMain ? '<div id="rec_assignslot">'+assignHtml+'</div>' : '')+
+
+    '<div class="field"><label>備註（可選）</label><textarea id="rec_note" placeholder="補充說明">'+esc(r.note||"")+'</textarea></div>'+
+
+    // ── 更多選項 ──
+    '<button type="button" class="more-toggle" id="rec_moretoggle">＋ 更多選項<span class="more-dot" id="rec_moredot"></span></button>'+
+    '<div class="morebox" id="rec_morebox" style="display:none">'+
+      '<div class="field" id="rec_repeatbox"><label>重複</label>'+
+        '<div class="two">'+
+          '<select id="rec_repeatUnit">'+
+            ['none|不重複','day|每…天','week|每…週','month|每…月','year|每…年'].map(o=>{const v=o.split("|")[0],t=o.split("|")[1];return '<option value="'+v+'"'+(repUnit===v?" selected":"")+'>'+t+'</option>';}).join("")+
+          '</select>'+
+          '<input id="rec_repeatEvery" type="number" min="1" value="'+repEvery+'" placeholder="間隔數">'+
+        '</div>'+
+        '<div id="rec_rephint" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5"></div>'+
+      '</div>'+
+      '<div id="rec_amountbox"'+(isShop?' style="display:none"':'')+'><div class="field"><label>金額（選填）</label>'+
+        '<input id="rec_amount" type="number" inputmode="numeric" value="'+(r.amount!=null?r.amount:"")+'" placeholder="例如 1200"></div></div>'+
+      (assignOnMain ? '' : '<div id="rec_assignslot">'+assignHtml+'</div>')+
+      (!canAdvanced()
+        ? '<div class="toggle-row" style="opacity:.55;cursor:pointer" onclick="showUpgrade(\'急迫與倒數\')"><span>❗️ 排在最上面　⏳ 顯示還有幾天</span><span style="font-size:18px">🔒</span></div>'
+        : ('<div class="toggle-row"><span>❗️ 排在最上面</span><label class="switch"><input type="checkbox" id="rec_urgent"'+(r.urgent?" checked":"")+'><span class="slider"></span></label></div>'+
+           '<div class="toggle-row" id="rec_cdbox"'+(isShop?' style="display:none"':'')+'><span>⏳ 顯示還有幾天</span><label class="switch"><input type="checkbox" id="rec_countdown"'+(r.countdown?" checked":"")+'><span class="slider"></span></label></div>')
+      )+
+    '</div>';
 
   openSheet(isShop?(isEdit?"編輯採購":"新增採購"):(isEdit?"編輯記事":"新增記事"), html,
     function(){ saveRecord(isEdit?r.id:null, asCopy?null:r); },
     isEdit?function(){ deleteRecord(r.id, r.title); }:null);
 
   (function(){
-    // 把「重複」欄位搬到「日期」正下方(在結束日期之前)
-    try{
-      var repBox=$("rec_repeatbox"), endBox=$("rec_endbox");
-      var dateInput=$("rec_dateStart");
-      var dateField=dateInput?dateInput.closest(".field"):null;
-      if(repBox && dateField && dateField.parentNode){
-        dateField.parentNode.insertBefore(repBox, dateField.nextSibling);  // 重複緊接日期後
-        if(endBox) repBox.parentNode.insertBefore(endBox, repBox.nextSibling); // 結束日期接在重複後
-      }
-    }catch(e){}
-    // 依「重複與否」讓結束日期欄位變身：不重複→結束日期(跨天)；有重複→重複到期日
-    function _morphEnd(){
-      var ru=$("rec_repeatUnit"), lab=$("rec_endlabel"), hint=$("rec_endhint");
-      if(!ru||!lab) return;
-      var isRep = ru.value && ru.value!=="none";
-      if(isRep){
-        lab.textContent="重複到期日（可空，不填=一直重複）";
-        if(hint) hint.textContent="設了就重複到這天為止";
-      } else {
-        lab.textContent="結束日期（可空）";
-        if(hint) hint.textContent="跨天活動用（例如旅遊 3 天）";
-      }
+    function _wkOf(v){ return v ? mdWk(v) : ""; }
+    function _wkLbl(){
+      var a=$("rec_dateStart"), b=$("rec_dateEnd");
+      var l1=$("rec_datewk"), l2=$("rec_datewk2");
+      if(l1) l1.innerHTML=_wkOf(a&&a.value);
+      if(l2) l2.innerHTML=_wkOf(b&&b.value);
     }
-    var _ru=$("rec_repeatUnit");
-    if(_ru){ _ru.addEventListener("change", _morphEnd); _morphEnd(); }
-    // 日期欄位「✕ 清除」(表單建立後立即綁定)
-    document.querySelectorAll('#sheet .clr-btn').forEach(function(b){
-      var el=$(b.getAttribute('data-clr'));
-      b.addEventListener('click', function(){
-        if(el){ el.value=""; try{ el.dispatchEvent(new Event('change')); }catch(e){} }
-        if(b.getAttribute('data-clr')==="rec_dateStart"){
-          var ru=$("rec_repeatUnit");
-          if(ru && ru.value && ru.value!=="none"){ ru.value="none"; if(typeof toast==="function") toast("已清除日期，重複也一併取消"); }
-        }
-      });
-    });
-    function _wkLbl(){ var el=$("rec_dateStart"), lab=$("rec_datewk"); if(!lab) return; lab.innerHTML = (el&&el.value)? mdWk(el.value) : ""; }
-    function _shift(n){ var el=$("rec_dateStart"); if(!el) return; var base=el.value?_ymdToDate(el.value):new Date(); base.setDate(base.getDate()+n); el.value=ymd(base); _wkLbl(); }
-    if($("rec_dateStart")) $("rec_dateStart").addEventListener("change", _wkLbl);
-    _wkLbl();
-    if($("rec_dm1")) $("rec_dm1").addEventListener("click", function(){ _shift(-1); });
+
+    // ── 開始／結束連動：預設同一天；跨天的保持天數差一起平移 ──
+    function _diffDays(a,b){ return Math.round((_ymdToDate(b)-_ymdToDate(a))/86400000); }
+    var _lastStart = ($("rec_dateStart")||{}).value || "";
+    function _syncEnd(){
+      var a=$("rec_dateStart"), b=$("rec_dateEnd");
+      if(!a||!b) return;
+      if(!a.value){ _lastStart=""; _wkLbl(); return; }
+      if(!b.value || !_lastStart){ b.value=a.value; }              // 沒設過結束 → 同一天
+      else {
+        var gap=_diffDays(_lastStart, b.value);
+        if(gap<0) gap=0;
+        var d=_ymdToDate(a.value); d.setDate(d.getDate()+gap);
+        b.value=ymd(d);                                             // 保持天數差
+      }
+      _lastStart=a.value;
+      _wkLbl();
+    }
+    function _guardEnd(){
+      var a=$("rec_dateStart"), b=$("rec_dateEnd");
+      if(!a||!b||!a.value||!b.value) { _wkLbl(); return; }
+      if(b.value<a.value){ b.value=a.value; toast("結束不能早於開始，已自動調整"); }
+      _wkLbl();
+    }
+    if($("rec_dateStart")) $("rec_dateStart").addEventListener("change", _syncEnd);
+    if($("rec_dateEnd"))   $("rec_dateEnd").addEventListener("change", _guardEnd);
+
+    function _shift(n){
+      var el=$("rec_dateStart"); if(!el) return;
+      var base=el.value?_ymdToDate(el.value):new Date();
+      base.setDate(base.getDate()+n);
+      el.value=ymd(base);
+      _syncEnd();
+    }
     if($("rec_dp1")) $("rec_dp1").addEventListener("click", function(){ _shift(1); });
     if($("rec_dp7")) $("rec_dp7").addEventListener("click", function(){ _shift(7); });
     if($("rec_dup")) $("rec_dup").addEventListener("click", function(){ var keep=r; closeSheet(); setTimeout(function(){ openRecordForm(keep, null, true); }, 60); });
+
+    // ── 重複：選了才給說明；結束欄位隨之變身 ──
+    var REP_WORD={day:"天",week:"週",month:"個月",year:"年"};
+    function _morphEnd(){
+      var ru=$("rec_repeatUnit"), lab=$("rec_endlabel"), hint=$("rec_endhint"), rh=$("rec_rephint");
+      var isRep = !!(ru && ru.value && ru.value!=="none");
+      if(lab) lab.textContent = isRep ? "重複到期" : "結束";
+      if(hint) hint.textContent = isRep ? "不填＝一直重複" : "";
+      if(rh){
+        if(isRep){
+          var ev=Math.max(1, Number(($("rec_repeatEvery")||{}).value)||1);
+          rh.textContent="每 "+ev+" "+(REP_WORD[ru.value]||"")+"重複一次";
+        } else rh.textContent="";
+      }
+    }
+    if($("rec_repeatUnit"))  $("rec_repeatUnit").addEventListener("change", _morphEnd);
+    if($("rec_repeatEvery")) $("rec_repeatEvery").addEventListener("input", _morphEnd);
+
+    // ── 待辦／純紀錄 ──
+    function _applyKind(){
+      var isLog = !!($("rec_isLog")||{}).checked;
+      var lab=$("rec_assignlabel");
+      if(lab) lab.textContent = isLog ? "由誰（可複選）" : "執行人（可複選）";
+      // 純紀錄＝已發生的事，用不到「往後跳」與「重複」
+      ["rec_dp1","rec_dp7"].forEach(function(id){ var el=$(id); if(el) el.style.display = isLog ? "none" : ""; });
+      var rb=$("rec_repeatbox");
+      if(rb){
+        rb.style.display = isLog ? "none" : "";
+        if(isLog){ var ru=$("rec_repeatUnit"); if(ru && ru.value!=="none"){ ru.value="none"; } }
+      }
+      _morphEnd();
+    }
+    document.querySelectorAll('input[name="rec_kind"]').forEach(function(rd){
+      rd.addEventListener("change", function(){
+        var box=$("rec_isLog"); if(box) box.checked = (this.value==="log");
+        _applyKind();
+      });
+    });
+
+    // ── 更多選項：預設收合；有填過進階欄位就自動展開 ──
+    function _advUsed(){
+      if(r.amount!=null && r.amount!=="") return true;
+      if(r.urgent || r.countdown) return true;
+      if(r.repeat && r.repeat.unit && r.repeat.unit!=="none") return true;
+      if(r.assignees && r.assignees.length) return true;
+      return false;
+    }
+    var _open=false;
+    function _setMore(v){
+      _open=v;
+      var box=$("rec_morebox"), tg=$("rec_moretoggle");
+      if(box) box.style.display = v ? "" : "none";
+      if(tg) tg.firstChild.nodeValue = v ? "− 收起更多選項" : "＋ 更多選項";
+    }
+    if($("rec_moretoggle")) $("rec_moretoggle").addEventListener("click", function(){ _setMore(!_open); });
+    if($("rec_moredot")) $("rec_moredot").style.display = _advUsed() ? "" : "none";
+    _setMore(isEdit && _advUsed());
+
+    // 日期「✕ 清除」
+    document.querySelectorAll('#sheet .clr-btn').forEach(function(b){
+      b.addEventListener('click', function(){
+        var a=$("rec_dateStart"), e=$("rec_dateEnd");
+        if(a) a.value=""; if(e) e.value=""; _lastStart="";
+        var ru=$("rec_repeatUnit");
+        if(ru && ru.value && ru.value!=="none"){ ru.value="none"; toast("已清除日期，重複也一併取消"); }
+        _morphEnd(); _wkLbl();
+      });
+    });
+
+    _syncEnd(); _applyKind(); _wkLbl();
   })();
 
   renderAssigneeChips();
   wireIconPicker("rec_category", function(v){
     const shop=v==="shopping";
-    $("rec_shopbox").style.display=shop?"":"none";
-    if($("rec_titlebox")) $("rec_titlebox").style.display=shop?"none":"";
-    $("rec_amountbox").style.display=shop?"none":"";
-    $("rec_cdbox").style.display=shop?"none":"";
-    $("rec_logbox").style.display=shop?"none":"";
-    $("rec_endbox").style.display=shop?"none":"";
-    $("rec_timebox").style.display=shop?"none":"";
+    const show=function(id, on){ const el=$(id); if(el) el.style.display = on ? "" : "none"; };
+    show("rec_shopbox", shop);
+    show("rec_titlebox", !shop);
+    show("rec_amountbox", !shop);
+    show("rec_cdbox", !shop);
+    show("rec_kindbox", !shop);        // 採購沒有待辦／純紀錄之分
+    show("rec_endbox", !shop);
+    show("rec_timebox", !shop);
   });
   function _lockSubcat(){
     const sc=$("rec_subcategory"); if(!sc) return;
