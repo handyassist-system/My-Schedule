@@ -1,16 +1,15 @@
 {
   "name": "生活管家",
   "short_name": "生活管家",
-  "description": "生活管家 - 記事、目標、採購與庫存管理",
+  "description": "行事曆、待辦、庫存、記帳，一個 App 顧好生活大小事",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FFFFFF",
+  "background_color": "#FBF8F3",
   "theme_color": "#3E9B8E",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
