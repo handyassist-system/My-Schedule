@@ -1,7 +1,7 @@
 {
-  "name": "智能行事曆",
-  "short_name": "行事曆",
-  "description": "智能行事曆 - 記事、目標、採購與庫存管理",
+  "name": "生活管家",
+  "short_name": "生活管家",
+  "description": "生活管家 - 記事、目標、採購與庫存管理",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

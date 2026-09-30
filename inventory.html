@@ -2,10 +2,15 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<meta name="theme-color" content="#3E9B8E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="庫存管理">
+<link rel="manifest" href="manifest.json">
 <title>家庭庫存管理</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap');
@@ -16,10 +21,12 @@
   --yellow:#D9825F;--yellow-light:#FDEEE7;
   --blue:#5B8DEF;--blue-light:#EAF1FE;
   --border:#EDE7DF;--danger:#C0392B;--radius:14px;--radius-lg:20px;--radius-sm:10px;
+  /* ── 智在生活共用命名（四個 App 都用這組名字，值各自不同）── */
+  --primary:#3E9B8E; --sub:#8A8A92; --line:#EDE7DF; --surface2b:#F3F0EB;
   --shadow:0 2px 12px rgba(46,46,51,.06),0 8px 24px rgba(46,46,51,.05);
   --shadow-md:0 2px 8px rgba(46,46,51,.09),0 8px 24px rgba(46,46,51,.07);
 }
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.6;padding-bottom:72px}
 
 /* Header */
@@ -242,7 +249,15 @@ input:checked+.slider:before{transform:translateX(18px)}
 .btn-primary{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif}
 .btn-ghost{background:var(--surface2);color:var(--ink);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:'Noto Sans TC',sans-serif}
 .btn-danger{background:transparent;color:var(--danger);border:1.5px solid var(--danger);border-radius:var(--radius-sm);padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif}
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:500;z-index:300;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none;max-width:90vw;overflow:hidden}
+/* 點擊區補到 40px：只擴大可按範圍，不改外觀大小 */
+.btn-primary,.btn-ghost,.btn-danger{min-height:44px}
+.item-qty-btn,.qty-btn,.sheet-close,.btn-del-sm,.zone-pill,.cat-chip,.emoji-pick-x{ position:relative; }
+.item-qty-btn::after,.qty-btn::after,.sheet-close::after,.btn-del-sm::after,
+.zone-pill::after,.cat-chip::after,.emoji-pick-x::after{
+  content:""; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  min-width:40px; min-height:40px; width:100%; height:100%;
+}
+.toast{position:fixed;bottom:calc(96px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:rgba(45,50,56,.94);color:#fff;border-radius:999px;padding:11px 18px;font-size:13.5px;line-height:1.5;font-weight:500;z-index:9999;opacity:0;transition:all .25s;pointer-events:none;max-width:84%;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .empty-hint{text-align:center;padding:52px 20px;color:var(--ink2);font-size:14px;font-weight:600}
 .empty-hint .eico{font-size:46px;display:block;margin-bottom:12px;opacity:.85}
@@ -263,7 +278,7 @@ input:checked+.slider:before{transform:translateX(18px)}
   <div class="login-card">
     <div class="login-logo">🏠</div>
     <div class="login-title">家庭庫存管理</div>
-    <div class="login-sub">請先登入「智能行事曆」<br>登入後即可自動使用庫存管理</div>
+    <div class="login-sub">請先登入「生活管家」<br>登入後即可自動使用庫存管理</div>
     <button class="btn-login" onclick="location.href='https://handyassist-system.github.io/My-Schedule/'">前往行事曆登入</button>
   </div>
 </div>
@@ -401,6 +416,21 @@ var LOC_KEY='inv_locs',CAT_KEY='inv_cats',FAV_KEY='inv_favs';
 var FB_READY=false, db=null, _lastBlob=null, _cloudStarted=false;
 var FB_PATH="inventory/space_0430/blob";
 var ADMIN_EMAIL_INV="mp65p@hotmail.com";
+// Email 正規化：gmail 的加號後綴與點號視為同一個帳號，避免換寫法重複試用
+function normEmail(e){
+  var v = String(e||"").trim().toLowerCase();
+  var at = v.lastIndexOf("@");
+  if(at < 1) return v;
+  var user = v.slice(0, at), host = v.slice(at+1);
+  if(host === "gmail.com" || host === "googlemail.com"){
+    user = user.split("+")[0].replace(/\./g, "");
+    host = "gmail.com";
+  }
+  return user + "@" + host;
+}
+// 資料路徑的 key 必須跟 Firebase 規則一致：
+//   $key == auth.token.email.toLowerCase().replace('.', '_')
+// 所以這裡「不能」做 Gmail 正規化，否則含點的 Gmail 會讀寫全被拒。
 function emailKey(e){ return String(e||"").toLowerCase().replace(/[.#$\[\]]/g,"_"); }
 function _resolveFbPath(){
   var cal=_invUserEmail;
@@ -441,7 +471,7 @@ function _invServerNow(cb){
    連得上 → 照雲端方案，並更新紀錄；被拒絕 → 擋；沒網路（等 8 秒）→ 讀行事曆
    記下的 cal_plan_cache，3 天內且沒過到期日才放行，否則顯示完整版鎖定畫面。 */
 var PLAN_CACHE_KEY="cal_plan_cache", PLAN_GRACE_MS=3*86400000, VERIFY_TIMEOUT_MS=8000;
-// 庫存已從家庭版下放到個人版：basic 以上都放行
+// 庫存屬完整版功能：basic/full/family 都放行
 function _invIsFullPlan(p){ return p==="basic" || p==="full" || p==="family" || p==="trial" || p==="admin"; }
 function _invWithTimeout(p, ms){
   return Promise.race([p, new Promise(function(_, rej){
@@ -489,21 +519,37 @@ var INV_READONLY = false;
 
 function invLocked(){
   if(!INV_READONLY) return false;
-  showInvToast('🔒 升級個人版即可編輯庫存');
+  showInvToast('🔒 升級完整版即可編輯庫存');
   return true;
 }
 
-function showInvToast(msg){
-  var t=document.getElementById('invRoToast');
-  if(!t){
-    t=document.createElement('div'); t.id='invRoToast';
-    t.style.cssText='position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:#2c3e50;color:#fff;'
-      +'padding:11px 20px;border-radius:10px;font-size:13.5px;z-index:99999;max-width:80%;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.25)';
-    document.body.appendChild(t);
-  }
-  t.textContent=msg; t.style.display='block';
-  clearTimeout(t._t); t._t=setTimeout(function(){ t.style.display='none'; }, 2200);
+function failMsg(act, err){
+  var code = String((err && (err.code || err.message)) || "");
+  if((typeof navigator!=="undefined" && navigator.onLine===false)
+     || /unavailable|network|timeout|deadline|offline/i.test(code)) return act+"失敗，請檢查網路連線";
+  if(/permission|denied|unauthenticated|auth/i.test(code)) return act+"失敗，請重新登入再試一次";
+  return act+"失敗，請稍後再試";
 }
+// 確認視窗：取代原生 confirm，樣式跟本 App 一致
+function askConfirm(title, msg, onOk, okText){
+  var old=document.getElementById('akOvl'); if(old) old.remove();
+  var d=document.createElement('div'); d.id='akOvl';
+  d.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(28,27,24,.45);display:flex;align-items:center;justify-content:center;padding:20px';
+  d.innerHTML='<div style="background:#fff;border-radius:16px;padding:22px 20px;max-width:340px;width:100%;box-shadow:0 12px 32px rgba(0,0,0,.2)">'
+    +'<div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:8px">'+title+'</div>'
+    +'<div style="font-size:13.5px;color:var(--ink2);line-height:1.8">'+msg+'</div>'
+    +'<div style="display:flex;gap:10px;margin-top:20px">'
+    +'<button id="akNo" style="flex:1;min-height:44px;border:1px solid var(--border);background:var(--surface2);color:var(--ink2);border-radius:10px;font-size:14.5px;font-weight:700">取消</button>'
+    +'<button id="akYes" style="flex:1;min-height:44px;border:none;background:var(--danger);color:#fff;border-radius:10px;font-size:14.5px;font-weight:700">'+(okText||'確定')+'</button>'
+    +'</div></div>';
+  document.body.appendChild(d);
+  d.querySelector('#akNo').onclick=function(){ d.remove(); };
+  d.querySelector('#akYes').onclick=function(){ d.remove(); if(onOk) onOk(); };
+  d.addEventListener('click', function(e){ if(e.target===d) d.remove(); });
+}
+
+// 唯讀提示沿用同一個 toast，不另外維護一套樣式
+function showInvToast(msg){ showToast(msg, 2200); }
 
 function showInvReadonlyBar(){
   var b=document.getElementById('invRoBar');
@@ -511,7 +557,7 @@ function showInvReadonlyBar(){
     b=document.createElement('div'); b.id='invRoBar';
     b.style.cssText='position:sticky;top:0;z-index:50;background:#FDF3E3;border-bottom:1px solid #F0DFC0;'
       +'padding:10px 14px;font-size:13px;color:#8A6112;display:flex;align-items:center;gap:10px;line-height:1.5';
-    b.innerHTML='<span style="flex:1">🔒 升級個人版可繼續管理庫存</span>'
+    b.innerHTML='<span style="flex:1">🔒 升級完整版可繼續管理庫存</span>'
       +'<a href="https://line.me/R/ti/p/@373pfdee" target="_blank" rel="noopener" '
       +'style="flex:0 0 auto;background:#06C755;color:#fff;padding:6px 12px;border-radius:8px;text-decoration:none;font-weight:700;font-size:12.5px">升級</a>';
     var wrap=document.getElementById('appWrap');
@@ -822,7 +868,7 @@ function _enterInventory(){
   document.getElementById('appWrap').style.display='block';
   FB_PATH=_resolveFbPath();
   _ensureInvOwner();
-  verifyInvAccess(function(){        // 個人版以上／試用／管理員 → 完整使用
+  verifyInvAccess(function(){        // 完整版／試用／管理員 → 完整使用
     INV_READONLY=false;
     migrateInvIfNeeded(function(){ loadData();initLocTabs();renderAll();startCloudSync(); });
   }, function(plan){                 // 免費版 → 進得去，但只能看
@@ -919,6 +965,18 @@ function saveData(){
   pushCloud();   // 同步到雲端
 }
 // ── 資料備份 ──
+// 合併：以 key 為準，備份有的覆蓋，現有沒被覆蓋的保留
+function _mergeBy(cur, inc, key){
+  var out = Array.isArray(cur) ? cur.slice() : [];
+  var idx = {};
+  out.forEach(function(x, i){ if(x && x[key]!=null) idx[x[key]] = i; });
+  (Array.isArray(inc) ? inc : []).forEach(function(x){
+    if(!x || x[key]==null) return;
+    if(idx[x[key]] !== undefined) out[idx[x[key]]] = x;
+    else { idx[x[key]] = out.length; out.push(x); }
+  });
+  return out;
+}
 function exportInvBackup(){
   var data={ type:"inventory-backup", version:1, exportedAt:new Date().toISOString(),
     items:items, categories:categories, locations:locations, favs:favs, customEmoji:customEmoji };
@@ -929,7 +987,8 @@ function exportInvBackup(){
     a.download="庫存備份_"+new Date().toISOString().slice(0,10)+".json";
     document.body.appendChild(a); a.click();
     setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },100);
-  }catch(e){ alert("匯出失敗："+e.message); }
+    showToast("✅ 已匯出備份");
+  }catch(e){ showToast(failMsg("匯出", e)); }
 }
 function importInvBackup(file){
   if(!file) return;
@@ -937,17 +996,23 @@ function importInvBackup(file){
   reader.onload=function(ev){
     try{
       var d=JSON.parse(ev.target.result);
-      if(d.type!=="inventory-backup"){ alert("這不是庫存備份檔"); return; }
-      if(!confirm("匯入將覆蓋目前所有庫存資料，確定嗎？")) return;
-      items=Array.isArray(d.items)?d.items:[];
-      categories=Array.isArray(d.categories)?d.categories:[];
-      locations=Array.isArray(d.locations)?d.locations:[];
-      favs=Array.isArray(d.favs)?d.favs:[];
-      if(d.customEmoji && typeof d.customEmoji==="object"){ customEmoji=d.customEmoji; saveCustomEmoji(); }
+      if(d.type!=="inventory-backup"){ showToast("這不是本 App 的備份檔"); return; }
+      var inItems = Array.isArray(d.items)?d.items:[];
+      var inCats  = Array.isArray(d.categories)?d.categories:[];
+      var inLocs  = Array.isArray(d.locations)?d.locations:[];
+      if(!confirm("將從備份還原 "+inItems.length+" 筆商品。\n\n同一筆會以備份內容覆蓋，其他現有資料保留（不會清空）。\n\n確定還原嗎？")) return;
+      items      = _mergeBy(items, inItems, "id");
+      categories = _mergeBy(categories, inCats, "id");
+      locations  = _mergeBy(locations, inLocs, "name");
+      if(Array.isArray(d.favs)) d.favs.forEach(function(f){ if(favs.indexOf(f)<0) favs.push(f); });
+      if(d.customEmoji && typeof d.customEmoji==="object"){
+        Object.keys(d.customEmoji).forEach(function(k){ customEmoji[k]=d.customEmoji[k]; });
+        saveCustomEmoji();
+      }
       saveData();      // 存本機 + 雲端
       renderAll();
-      alert("✅ 已還原庫存資料\n商品 "+items.length+" 筆");
-    }catch(e){ alert("匯入失敗，檔案可能損毀"); }
+      showToast("✅ 已還原備份，目前共 "+items.length+" 筆商品");
+    }catch(e){ showToast("匯入失敗，請確認是本 App 的備份檔"); }
   };
   reader.readAsText(file);
 }
@@ -1090,9 +1155,9 @@ function renderGrid(){
   if(filtered.length===0){
     grid.innerHTML='<div class="empty-hint" style="grid-column:1/-1"><span class="eico">📦</span>此區域尚無商品<span class="esub">'
       +(INV_READONLY
-        ? '記錄家裡有什麼、剩多少、何時到期，採購完成自動入庫。'
+        ? '記錄家用品剩多少、何時到期，採購完成自動入庫。'
         : '點右下「＋」開始建立庫存')
-      +'</span></div>';
+      +'</span><span class="esub" style="margin-top:6px;opacity:.75">這裡管家用品（衛生紙、清潔劑、電池、藥品）。食材請用「食在料理」的我的庫存。</span></div>';
     return;
   }
   grid.innerHTML=filtered.map(itemCardHTML).join('');
@@ -1263,7 +1328,7 @@ function toggleSG(head){
 
 function delZone(li,zi){
   if(invLocked()) return;
-  if(items.some(function(it){return it.location===locations[li].name&&it.zone===locations[li].zones[zi];})){showToast('⚠️ 有商品在此子位置');return;}
+  if(items.some(function(it){return it.location===locations[li].name&&it.zone===locations[li].zones[zi];})){showToast('此子位置還有商品，無法刪除');return;}
   locations[li].zones.splice(zi,1);saveData();renderLocSettings();renderZoneTabs();
 }
 function addZone(li){
@@ -1275,7 +1340,7 @@ function addZone(li){
 }
 function delLocation(li){
   if(invLocked()) return;
-  if(items.some(function(it){return it.location===locations[li].name;})){showToast('⚠️ 有商品在此區域');return;}
+  if(items.some(function(it){return it.location===locations[li].name;})){showToast('此區域還有商品，無法刪除');return;}
   locations.splice(li,1);saveData();renderLocSettings();initLocTabs();
 }
 function addLocationGroup(){
@@ -1296,7 +1361,7 @@ function _renderCatBody(ci){
 }
 function delCatItem(ci,ii){
   if(invLocked()) return;
-  if(items.some(function(it){return it.name===categories[ci].items[ii]&&it.cat===categories[ci].id;})){showToast('⚠️ 庫存中有此商品');return;}
+  if(items.some(function(it){return it.name===categories[ci].items[ii]&&it.cat===categories[ci].id;})){showToast('庫存中還有此商品，無法刪除');return;}
   categories[ci].items.splice(ii,1);saveData();
   _renderCatBody(ci);   // 只更新這個分類，畫面不跳、不收合
   renderAll();
@@ -1350,7 +1415,7 @@ function moveCategory(ci, delta){
 }
 function delCategory(ci){
   if(invLocked()) return;
-  if(items.some(function(it){return it.cat===categories[ci].id;})){showToast('⚠️ 有商品使用此分類');return;}
+  if(items.some(function(it){return it.cat===categories[ci].id;})){showToast('還有商品用此分類，無法刪除');return;}
   categories.splice(ci,1);saveData();renderCatSettings();
 }
 function addCategoryGroup(){
@@ -1395,7 +1460,7 @@ function _applyEmojiInPlace(){
 function applyCustomEmoji(){
   var el=document.getElementById('emojiCustomInput'); if(!el) return;
   var v=(el.value||'').trim();
-  if(!v){ showToast('請先輸入一個圖示'); return; }
+  if(!v){ showToast('請選擇一個圖示'); return; }
   var arr=Array.from(v);                    // 取第一個字符(emoji)
   var e=arr[0]; if(arr.length>1 && /[\u200d\uFE0F]/.test(v)) e=v;  // ZWJ/組合emoji整串保留
   pickEmoji(e);
@@ -1473,7 +1538,7 @@ function pollDone(){
                expiry:'', is3c:false, keepDays:null };
           items.push(it);
         } else {
-          showToast('⚠️ 收到回傳但找不到品項'+(cb.item_name?'：'+cb.item_name:' id='+itemId)); return;
+          showToast('找不到這個商品，可能已被刪除'+(cb.item_name?'：'+cb.item_name:'')); return;
         }
       }
       it.lastBuy=cb.done_date||today();
@@ -1535,9 +1600,11 @@ function openRestockLog(){
   document.getElementById('editOverlay').classList.add('open');
 }
 function clearRestockLog(){
-  if(!confirm('確定清除所有入庫紀錄？此動作無法復原。'))return;
-  try{localStorage.removeItem('inv_restock_log');}catch(e){}
-  openRestockLog();
+  askConfirm('清除入庫紀錄', '所有入庫紀錄會被清空，此動作無法復原。', function(){
+    try{localStorage.removeItem('inv_restock_log');}catch(e){}
+    openRestockLog();
+    showToast('✅ 已清除入庫紀錄');
+  }, '清除');
 }
 // 只在「分頁回到前景」時處理，確保「✅ 庫存更新」在你正看著的庫存分頁跳出（不在背景被吃掉）
 window.addEventListener('focus', pollDone);
@@ -1748,11 +1815,11 @@ function saveItem(){
   var itemVal=(document.getElementById('fItemPick')||{}).value||'';
   if(itemVal==='__custom__'||!itemVal){name=((document.getElementById('fNameCustom')||{}).value||'').trim();}
   else{name=itemVal;}
-  if(!name){showToast('⚠️ 請輸入商品名稱');return;}
-  if(!loc){showToast('⚠️ 請選擇存放區域');return;}
+  if(!name){showToast('請輸入商品名稱');return;}
+  if(!loc){showToast('請選擇存放區域');return;}
   // 重複名稱檢查
   if(items.find(function(i){return i.name===name;})){
-    showToast('⚠️「'+name+'」已存在庫存中');return;
+    showToast('「'+name+'」已經在庫存中了');return;
   }
   var ni={id:newId,name:name,cat:catId,location:loc,zone:zone,is3c:is3c};
   if(is3c){
@@ -1790,9 +1857,14 @@ function deleteItem(){
   if(!editId)return;
   var it=items.find(function(m){return m.id===editId;});
   var name=it?it.name:'';
-  items=items.filter(function(m){return m.id!==editId;});
-  favs=favs.filter(function(f){return f!==editId;});
-  saveData();closeSheet();showToast('🗑 已刪除「'+name+'」');
+  askConfirm('刪除「'+name+'」', '刪除後無法復原。', function(){
+    items=items.filter(function(m){return m.id!==editId;});
+    favs=favs.filter(function(f){return f!==editId;});
+    _afterDeleteItem(name);
+  }, '刪除');
+}
+function _afterDeleteItem(name){
+  saveData();closeSheet();showToast('✅ 已刪除「'+name+'」');
   renderAll();initLocTabs();
 }
 // 長按品項 → 確認 → 快速刪除（短按仍開編輯；＋／− 區不觸發；手指移動會取消避免誤刪鄰格）
@@ -1810,10 +1882,10 @@ function pressStart(ev,id){
     var nm=it?it.name:'';
     var el=_lpEl;
     setTimeout(function(){
-      var go=confirm('確定刪除「'+nm+'」？');
       if(el)el.classList.remove('lp-active');
-      if(go) deleteItemById(_lpId);
-      _lpId=null; _lpEl=null;          // 處理完徹底重置，避免下一次抓到這次
+      var delId=_lpId;
+      _lpId=null; _lpEl=null;          // 先重置，避免下一次抓到這次
+      askConfirm('刪除「'+nm+'」', '刪除後無法復原。', function(){ deleteItemById(delId); }, '刪除');
     },220);
   },600);
 }
@@ -1830,7 +1902,7 @@ function deleteItemById(id){
   var nm=it.name;
   items=items.filter(function(m){return m.id!==id;});
   favs=favs.filter(function(f){return f!==id;});
-  saveData();showToast('🗑 已刪除「'+nm+'」');
+  saveData();showToast('✅ 已刪除「'+nm+'」');
   renderAll();initLocTabs();
 }
 
@@ -1864,7 +1936,7 @@ function showToast(msg, ms){
   var t=document.getElementById('toast');
   document.getElementById('toastMsg').textContent=msg;
   t.classList.add('show');clearTimeout(_tt);
-  _tt=setTimeout(function(){t.classList.remove('show');}, ms||3000);
+  _tt=setTimeout(function(){t.classList.remove('show');}, ms||1800);
 }
 
 document.getElementById('editOverlay').addEventListener('click',function(e){if(e.target===e.currentTarget)closeSheet();});

@@ -1,4 +1,4 @@
-// 智能行事曆 Service Worker
+// 生活管家 Service Worker
 const CACHE_NAME = 'cal-cache-v6';
 const CORE = [
   './',
