@@ -86,6 +86,19 @@
     background:var(--primary-soft);color:var(--primary);border-radius:999px;padding:5px 12px}
   .set-acc .ex{margin-top:8px;font-size:12.5px;color:var(--muted)}
   .set-foot{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
+  /* 設定子頁：內容多的項目點進去看，有返回鍵，不用彈窗蓋住上下文 */
+  #setSub{position:absolute;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:2}
+  #setSub.show{display:flex}
+  #setSub .set-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  /* 設定列表外框：讓整組列看起來是一張卡 */
+  .set-list{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    overflow:hidden;margin-bottom:14px}
+  /* 開關型項目的狀態標籤：開啟時填色，一眼看得出來 */
+  .noti-pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;
+    background:var(--line);color:var(--muted)}
+  .noti-pill.on{background:var(--primary);color:#fff}
+  .set-row.danger{color:var(--danger);font-weight:700}
+  .set-row.danger .ic{filter:none}
   /* 管理員入口：低調文字樣式，避免引起一般使用者好奇（智在生活 Standard） */
   #adminLoginToggle{width:100%;margin-top:18px;padding:8px;background:none;border:none;
     color:var(--muted);font-size:12.5px;font-weight:400;opacity:.75;cursor:pointer}
@@ -493,6 +506,62 @@
 .subs-row2 .v{flex:1;}
 .subs-mini{border:1px solid #dfe3e8;background:#fff;color:#5a6a78;border-radius:8px;padding:6px 12px;font-size:12px;font-family:inherit;min-height:34px;cursor:pointer;}
 
+
+/* ===== 底部導覽：四個 App 同一套規格（高度 58px、圖示 21px、字 11.5px、反白加底色）===== */
+.tabbar{
+  position:fixed; left:0; right:0; bottom:0; box-sizing:border-box;
+  max-width:520px; margin:0 auto; z-index:40; display:flex; align-items:stretch;
+  background:var(--surface); border-top:1px solid var(--line);
+  padding:5px 8px calc(5px + env(safe-area-inset-bottom));
+}
+.tabbar button{
+  flex:1 1 0; min-width:0; box-sizing:border-box;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  padding:6px 2px; min-height:48px;
+  background:none; border:none; border-radius:12px;
+  color:var(--faint); font-family:inherit; font-size:11.5px; font-weight:600;
+  line-height:1.25; white-space:nowrap; cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+.tabbar button .ic{ font-size:21px; line-height:1; }
+.tabbar button.active{ color:#3E9B8E; background:#E8F3F1; font-weight:700; }
+.tabbar button:active{ opacity:.65; }
+
+/* ===== 設定列表：四個 App 同一套規格（列高 52、圖示 18、名稱 15、狀態值 13）=====
+   三個 App 的 class 名稱不同（.set-row／.settings-row，內層 .ic/.tx/.ar 與
+   .set-ico/.set-name/.set-val/.set-arrow），這裡一次涵蓋，不動既有標籤。 */
+.set-row, .settings-row{
+  display:flex; align-items:center; gap:10px; width:100%; box-sizing:border-box;
+  min-height:52px; padding:14px; margin:0;
+  background:none; border:none; border-bottom:1px solid var(--line); border-radius:0;
+  font-family:inherit; font-size:15px; font-weight:500; color:var(--ink);
+  text-align:left; cursor:pointer; -webkit-tap-highlight-color:transparent;
+}
+.set-row:last-child, .settings-row:last-child{ border-bottom:none; }
+.set-row:active, .settings-row:active{ background:var(--bg); }
+.set-row .ic, .set-row .set-ico, .settings-row .settings-row-icon{
+  flex:0 0 auto; width:24px; text-align:center; font-size:18px; line-height:1;
+}
+.set-row .tx, .set-row .set-name, .settings-row .settings-row-label{
+  flex:0 0 auto; white-space:nowrap;
+}
+.set-row .set-val{
+  flex:1 1 auto; min-width:0; text-align:right; font-size:13px; font-weight:400;
+  color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.set-row .ar, .set-row .set-arrow{
+  flex:0 0 auto; margin-left:auto; font-size:19px; line-height:1; color:var(--muted);
+}
+.set-gap{ height:14px; background:none; border:none; }
+
+  /* 危險動作（登出）不給箭頭：它不是「進入某頁」，而是當下就執行 */
+  .set-row.danger .ar, .set-row.danger .set-arrow{ display:none; }
+  .set-row.danger, .settings-row.danger{ color:var(--danger); font-weight:700; }
+  /* 管理員項目不另外加底色，跟其他 App 一致 */
+  .settings-row.admin{ background:none; border-color:inherit; }
+  /* 食在料理原本沒有箭頭，用 CSS 補上，標籤不用改 */
+  .settings-row:not(.danger)::after{
+    content:"›"; margin-left:auto; font-size:19px; line-height:1; color:var(--muted); flex:0 0 auto;
+  }
 </style>
 </head>
 <body>
@@ -707,6 +776,13 @@
     <h2>⚙️ 設定</h2>
   </div>
   <div class="set-body" id="settingsBody"></div>
+  <div id="setSub">
+    <div class="set-head">
+      <button id="setSubBack" class="set-back" type="button">‹</button>
+      <h2 id="setSubTitle"></h2>
+    </div>
+    <div class="set-body" id="setSubBody"></div>
+  </div>
 </div>
 <div id="modalRoot"></div>
 <div id="toast" class="toast"></div>
@@ -1394,27 +1470,6 @@ function _stepCard(ico,title,desc){
 function _stepArrow(){
   return '<div style="text-align:center;color:#C9C4BA;font-size:20px;line-height:1;margin:7px 0">↓</div>';
 }
-function showUpgradeFlow(){
-  var root=$("modalRoot");
-  root.innerHTML=
-    '<div class="overlay" id="ovl"><div class="sheet" id="sheet" style="padding-top:20px">'+
-      '<div style="text-align:center;margin-bottom:20px">'+
-        '<div style="font-size:23px;font-weight:900;color:#2E2E33">⭐ 升級申請</div>'+
-        '<div style="font-size:13px;color:#8A8A93;margin-top:4px">完成升級只要 3 步驟</div>'+
-      '</div>'+
-      _stepCard("💬","加入官方 LINE","點下方按鈕，自動開啟「智在生活」官方帳號")+
-      _stepArrow()+
-      _stepCard("💳","依選單引導完成付款","選擇方案後會自動提供付款方式")+
-      _stepArrow()+
-      _stepCard("✅","24 小時內開通","回傳付款截圖，我們盡快為你開通")+
-      '<button id="upGoLine" style="width:100%;border:none;background:#06C755;color:#fff;border-radius:14px;padding:16px;font-size:17px;font-weight:900;margin-top:24px;box-shadow:0 6px 18px rgba(6,199,85,.3)">💬 前往官方 LINE</button>'+
-      '<div style="text-align:center;margin-top:12px;font-size:12px;color:#8A8A93;line-height:1.7">🔒 由「智在生活」官方 LINE 為你服務</div>'+
-      '<button id="upBack" style="width:100%;border:none;background:none;color:#8A8A93;font-size:13.5px;padding:14px;margin-top:4px">返回</button>'+
-    '</div></div>';
-  $("upGoLine").addEventListener("click", function(){ try{ location.href=LINE_URL; }catch(e){} });
-  $("upBack").addEventListener("click", function(){ closeSheet(); openUpgradeSheet(""); });
-  $("ovl").addEventListener("click", function(e){ if(e.target.id==="ovl") closeSheet(); });
-}
 function openUpgradeSheet(feat){
   upgradeSheet.setEmail(state.user || "");
   upgradeSheet.open(feat || "");
@@ -1707,6 +1762,15 @@ function _todayTimedEvents(){
   return out;
 }
 function notifyOn(){ try{ return localStorage.getItem('notifyEnabled')==='1' && ('Notification' in window) && Notification.permission==='granted'; }catch(e){ return false; } }
+/* 通知按鈕要一眼看出是開還是關：開啟時整顆反色，並標示「開啟中／已關閉」。
+   授權流程是非同步的，所以允許之後也要回來刷新一次，否則點了看起來沒反應。 */
+function updateNotifyBtn(){
+  var b=document.getElementById('notifyBtn'); if(!b) return;
+  var v=document.getElementById('notifyVal');
+  var on=notifyOn();
+  if(v){ v.textContent = on ? '開啟中' : '已關閉'; v.classList.toggle('on', on); }
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
 function requestNotify(){
   if(!('Notification' in window)){ alert('此裝置不支援通知，請先將本 App「安裝到桌面」再試。'); return; }
   if(Notification.permission==='denied'){
@@ -1718,7 +1782,7 @@ function requestNotify(){
     return;
   }
   Notification.requestPermission().then(function(p){
-    if(p==='granted'){ try{ localStorage.setItem('notifyEnabled','1'); }catch(e){} toast('✅ 已開啟通知'); try{ closeSheet(); }catch(e){} maybeNotifyToday(true); }
+    if(p==='granted'){ try{ localStorage.setItem('notifyEnabled','1'); }catch(e){} toast('✅ 已開啟通知'); try{ updateNotifyBtn(); }catch(e){} maybeNotifyToday(true); }
     else if(p==='denied'){
       alert('🔔 你選擇了「封鎖」通知\n\n若要開啟，請到瀏覽器或手機設定\n把本站/本 App 的通知改成「允許」');
     } else {
@@ -1772,25 +1836,42 @@ function maybeNotifyToday(force){
 }
 
 function enterApp(){
-  renderVerTag();   // 登入後才知道是不是管理員，這時再決定要不要顯示更新編號
-  var _newUser = localStorage.getItem(AUTH_KEY) || state.user;
-  if(state._boundUser && state._boundUser !== _newUser && !LOCAL_MODE){   // 換帳號 → 斷開舊綁定、清狀態
-    var ob = isEmail(state._boundUser) ? "users/"+emailKey(state._boundUser)+"/" : "";
-    try{ ["records","people","calendars","goals","activity"].forEach(function(p){ db.ref(ob+p).off(); }); }catch(e){}
-    state.recordsBound=false; state.peopleBound=false; state.calendarsBound=false; state.goalsBound=false; state.activityBound=false;
-    state.records={}; state.people={}; state.goals={}; state.calendars={}; state.activity=[];
+  // 整段包起來：任何一步出錯都要把登入畫面放回來並說明原因，
+  // 不能讓使用者只看到一片空白又沒有任何線索。
+  try{ appLoading.show("載入中…", "#3E9B8E"); }catch(e){}
+  try{
+
+    renderVerTag();   // 登入後才知道是不是管理員，這時再決定要不要顯示更新編號
+    var _newUser = localStorage.getItem(AUTH_KEY) || state.user;
+    if(state._boundUser && state._boundUser !== _newUser && !LOCAL_MODE){   // 換帳號 → 斷開舊綁定、清狀態
+      var ob = isEmail(state._boundUser) ? "users/"+emailKey(state._boundUser)+"/" : "";
+      try{ ["records","people","calendars","goals","activity"].forEach(function(p){ db.ref(ob+p).off(); }); }catch(e){}
+      state.recordsBound=false; state.peopleBound=false; state.calendarsBound=false; state.goalsBound=false; state.activityBound=false;
+      state.records={}; state.people={}; state.goals={}; state.calendars={}; state.activity=[];
+    }
+    state.user = _newUser;
+    $("login").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    const ab=$("adminPanelBtn"); if(ab) ab.style.display = state.isAdmin ? "" : "none";
+    applyPlanLocks();
+    renderLegend();
+    bindData();
+    restoreDeviceName();
+    renderAll();
+    state._boundUser = _newUser;
+    try{ setTimeout(maybeNotifyToday, 2500); }catch(e){}   // 開App推今日行程(資料載入後,一天一次)
+    try{ appLoading.hide(); }catch(e){}
+  }catch(err){
+    try{ appLoading.hide(); }catch(e){}
+    // 要走 _showLoginPage()：登入頁除了 hidden class，還有一層防閃爍用的
+    // inline display:none，只移除 class 的話畫面一樣是空的。
+    try{ $("app").classList.add("hidden"); }catch(e){}
+    try{ _showLoginPage(); }catch(e){
+      try{ var _l=$("login"); if(_l){ _l.classList.remove("hidden"); _l.style.display="flex"; } }catch(e2){}
+    }
+    try{ var _m=$("loginMsg"); if(_m) _m.textContent="進入失敗："+((err&&err.message)?err.message:"未知錯誤"); }catch(e){}
+    try{ console.error("enterApp 失敗", err); }catch(e){}
   }
-  state.user = _newUser;
-  $("login").classList.add("hidden");
-  $("app").classList.remove("hidden");
-  const ab=$("adminPanelBtn"); if(ab) ab.style.display = state.isAdmin ? "" : "none";
-  applyPlanLocks();
-  renderLegend();
-  bindData();
-  restoreDeviceName();
-  renderAll();
-  state._boundUser = _newUser;
-  try{ setTimeout(maybeNotifyToday, 2500); }catch(e){}   // 開App推今日行程(資料載入後,一天一次)
 }
 function applyPlanLocks(){
   var adv=canAdvanced();
@@ -2081,6 +2162,8 @@ document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState=
    ============================================================ */
 $("calBtn").addEventListener("click", openCalManager);
 $("settingsBackBtn").addEventListener("click", closeSettingsPage);
+// 子頁的返回只收子頁，設定清單要留著
+if($("setSubBack")) $("setSubBack").addEventListener("click", closeSetSub);
 if($("myAppsBtn")) $("myAppsBtn").addEventListener("click", openMyApps);
 if($("upgradeBtn")) $("upgradeBtn").addEventListener("click", ()=>openUpgradeSheet(""));
 function openMyApps(){
@@ -2134,7 +2217,36 @@ function openSettingsPage(html){
   pg.classList.add("show");
   pg.scrollTop=0;
 }
+/* 設定子頁：內容多的項目（目前是「我的行事曆」）點進去看，返回回到設定清單。
+   子頁的內容是開啟當下才產生的，所以事件要在這裡綁，不能在設定頁渲染時綁。 */
+function openSetSub(title, html){
+  var pg=$("setSub"), t=$("setSubTitle"), body=$("setSubBody");
+  if(!pg||!body) return;
+  t.textContent = title || "";
+  body.innerHTML = html || "";
+  body.scrollTop = 0;
+  pg.classList.add("show");
+  var list=$("calList");
+  if(list){
+    list.querySelectorAll(".cal-name").forEach(function(el){
+      el.addEventListener("click", function(){ setCurrentCal(el.getAttribute("data-cal")); });
+    });
+    list.querySelectorAll(".cal-del").forEach(function(b){
+      b.addEventListener("click", function(e){ e.stopPropagation(); deleteCalendar(b.getAttribute("data-del")); });
+    });
+  }
+  var cab=$("calAddBtn");
+  if(cab) cab.addEventListener("click", function(){
+    var nm=$("calNewName").value.trim();
+    if(nm){ addCalendar(nm); } else { toast("請輸入名稱"); }
+  });
+  var lock=$("calAddLocked");
+  if(lock) lock.addEventListener("click", function(){ showUpgrade("多本行事曆"); });
+}
+function closeSetSub(){ var pg=$("setSub"); if(pg) pg.classList.remove("show"); }
+function setSubOpen(){ var pg=$("setSub"); return !!(pg && pg.classList.contains("show")); }
 function closeSettingsPage(){
+  closeSetSub();
   var pg=$("settingsPage");
   if(pg) pg.classList.remove("show");
 }
@@ -2145,13 +2257,15 @@ function settingsPageOpen(){
 function openCalManager(){
   const ids=Object.keys(state.calendars);
   // 不放分組標題 —— 按鈕上的字已經說明了用途，再加標題反而變成雙重標示
-  var _box=function(title, inner){
-    return '<div style="margin-bottom:14px">'
-      +'<div style="background:#fff;border:1px solid #E3DED4;border-radius:18px;padding:15px;box-shadow:0 2px 10px rgba(46,46,51,.06)">'+inner+'</div>'
-      +'</div>';
+  /* 設定頁改成單行列表（與其他三支 App 同一套）。
+     內容多的「我的行事曆」走子頁，有返回鍵；其餘是單一動作，點了就做。 */
+  var row=function(id, ico, name, val, extra){
+    return '<button type="button" class="set-row'+(extra||'')+'" id="'+id+'">'
+      +'<span class="ic">'+ico+'</span><span class="tx">'+name+'</span>'
+      +'<span class="set-val">'+(val||'')+'</span><span class="ar">›</span></button>';
   };
 
-  // 我的行事曆
+  // 我的行事曆：內容多（清單＋新增），放子頁
   var calInner='<p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.6">點名稱可切換。每本資料各自獨立；用同一組帳號登入的家人會看到同樣的行事曆。</p>';
   calInner+='<div id="calList">'+ids.map(id=>{
     const on=id===state.currentCal;
@@ -2163,62 +2277,68 @@ function openCalManager(){
   } else {
     calInner+='<button id="calAddLocked" type="button" style="width:100%;margin-top:10px;padding:12px;border:1.5px dashed var(--line);background:var(--bg);color:var(--muted);border-radius:12px;font-size:14px;font-weight:600;font-family:inherit">🔒 新增行事曆（升級完整版解鎖）</button>';
   }
+  window.__calSubHtml = calInner;
 
-  // 提醒
-  var notiInner='<button id="notifyBtn" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">🔔 開啟今日行程通知</button>'
-    +'<div style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.6">建議先安裝到桌面，開啟後打開 App 會用手機通知提醒今天的行程</div>';
-
-  // 資料備份
-  // 顯示一顆「資料備份」，實際的匯出鈕與檔案輸入藏起來，由備份選單觸發
-  var backInner='<button id="backupBtn" type="button" style="'+_btn+'">💾 資料備份</button>'
-    +'<button id="backupExport" type="button" style="display:none"></button>'
-    +'<input id="backupImport" type="file" accept="application/json" style="display:none">';
-
-  // 分享
-  var shareInner='<button id="shareAppBtn" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">📤 分享給朋友</button>'
-    +'<div style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center;line-height:1.6">好用的話，把它分享給需要的家人朋友</div>';
-
-  // 支援（智在生活 Standard：四支 App 都有）
-  var _btn='width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit';
-  var supInner='<button id="supportBtn" type="button" style="'+_btn+'">💬 聯繫客服</button>'
-    +'<button id="termsBtnSet" type="button" style="'+_btn+';margin-top:8px">📄 服務條款與隱私政策</button>';
-  // 應用程式：安裝到桌面（已是桌面 App 開啟就不顯示）
   var _standalone=false;
   try{ _standalone=(window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true; }catch(e){}
-  var appInner = _standalone ? '' : '<button id="installFromSettings" type="button" style="'+_btn+'">📲 安裝到手機桌面</button>';
-
-  // 升級入口放設定頁最上面；已付費或管理員不顯示
   var _paid = state.isAdmin || state.plan==="full" || state.plan==="basic" || state.plan==="family";
-  var upInner = '<button id="upFromSettings" type="button" style="'+_btn+'">\u2b50 升級完整版</button>';
-  let html=(_paid ? "" : _box("", upInner))
-    + _box("📅 我的行事曆", calInner)
-    + _box("🔔 提醒", notiInner)
-    + _box("", backInner)
-    + (appInner ? _box("", appInner) : "")
-    + _box("", shareInner)
-    + _box("", supInner);
-
-  if(state.isAdmin){
-    html+=_box("🔧 管理", '<button id="goAdminFromCal" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit">🔑 訂閱管理</button>'+'<button id="pvFromCal" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit;margin-top:8px">🧪 預覽使用者畫面</button>'+'<button id="cleanDupBtn" type="button" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;font-family:inherit;margin-top:8px">🧹 清除重複記事</button>');
-  }
-
-  // 帳號資訊（整頁設定最上方）
   var _planName={trial:"試用中",basic:"完整版",full:"完整版",family:"完整版",free:"免費版"};
-  var _acc='<div class="set-acc"><div class="em">'+esc(state.user||"—")+'</div>'
+
+  // 帳號卡
+  var html='<div class="set-acc"><div class="em">'+esc(state.user||"—")+'</div>'
     +'<div class="pl">'+(state.isAdmin?"管理員":(_planName[state.plan]||"免費版"))+'</div>'
     +((!state.isAdmin && state.expiry) ? '<div class="ex">到期日：'+esc(state.expiry)+'</div>' : '')
     +'</div>';
-  html = _acc + html
-    + '<button id="logoutFromSettings" type="button" style="width:100%;padding:15px;border-radius:12px;border:1.5px solid #C0392B;background:#fff;color:#C0392B;font-weight:700;font-size:16px;font-family:inherit;margin-top:6px">🚪 登出</button>'
+
+  if(!_paid){
+    html+='<div class="set-list">'+row('upFromSettings','⭐','升級完整版', _planName[state.plan]||'免費版')+'</div>';
+  }
+
+  // 這本 App 自己的功能
+  html+='<div class="set-list">'
+    + row('calFromSettings','📅','我的行事曆', ids.length+' 本')
+    + '<button type="button" class="set-row" id="notifyBtn" aria-pressed="false">'
+      + '<span class="ic">🔔</span><span class="tx">今日行程通知</span>'
+      + '<span class="set-val"><span class="noti-pill" id="notifyVal">已關閉</span></span></button>'
+    + '</div>';
+
+  // 四支 App 共通
+  html+='<div class="set-list">'
+    + row('backupBtn','💾','資料備份')
+    + (_standalone ? '' : row('installFromSettings','📲','安裝到手機桌面'))
+    + row('shareAppBtn','🔗','分享這個 App')
+    + '</div>'
+    + '<button id="backupExport" type="button" style="display:none"></button>'
+    + '<input id="backupImport" type="file" accept="application/json" style="display:none">';
+
+  html+='<div class="set-list">'
+    + row('supportBtn','💬','聯繫客服')
+    + row('termsBtnSet','📄','服務條款與隱私政策')
+    + '</div>';
+
+  if(state.isAdmin){
+    html+='<div class="set-list">'
+      + row('goAdminFromCal','🔑','訂閱管理')
+      + row('pvFromCal','🧪','預覽使用者畫面')
+      + row('cleanDupBtn','🧹','清除重複記事')
+      + '</div>';
+  }
+
+  html+='<div class="set-list">'
+    + '<button type="button" class="set-row danger" id="logoutFromSettings">'
+    + '<span class="ic">🚪</span><span class="tx">登出</span></button></div>'
     + '<div class="set-foot">生活管家 ' + APP_VER + (state.isAdmin ? " · "+BUILD_ID : "") + '</div>';
+
   openSettingsPage(html);
+  var _cfs=$("calFromSettings");
+  if(_cfs) _cfs.addEventListener("click", function(){ openSetSub("📅 我的行事曆", window.__calSubHtml); });
   var _nb=$("notifyBtn");
   if(_nb){
-    if(notifyOn()){ _nb.textContent="✅ 今日行程通知已開啟"; _nb.style.background="var(--primary-soft)"; _nb.style.color="var(--primary)"; }
+    updateNotifyBtn();
     _nb.addEventListener("click", function(){
       if(notifyOn()){
         try{ localStorage.setItem('notifyEnabled','0'); }catch(e){}
-        _nb.textContent="🔔 開啟今日行程通知"; _nb.style.background=""; _nb.style.color="";
+        updateNotifyBtn();
         toast("已關閉行程提醒");
       } else { requestNotify(); }
     });
@@ -2232,24 +2352,18 @@ function openCalManager(){
       ? "1. 請改用 Safari 開啟本頁\n2. 點下方「分享」⬆️\n3. 選「加入主畫面」"
       : "1. 請改用 Chrome 開啟本頁\n2. 點瀏覽器選單（⋮）\n3. 選「安裝應用程式／加到主畫面」"));
   });
-  if($("termsBtnSet")) $("termsBtnSet").addEventListener("click", function(){ closeSettingsPage(); legalDocs.open("terms"); });
+  if($("termsBtnSet")) $("termsBtnSet").addEventListener("click", function(){ legalDocs.open("terms"); });
   if($("pvFromCal")) $("pvFromCal").addEventListener("click", function(){ closeSettingsPage(); previewMode.open(); });
-  if($("upFromSettings")) $("upFromSettings").addEventListener("click", function(){ closeSettingsPage(); openUpgradeSheet(""); });
+  if($("upFromSettings")) $("upFromSettings").addEventListener("click", function(){ openUpgradeSheet(""); });
   if($("backupBtn")) $("backupBtn").addEventListener("click", function(){
     openBackupSheet({
       onExport: function(){ var b=$("backupExport"); if(b) b.click(); },
       onImport: function(){ var f=$("backupImport"); if(f) f.click(); }
     });
   });
-  if($("goAdminFromCal")) $("goAdminFromCal").addEventListener("click", function(){ closeSettingsPage(); openAdminPanel(); });
+  if($("goAdminFromCal")) $("goAdminFromCal").addEventListener("click", function(){ openAdminPanel(); });
   if($("cleanDupBtn")) $("cleanDupBtn").addEventListener("click", cleanDuplicateRecords);
   if($("logoutFromSettings")) $("logoutFromSettings").addEventListener("click", function(){ closeSettingsPage(); doLogout(); });
-  $("calList").querySelectorAll(".cal-name").forEach(s=>s.addEventListener("click", ()=>setCurrentCal(s.getAttribute("data-cal"))));
-  $("calList").querySelectorAll(".cal-del").forEach(b=>b.addEventListener("click", e=>{ e.stopPropagation(); deleteCalendar(b.getAttribute("data-del")); }));
-  var _cab=$("calAddBtn");
-  if(_cab) _cab.addEventListener("click", ()=>{ const nm=$("calNewName").value.trim(); if(nm){ addCalendar(nm); } else { toast("請輸入名稱"); } });
-  var _cal2=$("calAddLocked");
-  if(_cal2) _cal2.addEventListener("click", function(){ closeSettingsPage(); showUpgrade("多本行事曆"); });
   if($("backupExport")) $("backupExport").addEventListener("click", exportBackup);
   if($("backupImport")) $("backupImport").addEventListener("change", function(){ if(this.files&&this.files[0]) importBackup(this.files[0]); this.value=""; });
 }
@@ -4090,13 +4204,13 @@ if(!_firebaseReady){
 
 // 行事曆：返回鍵一層一層往回的順序
 function appHandleBack(){
-  if(typeof settingsPageOpen==='function' && settingsPageOpen()){ closeSettingsPage(); return true; }   // 設定頁
-  var cf=document.getElementById('cfWrap');
-  if(cf && cf.classList.contains('on')){ document.getElementById('cfNo').click(); return true; }   // 確認視窗
+  // 共用模組的彈窗疊在最上面，先關它們；設定頁排在後面，
+  // 否則條款、升級這些視窗會「跳過」被關掉的設定頁。
+  if(window.closeTopSharedOverlay && closeTopSharedOverlay()) return true;
   var mr=$("modalRoot");
   if(mr && mr.innerHTML.trim()!==''){ closeSheet(); return true; }            // 彈窗（新增記事等）
-  var lg=document.getElementById("lgWrap");
-  if(lg && lg.classList.contains('on')){ legalDocs.close(); return true; }                          // 條款頁
+  if(typeof setSubOpen==='function' && setSubOpen()){ closeSetSub(); return true; }                      // 設定子頁 → 回設定清單
+  if(typeof settingsPageOpen==='function' && settingsPageOpen()){ closeSettingsPage(); return true; }   // 設定頁 200
   var ap=$("adminPanel");
   if(ap && !ap.classList.contains('hidden')){ var bb=$("adminBackBtn"); if(bb) bb.click(); else ap.classList.add('hidden'); return true; }
   var app=$("app");
@@ -5110,6 +5224,77 @@ previewMode.init({
   }
 
   window.expiryNotice = { check: check, close: close, _daysLeft: daysLeft };
+})();
+
+/* ==================== 返回鍵：先關最上層彈窗（四個 App 共用）====================
+   共用模組的彈窗都是後來才加的，各 App 原本的返回鍵不認得它們，
+   按下去會「穿過」彈窗去關底下的設定頁或分頁。這裡依 z-index 由高到低
+   檢查，有開著的就關掉並回報 true，讓呼叫端知道這次返回已經處理掉了。
+   ==================================================================== */
+(function(){
+  var LAYERS = [
+    { id:'cfWrap',    z:10090, close:function(){ var b=document.getElementById('cfNo'); if(b) b.click(); } },
+    { id:'exWrap',    z:10080, close:function(){ if(window.expiryNotice) expiryNotice.close(); } },
+    { id:'bkWrap',    z:10070, close:function(w){ w.classList.remove('on'); } },
+    { id:'pvWrap',    z:10061, close:function(w){ w.classList.remove('on'); } },
+    { id:'lgWrap',    z:10040, close:function(){ if(window.legalDocs) legalDocs.close(); } },
+    { id:'upWrap',    z:10030, close:function(){ if(window.upgradeSheet) upgradeSheet.close(); } },
+    { id:'subsSheet', z:10002, close:function(w){ w.classList.remove('on'); } }
+  ];
+  window.closeTopSharedOverlay = function(){
+    for(var i=0;i<LAYERS.length;i++){
+      var w = document.getElementById(LAYERS[i].id);
+      if(w && w.classList.contains('on')){
+        try{ LAYERS[i].close(w); }catch(e){ try{ w.classList.remove('on'); }catch(e2){} }
+        return true;
+      }
+    }
+    return false;
+  };
+})();
+
+/* ==================== 載入指示（四個 App 共用）====================
+   網路慢的時候畫面不能完全靜止，否則使用者會重複點按鈕或以為當掉。
+   appLoading.show("訊息") / appLoading.hide()；重複呼叫 show 只會換訊息。
+   ==================================================================== */
+(function(){
+  function css(){
+    if(document.getElementById('ldCss')) return;
+    var s=document.createElement('style'); s.id='ldCss';
+    s.textContent =
+      '#ldWrap{position:fixed;inset:0;z-index:10095;display:none;flex-direction:column;'+
+        'align-items:center;justify-content:center;gap:14px;background:rgba(252,252,250,.94);'+
+        '-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}'+
+      '#ldWrap.on{display:flex;}'+
+      '#ldWrap .ld-sp{width:34px;height:34px;border-radius:50%;'+
+        'border:3px solid rgba(90,100,95,.18);border-top-color:var(--ld-ac,#5B6F79);'+
+        'animation:ldSpin .8s linear infinite;}'+
+      '#ldWrap .ld-tx{font-size:14px;color:#5B6F79;font-family:inherit;letter-spacing:.02em;}'+
+      '@keyframes ldSpin{to{transform:rotate(360deg)}}'+
+      '@media (prefers-reduced-motion:reduce){#ldWrap .ld-sp{animation-duration:2.4s}}';
+    document.head.appendChild(s);
+  }
+  css();   // 立刻注入：CRM 有一顆寫在 HTML 裡的載入遮罩也要用到 .ld-sp
+  function el(){
+    var w=document.getElementById('ldWrap');
+    if(!w){
+      w=document.createElement('div'); w.id='ldWrap';
+      w.setAttribute('role','status'); w.setAttribute('aria-live','polite');
+      w.innerHTML='<div class="ld-sp"></div><div class="ld-tx" id="ldTx">載入中…</div>';
+      document.body.appendChild(w);
+    }
+    return w;
+  }
+  window.appLoading = {
+    show: function(msg, accent){
+      var w=el();
+      if(accent) w.style.setProperty('--ld-ac', accent);
+      var t=document.getElementById('ldTx'); if(t) t.textContent = msg || '載入中…';
+      w.classList.add('on');
+    },
+    hide: function(){ var w=document.getElementById('ldWrap'); if(w) w.classList.remove('on'); },
+    visible: function(){ var w=document.getElementById('ldWrap'); return !!(w && w.classList.contains('on')); }
+  };
 })();
 
 /* ==================== 確認對話框（四個 App 共用）====================
