@@ -583,7 +583,7 @@
     <label class="login-consent"><input type="checkbox" id="agreeChk"> <span>我已閱讀並同意 <a id="termsLink" style="color:var(--primary);text-decoration:underline">《服務條款與隱私政策》</a></span></label>
     <button id="loginBtn" class="btn-primary">登入</button>
     <div id="loginMsg" class="login-msg"></div>
-    <div class="family-hint">👨‍👩‍👧 家人共用同一帳號：帳號主人登入後，把收到的登入信轉寄給家人，在家人手機點連結就能登入</div>
+    <div class="family-hint">👨‍👩‍👧 家人共用同一帳號：將登入信轉寄給家人，點連結即可登入</div>
     <button id="adminLoginToggle" type="button" class="btn-secondary">🔧 管理員登入</button>
     <div id="adminLoginBox" style="display:none;margin-top:14px;text-align:left">
       <input id="adminEmailInput" class="admin-input" type="email" inputmode="email" autocomplete="username" placeholder="管理員 Email">
@@ -846,7 +846,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1006-1";
+const BUILD_ID = "1006-10";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1600,8 +1600,6 @@ async function adminLogin(){
   btn.disabled=false; btn.textContent="管理員登入";
 }
 (function(){
-  var t=$("adminLoginToggle"), box=$("adminLoginBox");
-  if(t && box) t.addEventListener("click", function(){ box.style.display = box.style.display==="none" ? "block" : "none"; });
   var b=$("adminLoginBtn"); if(b) b.addEventListener("click", adminLogin);
   var pwi=$("adminPwInput"); if(pwi) pwi.addEventListener("keydown", function(e){ if(e.key==="Enter") adminLogin(); });
 })();
@@ -1784,7 +1782,7 @@ function requestNotify(){
   Notification.requestPermission().then(function(p){
     if(p==='granted'){ try{ localStorage.setItem('notifyEnabled','1'); }catch(e){} toast('✅ 已開啟通知'); try{ updateNotifyBtn(); }catch(e){} maybeNotifyToday(true); }
     else if(p==='denied'){
-      alert('🔔 你選擇了「封鎖」通知\n\n若要開啟，請到瀏覽器或手機設定\n把本站/本 App 的通知改成「允許」');
+      alert('🔔 通知已被封鎖\n\n若要開啟，請到瀏覽器或手機設定\n把本站/本 App 的通知改成「允許」');
     } else {
       alert('🔔 尚未開啟通知\n\n請再點一次「開啟行程提醒」\n並選擇「允許」');
     }
@@ -2018,7 +2016,7 @@ function invDict(){
 /* ===== ⑤ App 內通知（動態）===== */
 function deviceName(){ try{ return localStorage.getItem("cal_devname")||""; }catch(e){ return ""; } }
 function setDeviceNamePrompt(){
-  const v=prompt("設定你的暱稱（讓家人知道是誰新增的）", deviceName());
+  const v=prompt("設定暱稱（供家人辨識記事來源）", deviceName());
   if(v===null) return;
   const nm=(v||"").trim();
   try{ localStorage.setItem("cal_devname",nm); }catch(e){}
@@ -2088,7 +2086,7 @@ function openActivityPanel(){
   else {
     html+='<div class="act-list">'+list.map(a=>{
       const mine=a.actor===me;
-      return '<div class="act-item"><span class="act-ico">'+(KIND_ICO[a.kind]||"📝")+'</span><div class="act-body"><div class="act-txt"><b>'+esc(a.actor||"有人")+'</b> 新增了：'+esc(a.title)+(mine?' <span style="color:var(--faint)">（你）</span>':'')+'</div><div class="act-time">'+actTimeText(a.ts)+'</div></div></div>';
+      return '<div class="act-item"><span class="act-ico">'+(KIND_ICO[a.kind]||"📝")+'</span><div class="act-body"><div class="act-txt"><b>'+esc(a.actor||"有人")+'</b> 新增了：'+esc(a.title)+(mine?' <span style="color:var(--faint)">（我）</span>':'')+'</div><div class="act-time">'+actTimeText(a.ts)+'</div></div></div>';
     }).join("")+'</div>';
   }
   openSheet("🔔 動態", html, null, null, "關閉");
@@ -4151,14 +4149,16 @@ if('serviceWorker' in navigator){
 var _deferredPrompt=null;
 window.addEventListener('beforeinstallprompt', function(e){
   e.preventDefault(); _deferredPrompt=e;
+  if(window.appInstall && appInstall.installed()) return;   // 已從桌面圖示開啟 → 不顯示
   try{ if(!localStorage.getItem('installDismissed')){ var b=document.getElementById('installBar'); if(b) b.style.display='flex'; } }catch(err){ var b2=document.getElementById('installBar'); if(b2) b2.style.display='flex'; }
 });
 (function(){
   var btn=document.getElementById('installBtn'), bar=document.getElementById('installBar'), cls=document.getElementById('installClose');
   if(btn) btn.addEventListener('click', function(){
-    if(!_deferredPrompt){ alert('請用 Chrome 瀏覽器開啟本頁再安裝。\n\n若沒出現安裝視窗：點手機瀏覽器選單（⋮）選「安裝應用程式／加到主畫面」。\niPhone 請用 Safari 的分享鈕 → 加入主畫面。'); return; }
-    _deferredPrompt.prompt();
-    _deferredPrompt.userChoice.then(function(){ _deferredPrompt=null; if(bar) bar.style.display='none'; });
+    // 改走共用模組：提示文字與等待訊息四個 App 一致
+    appInstall.run(_deferredPrompt).then(function(used){
+      if(used){ _deferredPrompt=null; if(bar) bar.style.display='none'; }
+    });
   });
   if(cls) cls.addEventListener('click', function(){ if(bar) bar.style.display='none'; try{ localStorage.setItem('installDismissed','1'); }catch(e){} });
 })();
@@ -4194,8 +4194,8 @@ window.addEventListener('appinstalled', function(){
       var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
       if(help){
         help.innerHTML = isIOS
-          ? '📱 <b>安裝步驟：</b><br>1. 請改用「<b>Safari 瀏覽器</b>」開啟本頁<br>2. 點「<b>分享</b>」按鈕 ⬆️<br>3. 選「<b>加入主畫面</b>」<br><span style="display:block;margin-top:9px;padding-top:9px;border-top:1px dashed #DDD8CE;color:#8A8A93;font-size:11.5px">💡 若你已安裝過，請直接到手機桌面找「生活管家」開啟</span>'
-          : '📲 <b>安裝步驟：</b><br>1. 請改用「<b>Chrome 瀏覽器</b>」開啟本頁<br>2. 點「<b>安裝到手機桌面</b>」<br>3. 跳出視窗 → 選「<b>安裝</b>」<br><span style="display:block;margin-top:9px;padding-top:9px;border-top:1px dashed #DDD8CE;color:#8A8A93;font-size:11.5px">💡 若你已安裝過，請直接到手機桌面找「生活管家」開啟</span>';
+          ? '📱 <b>安裝步驟：</b><br>1. 請改用「<b>Safari 瀏覽器</b>」開啟本頁<br>2. 點「<b>分享</b>」按鈕 ⬆️<br>3. 選「<b>加入主畫面</b>」<br><span style="display:block;margin-top:9px;padding-top:9px;border-top:1px dashed #DDD8CE;color:#8A8A93;font-size:11.5px">💡 若您已安裝過，請直接至手機桌面開啟「生活管家」開啟</span>'
+          : '📲 <b>安裝步驟：</b><br>1. 請改用「<b>Chrome 瀏覽器</b>」開啟本頁<br>2. 點「<b>安裝到手機桌面</b>」<br>3. 跳出視窗 → 選「<b>安裝</b>」<br><span style="display:block;margin-top:9px;padding-top:9px;border-top:1px dashed #DDD8CE;color:#8A8A93;font-size:11.5px">💡 若您已安裝過，請直接至手機桌面開啟「生活管家」開啟</span>';
         help.style.display='block';
       }
     }
@@ -4258,7 +4258,7 @@ function appHandleBack(){
         lg.style.display="flex";
         lg.classList.remove("hidden");
         var m=document.getElementById("loginMsg");
-        if(m) m.textContent="（連線較慢，已為你顯示登入畫面）";
+        if(m) m.textContent="（連線較慢，已顯示登入畫面）";
       }
     }catch(e){}
   }, 3000);
@@ -4478,7 +4478,7 @@ function appHandleBack(){
   async function doAdd(){
     var em=document.getElementById('aEmail'), btn=document.getElementById('aGo');
     var v=(em&&em.value||'').trim().toLowerCase();
-    if(!isMail(v)){ toast('Email 格式不對，請檢查'); if(em) em.focus(); return; }
+    if(!isMail(v)){ toast('Email 格式不正確'); if(em) em.focus(); return; }
     var app=SUBS_APPS.filter(function(a){ return a.id===S.addApp; })[0];
     var key=eKey(v), now=Date.now();
     var exp=ymd(addMonths(now, S.addMonths));
@@ -4686,12 +4686,12 @@ function appHandleBack(){
         '<span style="font-size:34px;font-weight:900;color:'+ac+';letter-spacing:-.5px">$'+Number(o.price||0).toLocaleString()+'</span>'+
         '<span style="color:#8A8A93;font-size:14px">/年</span></div>'+ per +
       '<div style="background:#F6F7F9;border-radius:12px;padding:13px;margin-top:15px">'+
-        '<div style="font-size:12px;color:#7b8794;margin-bottom:6px">你的帳號</div>'+
+        '<div style="font-size:12px;color:#7b8794;margin-bottom:6px">帳號資訊</div>'+
         '<div style="display:flex;align-items:center;gap:8px">'+
           '<div id="payMail" style="flex:1;font-size:14px;font-weight:700;color:#2E2E33;word-break:break-all">'+esc(mail||'（請先登入）')+'</div>'+
           (mail?'<button type="button" id="payCopy" style="flex:none;border:1px solid #dfe3e8;background:#fff;color:#5a6a78;border-radius:8px;padding:7px 12px;font-size:12px;font-family:inherit;min-height:36px">複製</button>':'')+
         '</div>'+
-        '<div style="font-size:12.5px;color:#B45309;line-height:1.65;margin-top:10px">⚠️ 付款時「電子郵件」欄請填上面這個信箱，我們才知道要幫誰開通。</div>'+
+        '<div style="font-size:12.5px;color:#B45309;line-height:1.65;margin-top:10px">⚠️ 付款時請於「電子郵件」欄填寫上方信箱，以利帳號開通。</div>'+
       '</div>'+
       '<label for="payAgree" style="display:flex;gap:9px;align-items:flex-start;margin-top:15px;font-size:12.5px;line-height:1.65;color:#39423C;cursor:pointer">'+
         '<input type="checkbox" id="payAgree" style="flex:none;width:18px;height:18px;margin-top:1px;accent-color:'+ac+'">'+
@@ -4736,7 +4736,7 @@ function appHandleBack(){
       if(go.disabled) return;
       var url=PAY_LINKS[app];
       if(url){ window.open(url,'_blank','noopener'); return; }
-      tip('付款連結準備中，先幫你開客服');
+      tip('付款連結準備中，將為您轉至客服');
       setTimeout(function(){ window.open(LINE_URL,'_blank','noopener'); }, 700);
     };
   };
@@ -4752,7 +4752,7 @@ function appHandleBack(){
    ==================================================================== */
 (function(){
   var APP = (window.LEGAL_APP || 'cal');
-  var UPDATED = '2026/09/30';
+  var UPDATED = '2026/10/06';
   var MAIL = 'beyunself@hotmail.com';
   var LINE_NAME = '智在生活';
 
@@ -4816,13 +4816,13 @@ function appHandleBack(){
          '裝置識別碼：用於計算同一帳號之登入裝置數量。') +
       p('本服務不蒐集通訊錄、位置資訊、照片或其他裝置資料，亦未使用任何廣告或行為追蹤工具。')) +
     sec(2,'資料之儲存', ol(
-      '前條資料儲存於 Google Firebase。',
+      '前條資料儲存於 Google 雲端服務。',
       '各帳號之資料以使用者之電子郵件位址區隔，其他使用者無從讀取。')) +
     sec(3,'資料之存取與利用', ol(
       '本服務僅於使用者申告問題而有協助排除障礙之必要，或系統異常而有修復之必要時，存取使用者資料。',
       '除前款情形外，本服務不查閱使用者資料，不作行銷利用，亦不提供予任何第三人。')) +
     sec(4,'委外之第三方服務',
-      ol('Google Firebase：提供身分驗證及資料儲存。',
+      ol('Google 雲端服務：提供身分驗證及資料儲存。',
          '藍新金流：提供付款處理。本服務不取得使用者之信用卡號。') +
       p('前開服務各有其隱私權政策。')) +
     sec(5,'保存期限', ol(
@@ -5012,7 +5012,7 @@ function appHandleBack(){
       w=document.createElement('div'); w.id='pvWrap';
       w.innerHTML='<div class="pv-box">'+
         '<div class="pv-t">預覽使用者畫面</div>'+
-        '<div class="pv-s">用客戶的角度看一次。預覽期間不會動到你的資料。</div>'+
+        '<div class="pv-s">以使用者視角檢視畫面，預覽期間不會變更任何資料。</div>'+
         '<div id="pvList"></div>'+
         '<button type="button" class="pv-cancel" id="pvCancel">取消</button></div>';
       document.body.appendChild(w);
@@ -5192,12 +5192,12 @@ previewMode.init({
     if(d === 0){
       title = isTrial ? '試用今天到期' : '完整版今天到期';
       desc  = isTrial
-        ? '今天過後會轉成免費版，部分功能會鎖起來。<br><b>你建立的資料都會保留。</b>'
-        : '今天過後會轉成免費版。<br><b>你的資料都會保留，續約就能繼續用。</b>';
+        ? '明日起轉為免費版，部分功能停用。<br><b>既有資料完整保留。</b>'
+        : '明日起轉為免費版。<br><b>資料完整保留，續約後即可恢復。</b>';
     } else {
       title = isTrial ? ('試用還有 ' + d + ' 天') : ('完整版還有 ' + d + ' 天到期');
       desc  = isTrial
-        ? ('試用到 <b>' + cfg.expiry + '</b> 為止。<br>到期後會轉成免費版，部分功能會鎖起來，資料都會保留。')
+        ? ('試用到 <b>' + cfg.expiry + '</b> 為止。<br>到期後轉為免費版，部分功能停用，資料完整保留。')
         : ('使用到 <b>' + cfg.expiry + '</b> 為止。<br>現在續約會從原到期日往後延長，剩下的天數不會被吃掉。');
     }
     btn = isTrial ? '看方案' : '我要續約';
@@ -5300,37 +5300,115 @@ previewMode.init({
   };
 })();
 
+/* ==================== 登入頁：管理員模式（四個 App 共用）====================
+   原本點「管理員登入」只是在客戶登入區「下面」再長出一段，整張卡愈疊愈長，
+   中間累積的間距讓畫面看起來很空。
+   改成：進管理員模式時把客戶登入區整個收起來，只留標題與管理員欄位，
+   並附一顆「返回一般登入」還原。標題區（前三個元素）一律保留。
+   ========================================================================= */
+(function(){
+  function hide(el, on){
+    if(!el) return;
+    if(on){
+      if(el.dataset.admPrev === undefined) el.dataset.admPrev = el.style.display || '';
+      el.style.display = 'none';
+    }else if(el.dataset.admPrev !== undefined){
+      el.style.display = el.dataset.admPrev;
+      delete el.dataset.admPrev;
+    }
+  }
+  window.adminOnly = {
+    /* toggleId：「🔧 管理員登入」那顆；boxId：管理員帳密區塊 */
+    bind: function(toggleId, boxId, accent){
+      var t = document.getElementById(toggleId), box = document.getElementById(boxId);
+      if(!t || !box || box.dataset.admBound) return;
+      box.dataset.admBound = '1';
+      var card = box.parentElement;
+      if(!card) return;
+
+      var back = document.createElement('button');
+      back.type = 'button';
+      back.id = boxId + 'Back';
+      back.textContent = '‹ 返回一般登入';
+      back.style.cssText = 'width:100%;margin-top:12px;padding:9px;background:none;border:none;' +
+        'color:#95a5a6;font-size:13px;font-family:inherit;cursor:pointer;';
+      back.addEventListener('click', function(){ set(false); });
+      box.appendChild(back);
+
+      function set(on){
+        var kids = [].slice.call(card.children);
+        kids.forEach(function(el, i){
+          if(el === box) return;
+          if(i < 3) return;                       // 圖示、標題、副標留著
+          hide(el, on);
+        });
+        box.style.display = on ? 'block' : 'none';
+        try{ card.scrollTop = 0; }catch(e){}
+      }
+      t.addEventListener('click', function(){
+        var open = !(box.style.display === 'none' || !box.style.display);
+        set(!open);
+      });
+    }
+  };
+
+  /* 四支 App 的 id 命名不同，存在哪一組就綁哪一組。
+     放在模組自己這裡，不依賴各 App 程式碼的執行順序。 */
+  (function auto(){
+    var pairs = [['adminLoginToggle','adminLoginBox'], ['crmAdminToggle','crmAdminBox']];
+    var done = false;
+    pairs.forEach(function(x){
+      if(document.getElementById(x[0]) && document.getElementById(x[1])){
+        try{ window.adminOnly.bind(x[0], x[1]); done = true; }catch(e){}
+      }
+    });
+    if(!done) setTimeout(auto, 60);
+  })();
+})();
+
 /* ==================== 安裝到桌面（四個 App 共用）====================
    三件事在這裡統一：步驟說明的文字、「已安裝過」的提醒、按下安裝後的等待提示。
    各 App 只要把自己接到的 beforeinstallprompt 事件交進來。
+   提示長條固定在畫面「下方」，不會蓋到標題列與返回鍵；15 秒後自動淡掉。
    ==================================================================== */
 (function(){
   var CFG = { appName:'這個 App', accent:'#5B6F79' };
+  var _t = null;                                   // 自動關閉的計時器
   function isIOS(){
     try{ return /iphone|ipad|ipod/i.test(navigator.userAgent); }catch(e){ return false; }
+  }
+  /* 已經從桌面圖示開啟 → 不必再顯示任何安裝相關提示 */
+  function installed(){
+    try{
+      return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+             || window.navigator.standalone === true;
+    }catch(e){ return false; }
   }
   function steps(){
     var n = CFG.appName;
     return '安裝到手機桌面\n\n安裝步驟：\n' + (isIOS()
       ? '1. 請改用「Safari 瀏覽器」開啟本頁\n2. 點下方「分享」按鈕 ⬆️\n3. 選「加入主畫面」'
       : '1. 請改用「Chrome 瀏覽器」開啟本頁\n2. 點瀏覽器選單（⋮）\n3. 選「安裝應用程式／加到主畫面」')
-      + '\n\n💡 若你已安裝過，請直接到手機桌面找「' + n + '」開啟';
+      + '\n\n💡 若您已安裝過，請直接至手機桌面開啟「' + n + '」開啟';
   }
   function css(){
     if(document.getElementById('inCss')) return;
     var s=document.createElement('style'); s.id='inCss';
     s.textContent =
-      '#inBar{position:fixed;left:0;right:0;top:0;z-index:10096;max-width:520px;margin:0 auto;'+
-        'display:none;padding:12px 16px calc(12px + env(safe-area-inset-top,0px));'+
+      '#inBar{position:fixed;left:0;right:0;bottom:0;z-index:10096;max-width:520px;margin:0 auto;'+
+        'display:none;padding:12px 44px calc(12px + env(safe-area-inset-bottom,0px)) 16px;'+
         'background:#2E2E33;color:#fff;font-size:13.5px;line-height:1.6;font-family:inherit;'+
-        'box-shadow:0 2px 12px rgba(0,0,0,.25);}'+
+        'box-shadow:0 -2px 12px rgba(0,0,0,.25);cursor:pointer;'+
+        'opacity:0;transition:opacity .35s ease;}'+
       '#inBar.on{display:block;}'+
+      '#inBar.show{opacity:1;}'+
       '#inBar b{color:#FFD9A0;}'+
-      '#inBar .in-x{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;'+
+      '#inBar .in-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;'+
         'border:none;color:rgba(255,255,255,.7);font-size:18px;padding:6px 10px;cursor:pointer;}';
     document.head.appendChild(s);
   }
-  function bar(html){
+  /* html：提示內容；ms：幾毫秒後自動淡掉（不傳就用 15 秒） */
+  function bar(html, ms){
     css();
     var b=document.getElementById('inBar');
     if(!b){
@@ -5339,22 +5417,33 @@ previewMode.init({
       document.body.appendChild(b);
     }
     b.innerHTML = html + '<button type="button" class="in-x" aria-label="關閉">×</button>';
-    b.querySelector('.in-x').onclick = hide;
+    b.onclick = hide;                              // 點長條任一處都可關掉
     b.classList.add('on');
+    // 先掛上再加 .show，讓淡入生效
+    try{ void b.offsetWidth; }catch(e){}
+    b.classList.add('show');
+    if(_t){ clearTimeout(_t); _t=null; }
+    _t = setTimeout(hide, (typeof ms==='number' ? ms : 15000));
     return b;
   }
-  function hide(){ var b=document.getElementById('inBar'); if(b) b.classList.remove('on'); }
+  function hide(){
+    if(_t){ clearTimeout(_t); _t=null; }
+    var b=document.getElementById('inBar'); if(!b) return;
+    b.classList.remove('show');
+    setTimeout(function(){ b.classList.remove('on'); }, 360);
+  }
 
-  // 安裝完成時把提示收掉（不是每支瀏覽器都會送這個事件，所以只當加分）
+  // 安裝完成時換成完成訊息（不是每支瀏覽器都會送這個事件，所以只當加分）
   try{ window.addEventListener('appinstalled', function(){
-    bar('✅ <b>安裝完成</b>　到手機桌面找「' + CFG.appName + '」就能開啟');
-    setTimeout(hide, 6000);
+    try{ localStorage.setItem('installDismissed','1'); }catch(e){}
+    bar('✅ <b>安裝完成</b>　到手機桌面找「' + CFG.appName + '」就能開啟', 6000);
   }); }catch(e){}
 
   window.appInstall = {
     init: function(cfg){ if(cfg) { CFG.appName = cfg.appName || CFG.appName; } },
     steps: steps,
     hide: hide,
+    installed: installed,
     /* dp：各 App 接到的 beforeinstallprompt 事件；沒有就跳步驟說明。
        回傳 Promise<boolean>，true 代表事件已經用掉，呼叫端要把自己的變數清空。 */
     run: function(dp){
@@ -5363,10 +5452,11 @@ previewMode.init({
         dp.prompt();
         return dp.userChoice.then(function(r){
           if(r && r.outcome === 'accepted'){
+            // 使用者已經按下安裝 → 記住，首頁橫條不用再出現
+            try{ localStorage.setItem('installDismissed','1'); }catch(e){}
             bar('⏳ <b>安裝中，請稍候…</b>　<b>請勿關閉本頁</b>，完成後桌面會出現圖示');
           } else {
-            bar('已取消安裝，隨時可以再從設定頁安裝');
-            setTimeout(hide, 4000);
+            bar('已取消安裝，隨時可以再從設定頁安裝', 4000);
           }
           return true;
         }).catch(function(){ return true; });
@@ -5559,7 +5649,7 @@ upgradeSheet.init({
     ['家事分工指派', false, true],
     ['同帳號裝置數', '1 台', '3 台']
   ],
-  note:'試用期滿後轉為免費版，功能較少但不會到期，你建立的資料都會保留。'
+  note:'試用期滿後轉為免費版，功能較少但不會到期，既有資料完整保留。'
 });
 </script>
 
