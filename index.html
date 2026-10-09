@@ -846,7 +846,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-12";
+const BUILD_ID = "1009-13";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -3150,9 +3150,18 @@ function openRecordForm(rec, presets, asCopy){
     // ── 何時：開始 / 結束 / 時間 收在同一塊 ──
     '<div class="whenbox" id="rec_whenbox">'+
       '<div class="whenbox-title">何時</div>'+
+      '<div class="field" id="rec_repeatbox" style="margin-bottom:10px"><label>重複</label>'+
+        '<div class="two">'+
+          '<select id="rec_repeatUnit">'+
+            ['none|不重複','day|每…天','week|每…週','month|每…月','year|每…年'].map(o=>{const v=o.split("|")[0],t=o.split("|")[1];return '<option value="'+v+'"'+(repUnit===v?" selected":"")+'>'+t+'</option>';}).join("")+
+          '</select>'+
+          '<input id="rec_repeatEvery" type="number" min="1" value="'+repEvery+'" placeholder="間隔數">'+
+        '</div>'+
+        '<div id="rec_rephint" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5"></div>'+
+      '</div>'+
       '<div class="two">'+
-        '<div class="field"><label>開始</label><input id="rec_dateStart" type="date" value="'+(ds||"")+'"><div class="wk" id="rec_datewk"></div></div>'+
-        '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><label id="rec_endlabel">結束</label><input id="rec_dateEnd" type="date" value='+JSON.stringify(r.dateEnd||r.repeatUntil||"")+'><div class="wk" id="rec_datewk2"></div></div>'+
+        '<div class="field"><label>開始</label><input id="rec_dateStart" type="date" value="'+(ds||"")+'"></div>'+
+        '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><label id="rec_endlabel">結束</label><input id="rec_dateEnd" type="date" value='+JSON.stringify(r.dateEnd||r.repeatUntil||"")+'></div>'+
       '</div>'+
       '<div id="rec_endhint" style="font-size:11.5px;color:var(--muted);margin:-2px 0 8px"></div>'+
       '<div class="when-btns">'+
@@ -3176,15 +3185,6 @@ function openRecordForm(rec, presets, asCopy){
     // ── 更多選項 ──
     '<button type="button" class="more-toggle" id="rec_moretoggle">＋ 更多選項<span class="more-dot" id="rec_moredot"></span></button>'+
     '<div class="morebox" id="rec_morebox" style="display:none">'+
-      '<div class="field" id="rec_repeatbox"><label>重複</label>'+
-        '<div class="two">'+
-          '<select id="rec_repeatUnit">'+
-            ['none|不重複','day|每…天','week|每…週','month|每…月','year|每…年'].map(o=>{const v=o.split("|")[0],t=o.split("|")[1];return '<option value="'+v+'"'+(repUnit===v?" selected":"")+'>'+t+'</option>';}).join("")+
-          '</select>'+
-          '<input id="rec_repeatEvery" type="number" min="1" value="'+repEvery+'" placeholder="間隔數">'+
-        '</div>'+
-        '<div id="rec_rephint" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5"></div>'+
-      '</div>'+
       '<div id="rec_amountbox"'+(isShop?' style="display:none"':'')+'><div class="field"><label>金額（選填）</label>'+
         '<input id="rec_amount" type="number" inputmode="numeric" value="'+(r.amount!=null?r.amount:"")+'" placeholder="例如 1200"></div></div>'+
       (assignOnMain ? '' : '<div id="rec_assignslot">'+assignHtml+'</div>')+
@@ -3200,13 +3200,6 @@ function openRecordForm(rec, presets, asCopy){
     isEdit?function(){ deleteRecord(r.id, r.title); }:null);
 
   (function(){
-    function _wkOf(v){ return v ? mdWk(v) : ""; }
-    function _wkLbl(){
-      var a=$("rec_dateStart"), b=$("rec_dateEnd");
-      var l1=$("rec_datewk"), l2=$("rec_datewk2");
-      if(l1) l1.innerHTML=_wkOf(a&&a.value);
-      if(l2) l2.innerHTML=_wkOf(b&&b.value);
-    }
 
     // ── 開始／結束連動：預設同一天；跨天的保持天數差一起平移 ──
     function _diffDays(a,b){ return Math.round((_ymdToDate(b)-_ymdToDate(a))/86400000); }
@@ -3214,7 +3207,8 @@ function openRecordForm(rec, presets, asCopy){
     function _syncEnd(){
       var a=$("rec_dateStart"), b=$("rec_dateEnd");
       if(!a||!b) return;
-      if(!a.value){ _lastStart=""; _wkLbl(); return; }
+      if(_repNow()){ _lastStart=a.value||""; return; }   // 重複時這欄是「重複到期」，不自動帶入
+      if(!a.value){ _lastStart=""; return; }
       if(!b.value || !_lastStart){ b.value=a.value; }              // 沒設過結束 → 同一天
       else {
         var gap=_diffDays(_lastStart, b.value);
@@ -3223,13 +3217,11 @@ function openRecordForm(rec, presets, asCopy){
         b.value=ymd(d);                                             // 保持天數差
       }
       _lastStart=a.value;
-      _wkLbl();
     }
     function _guardEnd(){
       var a=$("rec_dateStart"), b=$("rec_dateEnd");
-      if(!a||!b||!a.value||!b.value) { _wkLbl(); return; }
-      if(b.value<a.value){ b.value=a.value; toast("結束不能早於開始，已自動調整"); }
-      _wkLbl();
+      if(!a||!b||!a.value||!b.value) return;
+      if(b.value<a.value){ b.value=a.value; toast(_repNow()?"重複到期不能早於開始，已自動調整":"結束不能早於開始，已自動調整"); }
     }
     if($("rec_dateStart")) $("rec_dateStart").addEventListener("change", _syncEnd);
     if($("rec_dateEnd"))   $("rec_dateEnd").addEventListener("change", _guardEnd);
@@ -3247,9 +3239,23 @@ function openRecordForm(rec, presets, asCopy){
 
     // ── 重複：選了才給說明；結束欄位隨之變身 ──
     var REP_WORD={day:"天",week:"週",month:"個月",year:"年"};
+    function _repNow(){ var ru=$("rec_repeatUnit"); return !!(ru && ru.value && ru.value!=="none"); }
+    var _wasRep = _repNow();
+    // 使用者切換重複：選重複→到期日清空（不填＝一直重複）；改回不重複→結束日回到和開始同一天
+    function _onRepChange(){
+      var now=_repNow();
+      if(now!==_wasRep){
+        var a=$("rec_dateStart"), b=$("rec_dateEnd");
+        if(b) b.value = now ? "" : ((a&&a.value)||"");
+        _lastStart = (a&&a.value)||"";
+        _wasRep=now;
+      }
+      _morphEnd();
+    }
     function _morphEnd(){
       var ru=$("rec_repeatUnit"), lab=$("rec_endlabel"), hint=$("rec_endhint"), rh=$("rec_rephint");
       var isRep = !!(ru && ru.value && ru.value!=="none");
+      var evEl=$("rec_repeatEvery"); if(evEl) evEl.style.display = isRep ? "" : "none";
       if(lab) lab.textContent = isRep ? "重複到期" : "結束";
       if(hint) hint.textContent = isRep ? "不填＝一直重複" : "";
       if(rh){
@@ -3259,7 +3265,7 @@ function openRecordForm(rec, presets, asCopy){
         } else rh.textContent="";
       }
     }
-    if($("rec_repeatUnit"))  $("rec_repeatUnit").addEventListener("change", _morphEnd);
+    if($("rec_repeatUnit"))  $("rec_repeatUnit").addEventListener("change", _onRepChange);
     if($("rec_repeatEvery")) $("rec_repeatEvery").addEventListener("input", _morphEnd);
 
     // ── 待辦／純紀錄 ──
@@ -3274,7 +3280,7 @@ function openRecordForm(rec, presets, asCopy){
         rb.style.display = isLog ? "none" : "";
         if(isLog){ var ru=$("rec_repeatUnit"); if(ru && ru.value!=="none"){ ru.value="none"; } }
       }
-      _morphEnd();
+      _onRepChange();
     }
     document.querySelectorAll('input[name="rec_kind"]').forEach(function(rd){
       rd.addEventListener("change", function(){
@@ -3287,7 +3293,6 @@ function openRecordForm(rec, presets, asCopy){
     function _advUsed(){
       if(r.amount!=null && r.amount!=="") return true;
       if(r.urgent || r.countdown) return true;
-      if(r.repeat && r.repeat.unit && r.repeat.unit!=="none") return true;
       if(r.assignees && r.assignees.length) return true;
       return false;
     }
@@ -3309,11 +3314,11 @@ function openRecordForm(rec, presets, asCopy){
         if(a) a.value=""; if(e) e.value=""; _lastStart="";
         var ru=$("rec_repeatUnit");
         if(ru && ru.value && ru.value!=="none"){ ru.value="none"; toast("已清除日期，重複也一併取消"); }
-        _morphEnd(); _wkLbl();
+        _wasRep=false; _morphEnd();
       });
     });
 
-    _syncEnd(); _applyKind(); _wkLbl();
+    _syncEnd(); _applyKind();
   })();
 
   renderAssigneeChips();
