@@ -1,5 +1,5 @@
 // 生活管家 Service Worker
-const CACHE_NAME = 'cal-cache-v6';
+const CACHE_NAME = 'cal-cache-v7';
 const CORE = [
   './',
   './index.html',
@@ -20,7 +20,8 @@ self.addEventListener('install', function(e){
 self.addEventListener('activate', function(e){
   e.waitUntil(
     caches.keys().then(function(keys){
-      return Promise.all(keys.filter(function(k){ return k!==CACHE_NAME; }).map(function(k){ return caches.delete(k); }));
+      // 只清自己這個 App 的舊快取（同網站的其他 App 也有快取，不能一起刪）
+      return Promise.all(keys.filter(function(k){ return k.indexOf('cal-cache-')===0 && k!==CACHE_NAME; }).map(function(k){ return caches.delete(k); }));
     }).then(function(){ return self.clients.claim(); })
   );
 });
