@@ -49,8 +49,8 @@
     padding:32px 26px;box-shadow:var(--shadow);text-align:center;
   }
   .login-card .logo{font-size:40px;line-height:1;margin-bottom:14px}
-  .login-card h1{margin:0 0 4px;font-size:21px;letter-spacing:.5px}
-  .login-card p{margin:0 0 24px;color:var(--muted);font-size:13.5px}
+  .login-card h1{margin:0 0 4px;font-size:22px;letter-spacing:.5px}
+  .login-card p{margin:0 0 24px;color:var(--muted);font-size:14px}
   .login-card p .kw{font-size:12px;opacity:.7}
   .code-input{
     width:100%;padding:15px 16px;border:1.5px solid var(--line);border-radius:12px;
@@ -67,7 +67,7 @@
   .btn-primary:disabled{opacity:.55;cursor:default}
   .login-msg{margin-top:14px;min-height:18px;font-size:13px;color:var(--important)}
   .link-btn{margin-top:18px;background:transparent;color:var(--muted);font-size:13px;text-decoration:underline;padding:6px}
-  .code-hint{margin-top:10px;font-size:12.5px;color:var(--muted);letter-spacing:0;text-align:center}
+  .code-hint{margin-top:10px;font-size:12px;color:var(--muted);letter-spacing:0;text-align:center}
   /* 管理員登入（次要按鈕：有框線、無底色）與家人登入說明 */
   .btn-secondary{width:100%;margin-top:14px;padding:13px;border-radius:12px;background:transparent;
     color:var(--primary);font-size:15px;font-weight:600;border:1.5px solid var(--primary)}
@@ -82,9 +82,9 @@
   .set-body{padding:16px 16px calc(28px + env(safe-area-inset-bottom))}
   .set-acc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:20px}
   .set-acc .em{font-size:15px;font-weight:700;word-break:break-all}
-  .set-acc .pl{margin-top:8px;display:inline-block;font-size:12.5px;font-weight:700;
+  .set-acc .pl{margin-top:8px;display:inline-block;font-size:12px;font-weight:700;
     background:var(--primary-soft);color:var(--primary);border-radius:999px;padding:5px 12px}
-  .set-acc .ex{margin-top:8px;font-size:12.5px;color:var(--muted)}
+  .set-acc .ex{margin-top:8px;font-size:12px;color:var(--muted)}
   .set-foot{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
   /* 設定子頁：內容多的項目點進去看，有返回鍵，不用彈窗蓋住上下文 */
   #setSub{position:absolute;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:2}
@@ -101,7 +101,7 @@
   .set-row.danger .ic{filter:none}
   /* 管理員入口：低調文字樣式，避免引起一般使用者好奇（智在生活 Standard） */
   #adminLoginToggle{width:100%;margin-top:18px;padding:8px;background:none;border:none;
-    color:var(--muted);font-size:12.5px;font-weight:400;opacity:.75;cursor:pointer}
+    color:var(--muted);font-size:12px;font-weight:400;opacity:.75;cursor:pointer}
   #adminLoginToggle:active{opacity:1}
   .admin-input{width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);
     font-size:16px;outline:none;margin-top:8px}
@@ -118,9 +118,9 @@
     border-bottom:1px solid var(--line);
   }
   header.bar .title{font-size:18px;font-weight:700;letter-spacing:.3px}
-  header.bar .who{font-size:11px;color:var(--faint);margin-top:0}
-  .logout{font-size:11px;color:var(--muted);padding:4px 7px;border:1px solid var(--line);border-radius:999px;background:var(--surface);white-space:nowrap}
-  .icobtn{font-size:17px;padding:7px 10px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink)}
+  header.bar .who{font-size:12px;color:var(--faint);margin-top:0}
+  .logout{font-size:12px;color:var(--muted);padding:4px 7px;border:1px solid var(--line);border-radius:999px;background:var(--surface);white-space:nowrap}
+  .icobtn{font-size:16px;padding:7px 10px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink)}
   .icobtn svg{display:block}
   .dp-toggle{display:flex;gap:5px;background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:4px;margin:8px 4px 2px}
   .dp-tab{flex:1;border:none;background:transparent;padding:9px 6px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted)}
@@ -137,9 +137,9 @@
   }
   .tabbar button{
     flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;box-sizing:border-box;
-    padding:6px 0;color:var(--faint);font-size:11.5px;border-radius:12px;white-space:nowrap;
+    padding:6px 0;color:var(--faint);font-size:12px;border-radius:12px;white-space:nowrap;
   }
-  .tabbar button .ic{font-size:21px;line-height:1}
+  .tabbar button .ic{font-size:22px;line-height:1}
   .tabbar button.active{color:var(--primary);background:var(--primary-soft)}
 
   /* ---------- Calendar ---------- */
@@ -180,7 +180,7 @@
   .section-head{display:flex;align-items:center;justify-content:space-between;margin:9px 4px 7px}
   .section-head h2{font-size:15px;margin:0;font-weight:700}
   .section-head h2 .dh-date{font-weight:400;color:var(--muted);font-size:13px;margin-left:6px}
-  .add-btn{display:flex;align-items:center;gap:6px;background:var(--primary);color:#fff;font-weight:600;font-size:13.5px;padding:10px 16px;border-radius:999px;box-shadow:0 4px 12px rgba(62,155,142,.28)}
+  .add-btn{display:flex;align-items:center;gap:6px;background:var(--primary);color:#fff;font-weight:600;font-size:14px;padding:10px 16px;border-radius:999px;box-shadow:0 4px 12px rgba(62,155,142,.28)}
   .add-btn:active{background:var(--primary-d)}
 
   .card{
@@ -190,13 +190,13 @@
   .card .stripe{width:4px;align-self:stretch;border-radius:999px;flex:none;min-height:38px}
   .card .time-col{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:46px;flex:none}
   .card .time-col .tc-h{font-size:15px;font-weight:700;line-height:1.1;color:var(--ink)}
-  .card .time-col .tc-ap{font-size:10px;color:var(--muted);margin-top:1px}
+  .card .time-col .tc-ap{font-size:12px;color:var(--muted);margin-top:1px}
   .card .body{flex:1;min-width:0}
   .card .row1{display:flex;align-items:center;gap:8px}
   .card .name{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .card .time{font-size:12.5px;color:var(--muted);margin-top:2px}
-  .card .note{font-size:12.5px;color:var(--faint);margin-top:4px;white-space:pre-wrap;word-break:break-word}
-  .pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;flex:none}
+  .card .time{font-size:12px;color:var(--muted);margin-top:2px}
+  .card .note{font-size:12px;color:var(--faint);margin-top:4px;white-space:pre-wrap;word-break:break-word}
+  .pill{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;flex:none}
   .pill.work{background:#EAF1FE;color:#5B8DEF}
   .pill.life{background:#E8F3F1;color:#3E9B8E}
   .pill.health{background:#FDEEE7;color:#D9825F}
@@ -214,9 +214,11 @@
   .check.on{background:var(--done);border-color:var(--done)}
   .item.done .name{text-decoration:line-through;color:var(--faint)}
 
-  .qty{font-size:12.5px;color:var(--muted)}
+  .qty{font-size:12px;color:var(--muted)}
   .filters{display:flex;flex-direction:column;gap:8px;padding:2px 4px 12px}
   .filter-row{display:flex;gap:8px;align-items:center}
+  .filter-row.f4{display:grid;grid-template-columns:30px minmax(0,1fr) minmax(0,1fr)}
+  .filter-row.f4 .filter-label{grid-row:span 2}
   .filter-label{font-size:12px;color:var(--faint);font-weight:700;min-width:30px;flex:none}
   .filters select{
     flex:1 1 0;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:10px;
@@ -224,7 +226,9 @@
   }
   .empty-state{text-align:center;color:var(--muted);padding:44px 20px;font-size:14px;font-weight:600;line-height:1.6}
   .empty-state .eico{display:block;font-size:40px;margin-bottom:10px;opacity:.85;font-weight:400}
-  .empty-state .esub{display:block;font-size:12.5px;color:var(--faint);font-weight:400;margin-top:6px}
+  .empty-state .esub{display:block;font-size:12px;color:var(--faint);font-weight:400;margin-top:6px}
+  .ov-spend{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;background:var(--primary-soft);border-radius:10px;padding:10px 12px;margin:0 4px 10px;line-height:1.5}
+  .ov-spend b{font-size:16px}
   .ov-hint{font-size:12px;color:var(--muted);background:var(--primary-soft);border-radius:10px;padding:8px 12px;margin:0 4px 10px;line-height:1.5}
 
   /* ---------- Modal ---------- */
@@ -235,9 +239,11 @@
     max-height:90vh;overflow-y:auto;animation:slideUp .2s ease;
   }
   @keyframes slideUp{from{transform:translateY(40px);opacity:.6}to{transform:translateY(0);opacity:1}}
-  .sheet h3{margin:2px 0 16px;font-size:17px}
+  .sheet h3{margin:2px 0 16px;font-size:16px}
   .field{margin-bottom:13px}
-  .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-weight:600}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
+  .two > .field{min-width:0}
+  .field input[type=date]{min-width:0;max-width:100%}
   .field input,.field select,.field textarea{
     width:100%;padding:12px;border:1.5px solid var(--line);border-radius:11px;outline:none;
     background:var(--surface);color:var(--ink);
@@ -261,7 +267,7 @@
   .toast{
     position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);
     background:rgba(45,50,56,.94);color:#fff;padding:11px 18px;border-radius:999px;
-    font-size:13.5px;line-height:1.5;max-width:84%;text-align:center;
+    font-size:14px;line-height:1.5;max-width:84%;text-align:center;
     z-index:9999;box-shadow:var(--shadow);opacity:0;transition:opacity .2s;pointer-events:none;
   }
   .toast.show{opacity:1}
@@ -269,7 +275,7 @@
   /* ---- 第一批：假日 / 急迫 / 倒數 / 開關 ---- */
   .cell.holiday .num{color:#EF4444;font-weight:700}
   .cell.sel.holiday .num{color:#fff}
-  .dots .urg{font-size:9px;line-height:1}
+  .dots .urg{font-size:12px;line-height:1}
   .hol-banner{background:#FDECEC;color:#DC2626;font-size:13px;font-weight:600;
     padding:8px 12px;border-radius:10px;margin-bottom:10px;text-align:center}
   .urg-badge{font-size:13px;flex:none;line-height:1}
@@ -284,13 +290,13 @@
   .field .kind-pick label.kind-opt input[type=radio]{width:17px;height:17px;padding:0;margin:0;border-radius:50%}
   .kind-opt span{display:block;line-height:1.3}
   .kind-opt b{display:block;font-size:14px;font-weight:700;color:var(--ink)}
-  .kind-opt small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px;font-weight:400}
+  .kind-opt small{display:block;color:var(--muted);font-size:12px;margin-top:2px;font-weight:400}
   .kind-opt:has(input:checked){border-color:var(--accent,#5B8DEF);background:rgba(91,141,239,.07)}
 
   .whenbox{border:1px solid var(--line);border-radius:14px;padding:12px 12px 10px;margin-bottom:13px;background:var(--bg)}
   .whenbox-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:9px}
   .whenbox .field{margin-bottom:8px}
-  .whenbox .wk{font-size:11.5px;font-weight:700;color:var(--muted);margin-top:3px;min-height:15px}
+  .whenbox .wk{font-size:12px;font-weight:700;color:var(--muted);margin-top:3px;min-height:15px}
   .when-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
   .when-btns .btn-ghost{padding:5px 11px;font-size:12px}
 
@@ -311,16 +317,16 @@
   .switch input:checked + .slider::before{transform:translateX(19px)}
 
   /* ---- 第二批 2a：記事/分類/執行人/待購分組 ---- */
-  .legend{display:flex;gap:8px 12px;justify-content:center;margin-top:6px;flex-wrap:wrap;font-size:12.5px}
-  .legend span{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted)}
-  .type-badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;flex:none}
+  .legend{display:flex;gap:8px 12px;justify-content:center;margin-top:6px;flex-wrap:wrap;font-size:12px}
+  .legend span{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
+  .type-badge{font-size:12px;font-weight:700;padding:2px 7px;border-radius:6px;flex:none}
   .type-task{background:#EAF1FE;color:#2563EB}
   .type-record{background:#F1ECFB;color:#7C3AED}
   .meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 10px}
   .meta .who{color:#0D9488}
   .shop-hint{font-size:12px;color:var(--faint);margin:2px 4px 12px}
   .group-head{display:flex;align-items:center;gap:7px;margin:16px 4px 8px;font-size:13px;font-weight:700;color:var(--ink)}
-  .group-head .gcount{font-size:11px;font-weight:600;color:var(--faint);background:var(--bg);padding:1px 8px;border-radius:999px}
+  .group-head .gcount{font-size:12px;font-weight:600;color:var(--faint);background:var(--bg);padding:1px 8px;border-radius:999px}
   .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
   .chip{padding:7px 13px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);
     color:var(--muted);font-size:13px;font-weight:600}
@@ -329,7 +335,7 @@
   .chip-add input{flex:1;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;outline:none}
   .chip-add button{flex:none;padding:0 15px;border-radius:10px;background:var(--bg);color:var(--muted);font-weight:600}
   .label-row{display:flex;align-items:center;justify-content:space-between}
-  .clr-btn{font-size:11.5px;color:#E8735C;cursor:pointer;font-weight:600;user-select:none}
+  .clr-btn{font-size:12px;color:#E8735C;cursor:pointer;font-weight:600;user-select:none}
   .manage-link{font-size:12px;color:var(--primary);font-weight:600}
   .person-row{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-top:1px solid var(--line)}
   .person-row:first-of-type{border-top:none}
@@ -356,7 +362,7 @@
   .iconpick{display:flex;flex-wrap:wrap;gap:7px}
   .iconchip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
     width:62px;padding:8px 4px;border-radius:12px;background:var(--bg);border:1.5px solid transparent;
-    color:var(--muted);font-size:11px;line-height:1.2;transition:all .12s}
+    color:var(--muted);font-size:12px;line-height:1.2;transition:all .12s}
   .iconchip .ic{font-size:20px;line-height:1}
   .iconchip .lb{white-space:nowrap}
   .iconchip.on{background:#EAF2FF;border-color:var(--primary);color:var(--primary);font-weight:600}
@@ -384,11 +390,11 @@
   .goal-status{margin-top:8px;font-size:13px;font-weight:600;color:var(--muted)}
   .goal-status.is-done{color:#2CA02C}
   .goal-segs{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
-  .goal-segs .seg{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+  .goal-segs .seg{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
   .goal-segs .seg-done{background:#E8F5E9;color:#2CA02C;border-color:#A5D6A7;font-weight:600}
   .goal-segs .seg-goal{font-weight:700;border-color:var(--accent,#2563eb);color:var(--accent,#2563eb)}
   .goal-ms{margin-top:12px;display:flex;flex-direction:column;gap:9px}
-  .ms-divider{font-size:11px;color:var(--faint);margin:12px 0 6px;text-align:center}
+  .ms-divider{font-size:12px;color:var(--faint);margin:12px 0 6px;text-align:center}
   .ms-row{display:flex;align-items:flex-start;gap:8px;font-size:14px;color:var(--ink);padding:3px 0;line-height:1.5}
   .ms-row input{width:18px;height:18px;flex:none;margin-top:2px}
   .ms-body{flex:1;min-width:0;display:flex;flex-direction:column}
@@ -413,8 +419,8 @@
   .seg button{flex:1;padding:11px 6px;border-radius:11px;border:1.5px solid var(--line);
     background:var(--surface);color:var(--muted);font-size:14px;font-weight:600}
   .seg button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-d)}
-  .ov-section-head{display:flex;align-items:center;gap:8px;margin:18px 4px 9px;font-size:13.5px;font-weight:700;color:var(--ink)}
-  .ov-section-head .gcount{font-size:11px;font-weight:600;color:var(--faint);background:var(--bg);padding:1px 8px;border-radius:999px}
+  .ov-section-head{display:flex;align-items:center;gap:8px;margin:18px 4px 9px;font-size:14px;font-weight:700;color:var(--ink)}
+  .ov-section-head .gcount{font-size:12px;font-weight:600;color:var(--faint);background:var(--bg);padding:1px 8px;border-radius:999px}
   .kind-ico{font-size:13px;flex:none}
   .card.is-done{opacity:.62}
   .card.is-done .name{text-decoration:line-through}
@@ -428,7 +434,7 @@
   .ms-marker{display:flex;align-items:center;gap:8px;padding:9px 12px;margin-bottom:8px;background:#F5F3FF;border:1px solid #E9E5FF;border-left:3px solid #7C3AED;border-radius:10px;cursor:pointer}
   .ms-marker-ico{font-size:15px}
   .ms-marker-txt{font-size:13px;color:#4C1D95;line-height:1.4}
-  .act-badge{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;background:#EF4444;color:#fff;font-size:10px;line-height:16px;border-radius:999px;text-align:center;font-weight:700}
+  .act-badge{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;background:#EF4444;color:#fff;font-size:12px;line-height:16px;border-radius:999px;text-align:center;font-weight:700}
   .act-list{display:flex;flex-direction:column;gap:8px}
   .app-list{display:flex;flex-direction:column;gap:10px}
   .app-row{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--ink)}
@@ -451,7 +457,7 @@
   .consent-check{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--ink);margin:14px 2px 12px;line-height:1.5;cursor:pointer}
   .consent-check input{width:20px;height:20px;flex:none;margin-top:1px}
   #consentBtn{width:100%}
-  .login-consent{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--muted);line-height:1.7;margin:12px 2px 0;text-align:left;cursor:pointer}
+  .login-consent{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--muted);line-height:1.7;margin:12px 2px 0;text-align:left;cursor:pointer}
   .login-consent input{width:18px;height:18px;flex:none;margin-top:1px}
 /* ==================== 訂閱管理（跨 App）==================== */
 #subsPage{position:fixed;inset:0;background:#f5f6f8;z-index:10000;display:none;flex-direction:column;}
@@ -469,7 +475,7 @@
 .subs-body{flex:1;overflow-y:auto;padding:12px 12px 100px;-webkit-overflow-scrolling:touch;}
 .subs-card{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
 .subs-email{font-size:14px;font-weight:600;color:#2c3e50;word-break:break-all;margin-bottom:2px;}
-.subs-key{font-size:11px;color:#b0b8bf;word-break:break-all;margin-bottom:8px;}
+.subs-key{font-size:12px;color:#b0b8bf;word-break:break-all;margin-bottom:8px;}
 .subs-line{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid #f0f2f4;min-height:44px;cursor:pointer;}
 .subs-line:first-of-type{border-top:none;}
 .subs-ico{font-size:15px;width:20px;text-align:center;flex:none;}
@@ -519,10 +525,10 @@
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
   padding:6px 2px; min-height:48px;
   background:none; border:none; border-radius:12px;
-  color:var(--faint); font-family:inherit; font-size:11.5px; font-weight:600;
+  color:var(--faint); font-family:inherit; font-size:12px; font-weight:600;
   line-height:1.25; white-space:nowrap; cursor:pointer; -webkit-tap-highlight-color:transparent;
 }
-.tabbar button .ic{ font-size:21px; line-height:1; }
+.tabbar button .ic{ font-size:22px; line-height:1; }
 .tabbar button.active{ color:#3E9B8E; background:#E8F3F1; font-weight:700; }
 .tabbar button:active{ opacity:.65; }
 
@@ -549,7 +555,7 @@
   color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .set-row .ar, .set-row .set-arrow{
-  flex:0 0 auto; margin-left:auto; font-size:19px; line-height:1; color:var(--muted);
+  flex:0 0 auto; margin-left:auto; font-size:18px; line-height:1; color:var(--muted);
 }
 .set-gap{ height:14px; background:none; border:none; }
 
@@ -560,7 +566,7 @@
   .settings-row.admin{ background:none; border-color:inherit; }
   /* 食在料理原本沒有箭頭，用 CSS 補上，標籤不用改 */
   .settings-row:not(.danger)::after{
-    content:"›"; margin-left:auto; font-size:19px; line-height:1; color:var(--muted); flex:0 0 auto;
+    content:"›"; margin-left:auto; font-size:18px; line-height:1; color:var(--muted); flex:0 0 auto;
   }
 </style>
 </head>
@@ -596,62 +602,13 @@
   </div>
 </div>
 
-<!-- ===== 管理員入口選擇（只有 admin 會看到）===== -->
-<div id="adminChoice" class="hidden" style="position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#f5f7fa;padding:24px">
-  <div style="font-size:20px;font-weight:700;color:#333">👋 歡迎回來</div>
-  <div style="font-size:13px;color:#888;margin-top:-8px">請選擇要進入的地方</div>
-  <button id="goCalBtn" style="width:100%;max-width:320px;padding:18px;border:none;border-radius:14px;background:#4a90d9;color:#fff;font-size:17px;font-weight:600">📅 進入行事曆</button>
-  <button id="goAdminBtn" style="width:100%;max-width:320px;padding:18px;border:none;border-radius:14px;background:#2f9e6e;color:#fff;font-size:17px;font-weight:600">🔧 管理後台</button>
-</div>
-
-<!-- ===== 管理後台（空框架，之後填內容）===== -->
-<div id="adminPanel" class="hidden" style="position:fixed;inset:0;z-index:50;background:#fff;overflow:auto">
-  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #eee;position:sticky;top:0;background:#fff">
-    <button id="adminBackBtn" style="border:none;background:#eee;border-radius:8px;padding:8px 12px;font-size:14px">← 返回</button>
-    <div style="font-size:17px;font-weight:700">🔧 訂閱管理後台</div>
-  </div>
-  <div style="padding:14px 16px">
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <button onclick="adminAddCustomer()" style="border:none;background:#2f9e6e;color:#fff;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:600">➕ 新增客戶</button>
-      <button onclick="window._adminOnlyExpiring=!window._adminOnlyExpiring;loadAdminList()" style="border:none;background:#f0ad4e;color:#fff;border-radius:8px;padding:10px 14px;font-size:14px">⚠️ 快到期</button>
-    </div>
-    <input id="adminSearch" oninput="loadAdminList()" placeholder="🔍 搜尋 Email" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:12px;font-size:14px">
-    <div id="adminList"></div>
-    <hr style="margin:20px 0;border:none;border-top:1px solid #eee">
-    <div style="font-size:12px;color:#aaa;margin-top:6px">（測試用）</div>
-  </div>
-</div>
-
-
-<!-- 後台：改方案 / LINE備註 彈窗 -->
-<div id="adminEdit" class="hidden" style="position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:24px">
-  <div style="background:#fff;border-radius:14px;padding:20px;width:100%;max-width:340px">
-    <div style="font-weight:700;font-size:16px;margin-bottom:14px">✏️ 編輯客戶</div>
-    <div id="adminEditEmail" style="font-size:13px;color:#666;margin-bottom:12px;word-break:break-all"></div>
-    <label style="font-size:13px;color:#444">方案</label>
-    <select id="adminEditPlan" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin:4px 0 12px;font-size:14px">
-            <option value="full">完整版（$999／年）</option>
-      <option value="trial">試用（21天）</option>
-      <option value="free">免費(過期)</option>
-    </select>
-    <label style="font-size:13px;color:#444">到期日（可手動修改）</label>
-    <input id="adminEditExpiry" type="date" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:8px;margin:4px 0 12px;font-size:14px">
-    <label style="font-size:13px;color:#444">LINE 備註（自己記對方是誰）</label>
-    <input id="adminEditLine" placeholder="例如：小美 / LINE暱稱" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #ddd;border-radius:8px;margin:4px 0 16px;font-size:14px">
-    <div style="display:flex;gap:8px">
-      <button onclick="adminEditSave()" style="flex:1;border:none;background:#2f9e6e;color:#fff;border-radius:8px;padding:11px;font-size:14px;font-weight:600">儲存</button>
-      <button onclick="$('adminEdit').classList.add('hidden')" style="flex:1;border:none;background:#eee;color:#333;border-radius:8px;padding:11px;font-size:14px">取消</button>
-    </div>
-  </div>
-</div>
-
 <!-- ===================== APP ===================== -->
 <div id="app" class="hidden">
   <header class="bar">
     <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-shrink:1;overflow:hidden">
       <span style="width:4px;height:20px;background:var(--primary);border-radius:2px;flex-shrink:0"></span>
       <div class="title" id="barTitle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">生活管家</div>
-      <span id="appVerTag" style="font-size:10px;color:#aaa;font-weight:normal;white-space:nowrap;flex-shrink:0">v1.0</span>
+      <span id="appVerTag" style="font-size:12px;color:#aaa;font-weight:normal;white-space:nowrap;flex-shrink:0">v1.0</span>
     </div>
     <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
       <button class="logout icobtn" id="activityBtn" style="position:relative">🔔<span id="activityBadge" class="act-badge" style="display:none"></span></button>
@@ -717,7 +674,7 @@
           <select id="ovMonth"></select>
           <select id="ovDay"></select>
         </div>
-        <div class="filter-row">
+        <div class="filter-row f4">
           <span class="filter-label">篩選</span>
           <select id="ovStatus">
             <option value="pending">未完成</option>
@@ -846,7 +803,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-13";
+const BUILD_ID = "1009-19";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1285,8 +1242,8 @@ function showDeviceLimit(email, plan, limit){
   root.innerHTML=
     '<div class="overlay" id="ovl" style="align-items:center"><div class="sheet" id="sheet" style="border-radius:20px;max-width:400px;margin:0 16px;padding:24px 20px">'+
       '<div style="text-align:center;font-size:44px;line-height:1;margin-bottom:10px">📱</div>'+
-      '<div style="text-align:center;font-size:19px;font-weight:900;color:#2E2E33">已達裝置上限</div>'+
-      '<div style="text-align:center;font-size:13.5px;color:#8A8A93;margin-top:8px;line-height:1.7">您目前的方案可在 <b style="color:#E8735C">'+limit+' 台裝置</b>使用。<br>若這是您的新手機，可登出其他裝置。</div>'+
+      '<div style="text-align:center;font-size:18px;font-weight:900;color:#2E2E33">已達裝置上限</div>'+
+      '<div style="text-align:center;font-size:14px;color:#8A8A93;margin-top:8px;line-height:1.7">您目前的方案可在 <b style="color:#E8735C">'+limit+' 台裝置</b>使用。<br>若這是您的新手機，可登出其他裝置。</div>'+
       '<button id="dlKick" style="width:100%;border:none;background:#3E9B8E;color:#fff;border-radius:12px;padding:14px;font-size:15px;font-weight:800;margin-top:18px">這是我的新裝置，登出其他裝置</button>'+
       (isFull?'':'<div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #EFEAE2"><div style="font-size:13px;color:#8A8A93;margin-bottom:10px">想和家人一起使用？</div>'+
       '<button id="dlUp" style="width:100%;border:none;background:#E8735C;color:#fff;border-radius:12px;padding:13px;font-size:15px;font-weight:800">升級完整版，最多 3 台裝置</button></div>')+
@@ -1434,7 +1391,7 @@ function showTrialWelcome(expiry){
       +"👪 試試「全家共用」\n"
       +"把 Email 給家人，在他手機登入\n"
       +"一人記錄，大家都看得到！\n"
-      +"（試用期最多 2 台裝置）\n\n"
+      +"（試用期最多 3 台裝置）\n\n"
       +"到期後仍可使用基本行事曆 😊");
   }catch(e){}
 }
@@ -1605,133 +1562,8 @@ async function adminLogin(){
 })();
 function openAdminPanel(){
   if(!state.isAdmin){ try{ toast("無管理員權限"); }catch(e){} return; }   // 守衛：非管理員一律擋下
-  $("adminChoice").classList.add("hidden");
   subsAdmin.open();   // 統一的跨 App 訂閱管理
-  loadAdminList();
 }
-var PLAN_LABEL={ trial:"試用中", free:"免費版", basic:"完整版", full:"完整版", family:"完整版" };
-function _daysAgo(ts){
-  if(!ts) return "—";
-  var d=Math.floor((Date.now()-ts)/86400000);
-  if(d<=0) return "今天"; if(d===1) return "昨天"; return d+" 天前";
-}
-function _subStatusTag(sub){
-  if(sub.status==="disabled") return '<span style="color:#e74c3c">⏸️ 停用</span>';
-  var expMs=sub.expiry?Date.parse(sub.expiry+"T23:59:59"):0;
-  var now=Date.now();
-  if(expMs && now>expMs) return '<span style="color:#e74c3c">🔴 已過期</span>';
-  if(expMs && (expMs-now)<30*86400000) return '<span style="color:#e67e22">⚠️ 快到期</span>';
-  return '<span style="color:#27ae60">🟢 啟用</span>';
-}
-function adminClearDevices(key){
-  if(!state.isAdmin){ toast("無權限"); return; }
-  if(!confirm("清除此客戶的所有裝置紀錄？\n客戶需重新登入。")) return;
-  db.ref("subscribers/"+key+"/devices").remove().then(function(){ toast("已清除裝置"); loadAdminList(); })
-   .catch(function(e){ toast(failMsg("清除", e)); });
-}
-function loadAdminList(){
-  var box=$("adminList"); if(!box) return;
-  box.innerHTML='<div style="text-align:center;color:#999;padding:20px">載入中…</div>';
-  db.ref("subscribers").once("value").then(function(snap){
-    var v=snap.val()||{};
-    var arr=Object.keys(v).map(function(k){ return Object.assign({_key:k}, v[k]); });
-    // 依到期日排序(近的在前)
-    arr.sort(function(a,b){ return (Date.parse(a.expiry||"2099-01-01"))-(Date.parse(b.expiry||"2099-01-01")); });
-    var kw=(($("adminSearch")||{}).value||"").trim().toLowerCase();
-    var onlyExp=window._adminOnlyExpiring;
-    var now=Date.now();
-    var rows=arr.filter(function(s){
-      if(kw && (s.email||"").toLowerCase().indexOf(kw)<0) return false;
-      if(onlyExp){ var e=s.expiry?Date.parse(s.expiry+"T23:59:59"):0; if(!(e && (e-now)<30*86400000)) return false; }
-      return true;
-    }).map(function(s){
-      var k=s._key, em=(s.email||k).replace(/'/g,"");
-      return '<div style="border:1px solid #eee;border-radius:10px;padding:12px;margin-bottom:10px">'
-        +'<div style="font-weight:600;word-break:break-all">'+esc(s.email||s._key)+'</div>'
-        +(s.lineNote?'<div style="font-size:12px;color:#06C755;margin:2px 0">💬 LINE：'+esc(s.lineNote)+'</div>':'')
-        +'<div style="font-size:13px;color:#666;margin:4px 0">'+(PLAN_LABEL[s.plan]||s.plan||"—")+'　·　到期 '+(s.expiry||"—")+'　·　'+_subStatusTag(s)+'</div>'
-        +'<div style="font-size:12px;color:#999;margin-bottom:8px">最後登入：'+_daysAgo(s.lastSeen)+'　·　裝置：'+Object.keys(s.devices||{}).length+'/'+(s.deviceLimit||1)+'</div>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:6px">'
-        +'<button onclick="adminRenew(\''+k+'\',\''+(s.expiry||"")+'\')" style="border:none;background:#eaf5ff;color:#2980b9;border-radius:6px;padding:6px 10px;font-size:12px">🔄 續約</button>'
-        +'<button onclick="adminChangePlan(\''+k+'\')" style="border:none;background:#f0eafd;color:#8e44ad;border-radius:6px;padding:6px 10px;font-size:12px">✏️ 改方案</button>'
-        +'<button onclick="adminToggleStatus(\''+k+'\',\''+(s.status||"active")+'\')" style="border:none;background:#fff4e5;color:#e67e22;border-radius:6px;padding:6px 10px;font-size:12px">'+(s.status==="disabled"?"▶️ 啟用":"⏸️ 停用")+'</button>'
-        +'<button onclick="adminClearDevices(\''+k+'\')" style="border:none;background:#e8f6f4;color:#2F7A6F;border-radius:6px;padding:6px 10px;font-size:12px">📱 清除裝置</button>'
-        +'<button onclick="adminDelete(\''+k+'\',\''+esc(em)+'\')" style="border:none;background:#F7E0DD;color:#C0392B;border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700">🗑️ 刪除</button>'
-        +'</div>'
-        +'</div>';
-    }).join("");
-    box.innerHTML='<div style="font-size:13px;color:#888;margin-bottom:8px">共 '+arr.length+' 位客戶</div>'+(rows||'<div style="text-align:center;color:#999;padding:20px">沒有符合的客戶</div>');
-  }).catch(function(e){ box.innerHTML='<div style="text-align:center;color:#e74c3c;padding:20px">載入失敗</div>'; });
-}
-function adminAddCustomer(){
-  var email=prompt("客戶 Email："); if(!email) return;
-  email=email.trim().toLowerCase();
-  if(!isEmail(email)){ alert("Email 格式不正確"); return; }
-  var plan=prompt("方案代號：\nfull=完整版（$999／年）\ntrial=試用\nfree=免費版","full");
-  if(!plan) return; plan=plan.trim();
-  if(["basic","full","family","trial","free"].indexOf(plan)<0){ alert("方案代號不正確"); return; }
-  var months=prompt("有效月數（12=一年）","12"); if(months===null) return;
-  var m=Number(months)||12;
-  var key=emailKey(email);
-  // 續約政策：已有到期日 → 從到期日往後延長；新客戶/已過期 → 從今天算
-  db.ref("subscribers/"+key).once("value").then(function(snap){
-    var old=snap.val();
-    var expiry=_addMonths(old&&old.expiry?old.expiry:null, m);
-    var rec={ email:email, plan:plan, expiry:expiry, status:"active", deviceLimit:planDeviceLimit(plan) };
-    if(!old){ rec.createdAt=Date.now(); rec.lastSeen=0; rec.devices={}; }   // 新客戶才初始化
-    db.ref("subscribers/"+key).update(rec).then(function(){
-      alert((old?"已續約/更新：":"已建立：")+"\n"+email+"\n"+(PLAN_LABEL[plan]||plan)+"\n到期 "+expiry+(old&&old.expiry?"\n(由原到期日 "+old.expiry+" 延長)":""));
-      loadAdminList();
-    }).catch(function(e){ alert("建立失敗"); });
-  }).catch(function(){ alert("讀取失敗"); });
-}
-function _addMonths(baseYmd, months){
-  var base = baseYmd ? new Date(baseYmd+"T00:00:00") : new Date();
-  if(isNaN(base.getTime()) || base.getTime()<Date.now()) base=new Date();   // 已過期則從今天算
-  var t=new Date(base.getTime()+months*30.44*86400000);
-  return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
-}
-function adminRenew(key, curExpiry){
-  var expiry=_addMonths(curExpiry, 12);           // 一鍵 +1 年
-  if(!confirm("確定為此客戶續約 1 年？\n新到期日："+expiry)) return;
-  db.ref("subscribers/"+key).update({ expiry:expiry, status:"active" }).then(function(){ alert("已續約 1 年，到期日："+expiry); loadAdminList(); });
-}
-var _adminEditKey=null;
-function adminChangePlan(key){
-  _adminEditKey=key;
-  db.ref("subscribers/"+key).once("value").then(function(snap){
-    var s=snap.val()||{};
-    $("adminEditEmail").textContent=s.email||key;
-    var sel=$("adminEditPlan"); if(sel) sel.value=s.plan||"full";
-    var ex=$("adminEditExpiry"); if(ex) ex.value=s.expiry||"";
-    var ln=$("adminEditLine"); if(ln) ln.value=s.lineNote||"";
-    $("adminEdit").classList.remove("hidden");
-  });
-}
-function adminEditSave(){
-  if(!_adminEditKey) return;
-  var plan=$("adminEditPlan").value;
-  var expiry=($("adminEditExpiry").value||"").trim();
-  var lineNote=($("adminEditLine").value||"").trim().slice(0,40);
-  var upd={ plan:plan, lineNote:lineNote, deviceLimit:planDeviceLimit(plan) };   // 換方案同步裝置上限
-  if(expiry) upd.expiry=expiry;                    // 有填才更新到期日
-  db.ref("subscribers/"+_adminEditKey).update(upd).then(function(){
-    $("adminEdit").classList.add("hidden"); _adminEditKey=null; loadAdminList();
-  });
-}
-function adminToggleStatus(key, cur){
-  var next=(cur==="disabled")?"active":"disabled";
-  if(!confirm(next==="disabled"?"確定停用此客戶？(將擋登入)":"確定啟用此客戶？")) return;
-  db.ref("subscribers/"+key).update({ status:next }).then(function(){ loadAdminList(); });
-}
-function adminDelete(key, email){
-  if(!confirm("確定刪除客戶「"+email+"」？\n此動作無法復原。")) return;
-  db.ref("subscribers/"+key).remove().then(function(){ alert("已刪除"); loadAdminList(); });
-}
-$("goCalBtn").addEventListener("click", ()=>{ $("adminChoice").classList.add("hidden"); enterApp(); });
-$("goAdminBtn").addEventListener("click", openAdminPanel);
-$("adminBackBtn").addEventListener("click", ()=>{ $("adminPanel").classList.add("hidden"); enterApp(); });
-
 // 開 App 自動登入：以 Firebase 的登入身分為準（不再相信手機裡存的 email 或網址參數）
 async function autoLogin(){
   if(!auth){
@@ -2792,6 +2624,38 @@ function cleanDuplicatePurchases(){
     if(typeof renderAll==='function') renderAll();
   }, '清除');
 }
+// 花費合計：把有填「金額」的記事加總（沒有任何金額就不顯示）。
+// 期間＝總覽目前選的年／月／日（預設當月）；日期以「行程日期，沒有就用完成日」為準；
+// 只計算到今天為止（還沒到的日期不算，永久重複的記事也不會把未來月份算進來）；
+// 只套用「分類」「負責人」篩選，不受「未完成／已完成」「類型」影響。
+function ovSpendHtml(){
+  try{
+    const todo=(ovMode==="todo"), now=new Date();
+    const pad=n=>String(n).padStart(2,"0");
+    let y,m,d;
+    if(todo){ y=String(now.getFullYear()); m=String(now.getMonth()+1); d=""; }
+    else { y=$("ovYear").value; m=$("ovMonth").value; d=$("ovDay").value; }
+    if(!y) return "";
+    const prefix = m ? (d ? y+"-"+pad(m)+"-"+pad(d) : y+"-"+pad(m)) : y;
+    const catF=$("ovCategory").value, whoF=$("ovAssignee").value;
+    const todayStr=ymd(now);
+    let sum=0;
+    buildOverviewRows().forEach(r=>{
+      if(catF!=="all" && r.category!==catF) return;
+      if(whoF!=="all" && !(r.assignees||[]).includes(whoF)) return;
+      if(r.amount==null || r.amount==="") return;
+      const n=Number(r.amount); if(isNaN(n)) return;
+      const ds=r.dateStart||r.doneDate||"";
+      if(ds.indexOf(prefix)!==0 || ds>todayStr) return;
+      sum+=n;
+    });
+    if(!(sum>0)) return "";
+    const label = m ? (d ? (Number(m)+"/"+Number(d)) : (y+" 年 "+Number(m)+" 月")) : (y+" 年");
+    const endStr = d ? prefix : (m ? (prefix+"-31") : (y+"-12-31"));
+    const filtered = ((catF!=="all" || whoF!=="all") ? "（依目前分類／負責人）" : "") + (endStr>todayStr ? "（截至今天）" : "");
+    return '<div class="ov-spend"><span>💰 '+label+' 花費合計'+filtered+'</span><b>$'+sum.toLocaleString()+'</b></div>';
+  }catch(err){ return ""; }
+}
 function renderOverview(){
   const wrap=$("ovList");
   const todo = (ovMode==="todo");
@@ -2843,7 +2707,7 @@ function renderOverview(){
   let total=order.reduce((n,k)=>n+buckets[k].length,0);
   var _dupN=findDuplicatePurchases().length;
   var _dupBtn=_dupN>0 ? '<button onclick="cleanDuplicatePurchases()" style="width:100%;margin-bottom:8px;padding:9px;border:none;border-radius:8px;background:#E377C2;color:#fff;font-size:14px;font-weight:600">🧹 清除重複採購（'+_dupN+' 筆）</button>' : '';
-  const hint = _dupBtn + (todo ? '<div class="ov-hint">📋 當月未完成 ＋ 逾期（用上方年／月／日可查其他期間）</div>' : '');
+  const hint = _dupBtn + ovSpendHtml() + (todo ? '<div class="ov-hint">📋 當月未完成 ＋ 逾期（用上方年／月／日可查其他期間）</div>' : '');
   if(total===0){ wrap.innerHTML=hint+'<div class="empty-state">'+(todo?'<span class="eico">🎉</span>目前沒有當月或逾期未完成的事':'<span class="eico">🔍</span>沒有符合的記事<span class="esub">試著調整上方篩選</span>')+'</div>'; return; }
 
   wrap.innerHTML=hint;
@@ -3163,18 +3027,18 @@ function openRecordForm(rec, presets, asCopy){
         '<div class="field"><label>開始</label><input id="rec_dateStart" type="date" value="'+(ds||"")+'"></div>'+
         '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><label id="rec_endlabel">結束</label><input id="rec_dateEnd" type="date" value='+JSON.stringify(r.dateEnd||r.repeatUntil||"")+'></div>'+
       '</div>'+
-      '<div id="rec_endhint" style="font-size:11.5px;color:var(--muted);margin:-2px 0 8px"></div>'+
+      '<div id="rec_endhint" style="font-size:12px;color:var(--muted);margin:-2px 0 8px"></div>'+
       '<div class="when-btns">'+
         '<button type="button" class="btn-ghost" id="rec_dp1">＋1天</button>'+
         '<button type="button" class="btn-ghost" id="rec_dp7">＋7天</button>'+
         ((!!rec&&!asCopy)?'<button type="button" class="btn-ghost" id="rec_dup">📋 複製</button>':'')+
-        '<span class="clr-btn" data-clr="rec_dateStart" style="margin-left:auto;font-size:11.5px;color:#A8A8B0;cursor:pointer;font-weight:600;align-self:center">✕ 清除</span>'+
+        '<span class="clr-btn" data-clr="rec_dateStart" style="margin-left:auto;font-size:12px;color:#A8A8B0;cursor:pointer;font-weight:600;align-self:center">✕ 清除</span>'+
       '</div>'+
       '<div class="two" id="rec_timebox"'+(isShop?' style="display:none"':'')+'>'+
         '<div class="field"><label>開始時間</label><input id="rec_start" type="time" value='+JSON.stringify(r.start||"")+'></div>'+
         '<div class="field"><label>結束時間</label><input id="rec_end" type="time" value='+JSON.stringify(r.end||"")+'></div>'+
       '</div>'+
-      '<div style="font-size:11.5px;color:var(--muted)">留空＝整天</div>'+
+      '<div style="font-size:12px;color:var(--muted)">留空＝整天</div>'+
     '</div>'+
 
     // ── 執行人（符合條件才放主畫面）──
@@ -3879,12 +3743,12 @@ function openGoalForm(goal){
     '</div>'+
     '<div class="field"><label>分類</label>'+iconPicker("g_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
     '<div id="g_numbox"'+(type==="number"?"":' style="display:none"')+'>'+
-      '<div class="field"><label>目標值 <span style="color:#E8735C">*</span></label><input id="g_target" type="number" value="'+(g.target!=null?g.target:"")+'" placeholder="例如 65 或 300000"><div style="font-size:11.5px;color:var(--muted);margin-top:4px">無法用數字衡量的目標，建議改用簡單型或里程碑型</div></div>'+
+      '<div class="field"><label>目標值 <span style="color:#E8735C">*</span></label><input id="g_target" type="number" value="'+(g.target!=null?g.target:"")+'" placeholder="例如 65 或 300000"><div style="font-size:12px;color:var(--muted);margin-top:4px">無法用數字衡量的目標，建議改用簡單型或里程碑型</div></div>'+
       '<div class="two">'+
-        '<div class="field"><label>目前 <span style="color:#E8735C">*</span></label><input id="g_current" type="number" value="'+(g.current!=null?g.current:"")+'" placeholder="例如 80"><div style="font-size:11.5px;color:var(--muted);margin-top:4px">例如減重填現在體重，從零開始填 0</div></div>'+
-        '<div class="field"><label>單位 <span style="color:#E8735C">*</span></label>'+_unitSelect(g.unit||"")+'<div style="font-size:11.5px;color:var(--muted);margin-top:4px">例如：公斤、元、次、天</div></div>'+
+        '<div class="field"><label>目前 <span style="color:#E8735C">*</span></label><input id="g_current" type="number" value="'+(g.current!=null?g.current:"")+'" placeholder="例如 80"><div style="font-size:12px;color:var(--muted);margin-top:4px">例如減重填現在體重，從零開始填 0</div></div>'+
+        '<div class="field"><label>單位 <span style="color:#E8735C">*</span></label>'+_unitSelect(g.unit||"")+'<div style="font-size:12px;color:var(--muted);margin-top:4px">例如：公斤、元、次、天</div></div>'+
       '</div>'+
-      '<div class="field"><label>目標間隔</label><input id="g_step" type="number" min="1" value="'+(g.step!=null?g.step:5)+'"><div id="g_stephint" style="font-size:11.5px;color:var(--muted);margin-top:4px"></div></div>'+
+      '<div class="field"><label>目標間隔</label><input id="g_step" type="number" min="1" value="'+(g.step!=null?g.step:5)+'"><div id="g_stephint" style="font-size:12px;color:var(--muted);margin-top:4px"></div></div>'+
       '<div class="field"><label>對象</label>'+
       (canFull()
         ? ('<select id="g_personmode">'+
@@ -4085,7 +3949,7 @@ function openSheet(title, innerHTML, onSave, onDelete, saveLabel){
       (onDelete?'<button class="btn-danger" id="sheetDelete">刪除</button>':'');
   root.innerHTML=
     '<div class="overlay" id="ovl"><div class="sheet" id="sheet">'+
-      '<h3 style="margin:0 0 14px;font-size:17px">'+esc(title)+'</h3>'+
+      '<h3 style="margin:0 0 14px;font-size:16px">'+esc(title)+'</h3>'+
       innerHTML+ acts +
     '</div></div>';
   if(isView){ var _c=$("sheetClose"); if(_c) _c.addEventListener("click", closeSheet); }
@@ -4175,7 +4039,7 @@ window.addEventListener('appinstalled', function(){
   var hb=document.getElementById('installHintBtn');
   if(hb){ hb.textContent='✅ 已開始安裝'; hb.disabled=true; hb.style.opacity='1'; hb.style.background='#F0EEEA'; hb.style.color='#9A9AA2'; hb.style.borderColor='#E3DED4'; hb.style.fontWeight='600'; }
   var help=document.getElementById('installHelp');
-  if(help){ help.innerHTML='<span style="color:#8A8A93;font-size:12.5px">需稍等幾秒等待桌面圖示出現</span><br><span style="color:#E8735C;font-size:12.5px;font-weight:700">請勿關閉視窗！</span>'; help.style.display='block'; }
+  if(help){ help.innerHTML='<span style="color:#8A8A93;font-size:12px">需稍等幾秒等待桌面圖示出現</span><br><span style="color:#E8735C;font-size:12px;font-weight:700">請勿關閉視窗！</span>'; help.style.display='block'; }
 });
 // 登入頁「安裝到手機桌面」按鈕
 (function(){
@@ -4192,7 +4056,7 @@ window.addEventListener('appinstalled', function(){
       _deferredPrompt.userChoice.then(function(r){
         _deferredPrompt=null;
         if(r && r.outcome==='accepted'){
-          if(help){ help.innerHTML='⏳ <b>安裝中，請稍候…</b><br><span style="color:#E8735C;font-size:11.5px;font-weight:700">請勿關閉本頁</span><span style="color:#8A8A93;font-size:11.5px">，完成後桌面會出現圖示</span>'; help.style.display='block'; }
+          if(help){ help.innerHTML='⏳ <b>安裝中，請稍候…</b><br><span style="color:#E8735C;font-size:12px;font-weight:700">請勿關閉本頁</span><span style="color:#8A8A93;font-size:12px">，完成後桌面會出現圖示</span>'; help.style.display='block'; }
           hb.textContent='⏳ 安裝中…'; hb.disabled=true; hb.style.opacity='.6';
         } else {
           if(help){ help.innerHTML='已取消安裝，可隨時再點上方按鈕安裝'; help.style.display='block'; }
@@ -4202,8 +4066,8 @@ window.addEventListener('appinstalled', function(){
       var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
       if(help){
         help.innerHTML = isIOS
-          ? '📱 <b>安裝步驟：</b><br>1. 請改用「<b>Safari 瀏覽器</b>」開啟本頁<br>2. 點「<b>分享</b>」按鈕 ⬆️<br>3. 選「<b>加入主畫面</b>」<br><span style="display:block;margin-top:9px;padding-top:9px;border-top:1px dashed #DDD8CE;color:#8A8A93;font-size:11.5px">💡 若您已安裝過，請直接至手機桌面開啟「生活管家」開啟</span>'
-          : '📲 <b>安裝步驟：</b><br>1. 請改用「<b>Chrome 瀏覽器</b>」開啟本頁<br>2. 點「<b>安裝到手機桌面</b>」<br>3. 跳出視窗 → 選「<b>安裝</b>」<br><span style="display:block;margin-top:9px;padding-top:9px;border-top:1px dashed #DDD8CE;color:#8A8A93;font-size:11.5px">💡 若您已安裝過，請直接至手機桌面開啟「生活管家」開啟</span>';
+          ? '📱 <b>安裝步驟：</b><br>1. 請改用「<b>Safari 瀏覽器</b>」開啟本頁<br>2. 點「<b>分享</b>」按鈕 ⬆️<br>3. 選「<b>加入主畫面</b>」<br><span style="display:block;margin-top:9px;padding-top:9px;border-top:1px dashed #DDD8CE;color:#8A8A93;font-size:12px">💡 若您已安裝過，請直接至手機桌面開啟「生活管家」開啟</span>'
+          : '📲 <b>安裝步驟：</b><br>1. 請改用「<b>Chrome 瀏覽器</b>」開啟本頁<br>2. 點「<b>安裝到手機桌面</b>」<br>3. 跳出視窗 → 選「<b>安裝</b>」<br><span style="display:block;margin-top:9px;padding-top:9px;border-top:1px dashed #DDD8CE;color:#8A8A93;font-size:12px">💡 若您已安裝過，請直接至手機桌面開啟「生活管家」開啟</span>';
         help.style.display='block';
       }
     }
@@ -4307,7 +4171,7 @@ function appHandleBack(){
   function toast(msg){
     var t=document.getElementById('subsToast');
     if(!t){ t=document.createElement('div'); t.id='subsToast';
-      t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:rgba(32,38,44,.94);color:#fff;padding:11px 20px;border-radius:999px;font-size:13.5px;z-index:10005;opacity:0;transition:opacity .2s;pointer-events:none;max-width:86vw;text-align:center;';
+      t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:rgba(32,38,44,.94);color:#fff;padding:11px 20px;border-radius:999px;font-size:14px;z-index:10005;opacity:0;transition:opacity .2s;pointer-events:none;max-width:86vw;text-align:center;';
       document.body.appendChild(t); }
     t.textContent=msg; t.style.opacity='1';
     clearTimeout(t._tm); t._tm=setTimeout(function(){ t.style.opacity='0'; }, 2000);
@@ -4666,9 +4530,9 @@ function appHandleBack(){
    ==================================================================== */
 (function(){
   var PAY_LINKS = {
-    cal:  '',   // 行事曆   $999／年
-    cook: '',   // 食在料理 $799／年
-    trv:  '',   // 旅遊計畫 $999／年
+    cal:  '',   // 行事曆   $990／年
+    cook: '',   // 食在料理 $990／年
+    trv:  '',   // 旅遊計畫 $990／年
     crm:  ''    // 客戶管理 $6,000／年（早鳥）
   };
   var LINE_URL = 'https://lin.ee/DwhMLJm';
@@ -4679,7 +4543,7 @@ function appHandleBack(){
   function tip(msg){
     var t=document.getElementById('payTip');
     if(!t){ t=document.createElement('div'); t.id='payTip';
-      t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:rgba(32,38,44,.94);color:#fff;padding:11px 20px;border-radius:999px;font-size:13.5px;z-index:10050;opacity:0;transition:opacity .2s;pointer-events:none;';
+      t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:rgba(32,38,44,.94);color:#fff;padding:11px 20px;border-radius:999px;font-size:14px;z-index:10050;opacity:0;transition:opacity .2s;pointer-events:none;';
       document.body.appendChild(t); }
     t.textContent=msg; t.style.opacity='1';
     clearTimeout(t._tm); t._tm=setTimeout(function(){ t.style.opacity='0'; },1800);
@@ -4690,7 +4554,7 @@ function appHandleBack(){
     var o=opts||{}, ac=o.accent||'#E8735C';
     var mail=o.email||'';
     var per = o.per ? '<div style="color:#6B7280;font-size:13px;margin-top:4px">平均每月約 $'+o.per+'</div>' : '';
-    var badge = o.note ? '<span style="background:'+ac+';color:#fff;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:999px;margin-left:8px;vertical-align:middle">'+esc(o.note)+'</span>' : '';
+    var badge = o.note ? '<span style="background:'+ac+';color:#fff;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;margin-left:8px;vertical-align:middle">'+esc(o.note)+'</span>' : '';
     return '<div id="payCard" data-app="'+esc(o.app||'')+'" data-ac="'+ac+'" style="border:2px solid '+ac+';border-radius:16px;padding:18px;margin-top:18px;background:#fff">'+
       '<div style="font-size:15px;font-weight:800;color:#2E2E33">完整版'+badge+'</div>'+
       '<div style="display:flex;align-items:baseline;gap:8px;margin-top:8px">'+
@@ -4702,9 +4566,9 @@ function appHandleBack(){
           '<div id="payMail" style="flex:1;font-size:14px;font-weight:700;color:#2E2E33;word-break:break-all">'+esc(mail||'（請先登入）')+'</div>'+
           (mail?'<button type="button" id="payCopy" style="flex:none;border:1px solid #dfe3e8;background:#fff;color:#5a6a78;border-radius:8px;padding:7px 12px;font-size:12px;font-family:inherit;min-height:36px">複製</button>':'')+
         '</div>'+
-        '<div style="font-size:12.5px;color:#B45309;line-height:1.65;margin-top:10px">⚠️ 付款時請於「電子郵件」欄填寫上方信箱，以利帳號開通。</div>'+
+        '<div style="font-size:12px;color:#B45309;line-height:1.65;margin-top:10px">⚠️ 付款時請於「電子郵件」欄填寫上方信箱，以利帳號開通。</div>'+
       '</div>'+
-      '<label for="payAgree" style="display:flex;gap:9px;align-items:flex-start;margin-top:15px;font-size:12.5px;line-height:1.65;color:#39423C;cursor:pointer">'+
+      '<label for="payAgree" style="display:flex;gap:9px;align-items:flex-start;margin-top:15px;font-size:12px;line-height:1.65;color:#39423C;cursor:pointer">'+
         '<input type="checkbox" id="payAgree" style="flex:none;width:18px;height:18px;margin-top:1px;accent-color:'+ac+'">'+
         '<span>我了解本服務提供免費試用，並同意付款開通後不適用七日猶豫期、恕不退費。'+
           '<a href="javascript:void(0)" id="payTerms" style="color:'+ac+';text-decoration:underline">付款與退款說明</a></span>'+
@@ -4763,19 +4627,19 @@ function appHandleBack(){
    ==================================================================== */
 (function(){
   var APP = (window.LEGAL_APP || 'cal');
-  var UPDATED = '2026/10/06';
+  var UPDATED = '2026/10/12';
   var MAIL = 'beyunself@hotmail.com';
   var LINE_NAME = '智在生活';
 
   var CFG = {
-    cal:  { name:'生活管家', trial:'二十一', price:'999' },
-    cook: { name:'食在料理', trial:'十四',   price:'999' },
-    trv:  { name:'旅遊計畫', trial:'十四',   price:'999' },
-    crm:  { name:'客戶管理', trial:'三十',   price:'7,200', noFree:true }   // noFree：沒有免費版，試用到期轉唯讀
+    cal:  { name:'生活管家', trial:'二十一', price:'990', devTxt:'完整版及試用期間之同一帳號至多得於三台裝置登入，免費版為一台。' },
+    cook: { name:'食在料理', trial:'十四',   price:'990', local:true, devTxt:'同一帳號限於一台裝置登入；更換裝置時，得於新裝置登入後登出舊裝置。' },
+    trv:  { name:'旅遊計畫', trial:'十四',   price:'990', devTxt:'完整版及試用期間之同一帳號至多得於三台裝置登入，免費版為一台。' },
+    crm:  { name:'客戶管理', trial:'三十',   price:'7,200', noFree:true, devTxt:'完整版之同一帳號至多得於二台裝置登入，試用期間為一台。' }   // noFree：沒有免費版，試用到期轉唯讀
   };
   var C = CFG[APP] || CFG.cal;
-  var PRICE_TXT = { cal:'新臺幣 999 元／年', cook:'新臺幣 999 元／年', trv:'新臺幣 999 元／年',
-                    crm:'新臺幣 7,200 元／年（前十五名早鳥價 6,000 元，續約維持同價）' };
+  var PRICE_TXT = { cal:'新臺幣 990 元／年', cook:'新臺幣 990 元／年', trv:'新臺幣 990 元／年',
+                    crm:'新臺幣 7,200 元／年（早鳥價：限 2026 年 12 月 30 日前購買之前三十名，6,000 元，並加贈生活管家一年；續約維持同價）' };
   C.priceTxt = PRICE_TXT[APP] || PRICE_TXT.cal;
 
   var CN = ['','一','二','三','四','五','六','七','八','九','十'];
@@ -4786,16 +4650,17 @@ function appHandleBack(){
     .map(function(s){ return '<li>'+s+'</li>'; }).join('') + '</ol>'; }
   function h(t,b){ return { t:t, b:b }; }
 
+  /* 賣方資訊：目前僅以品牌名稱「智在生活」揭露。如需補充名稱、地址，於此處新增即可。 */
   var CONTACT = p('電子郵件：'+MAIL, '官方 LINE：'+LINE_NAME);
 
   /* ---------- 服務條款 ---------- */
   var TERMS =
     sec(1,'契約之成立與變更', ol(
       '本條款為使用者與「智在生活」（下稱本服務）間之契約。使用者開始使用本服務，即視為已閱讀並同意本條款全部內容。',
-      '本條款如有修訂，將於本服務內公告；公告後使用者繼續使用者，視為同意修訂後之條款。')) +
+      '本條款如有修訂，將於本服務內公告；公告後使用者繼續使用，視為同意修訂後之條款。')) +
     sec(2,'帳號', ol(
       '本服務以電子郵件驗證連結辨識使用者身分，不另設密碼。使用者應妥善保管其電子郵件帳號；凡經由該帳號所為之操作，均推定為使用者本人所為。',
-      C.noFree ? '完整版之同一帳號至多得於三台裝置登入，試用期間為一台。' : '完整版之同一帳號至多得於三台裝置登入，免費版為一台。',
+      C.devTxt,
       '使用者於共用裝置使用後應即登出，以避免第三人存取其資料。',
       '未滿十八歲者，應經法定代理人同意後始得使用本服務。')) +
     sec(3,'智慧財產權', ol(
@@ -4827,7 +4692,7 @@ function appHandleBack(){
          '裝置識別碼：用於計算同一帳號之登入裝置數量。') +
       p('本服務不蒐集通訊錄、位置資訊、照片或其他裝置資料，亦未使用任何廣告或行為追蹤工具。')) +
     sec(2,'資料之儲存', ol(
-      '前條資料儲存於 Google 雲端服務。',
+      C.local ? '帳號及訂閱資料儲存於 Google 雲端服務；使用者於本服務建立之料理、菜單、庫存及採購等內容，僅儲存於使用者之裝置本機，不上傳至本服務。' : '前條資料儲存於 Google 雲端服務。',
       '各帳號之資料以使用者之電子郵件位址區隔，其他使用者無從讀取。')) +
     sec(3,'資料之存取與利用', ol(
       '本服務僅於使用者申告問題而有協助排除障礙之必要，或系統異常而有修復之必要時，存取使用者資料。',
@@ -4838,7 +4703,7 @@ function appHandleBack(){
       p('前開服務各有其隱私權政策。')) +
     sec(5,'保存期限', ol(
       '資料於帳號存續期間持續保存。',
-      '使用者得隨時請求刪除帳號，本服務應於三十日內刪除其全部資料；備份系統中之副本亦於同期間內一併移除。刪除後無法回復，請先自行匯出。')) +
+      C.local ? '使用者得隨時請求刪除帳號，本服務應於三十日內刪除其帳號及訂閱資料；備份系統中之副本亦於同期間內一併移除。儲存於使用者裝置本機之內容，使用者得自行於該裝置清除。刪除後無法回復，請先自行匯出。' : '使用者得隨時請求刪除帳號，本服務應於三十日內刪除其全部資料；備份系統中之副本亦於同期間內一併移除。刪除後無法回復，請先自行匯出。')) +
     sec(6,'使用者之權利', p(
       '使用者就其個人資料，得行使查詢、閱覽、製給複製本、補充或更正、請求停止蒐集處理利用及請求刪除之權利。多數項目於本服務內即可自行完成，其餘得以電子郵件或官方 LINE 聯繫。')) +
     sec(7,'Cookie 與本機儲存', p(
@@ -4852,7 +4717,7 @@ function appHandleBack(){
       p('其他產品之方案與費用，請參閱官方網站 handyassist-system.github.io。')) +
     sec(2,'免費試用', ol(
       C.noFree
-        ? C.name+'提供'+C.trial+'日免費試用。試用期間得建立五位客戶，並使用客戶、合約、預約及收款功能；營運儀表板及客戶追蹤為完整版功能。'
+        ? C.name+'提供'+C.trial+'日免費試用。試用期間得建立五位客戶（已建立之客戶即使刪除，名額不予退還），並使用客戶、合約、預約及收款功能；營運儀表板及客戶追蹤為完整版功能。'
         : C.name+'提供'+C.trial+'日免費試用，試用期間功能全部開放。',
       C.noFree
         ? '試用期屆滿後，帳號轉為唯讀：使用者既有資料仍予保留，得查看及匯出，惟不得新增或編輯；升級完整版後即恢復。'
@@ -4901,25 +4766,25 @@ function appHandleBack(){
       '.lg-box{background:#FCFCFA;color:#1F2724;width:100%;max-height:92vh;display:flex;flex-direction:column;border-radius:18px 18px 0 0;overflow:hidden;}'+
       '.lg-head{text-align:center;padding:10px 0 16px;}'+
       '.lg-logo{width:96px;height:auto;border-radius:12px;display:block;margin:0 auto;}'+
-      '.lg-bn{font-size:17px;font-weight:700;letter-spacing:.06em;line-height:1.3;color:#1F2724;}'+
-      '.lg-bs{font-size:11.5px;color:#8A928C;letter-spacing:.14em;margin-top:4px;}'+
+      '.lg-bn{font-size:16px;font-weight:700;letter-spacing:.06em;line-height:1.3;color:#1F2724;}'+
+      '.lg-bs{font-size:12px;color:#8A928C;letter-spacing:.14em;margin-top:4px;}'+
       '.lg-tabs{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;background:#fff;'+
         'border-bottom:1px solid #EAEDE8;padding:6px 12px 0;flex:none;border-radius:18px 18px 0 0;}'+
       '.lg-tab{flex:none;background:none;border:none;border-bottom:2px solid transparent;color:#6B736D;'+
-        'font-size:13.5px;font-family:inherit;padding:11px 10px;min-height:44px;cursor:pointer;white-space:nowrap;}'+
+        'font-size:14px;font-family:inherit;padding:11px 10px;min-height:44px;cursor:pointer;white-space:nowrap;}'+
       '.lg-tab.on{color:#14564A;border-bottom-color:#14564A;font-weight:700;}'+
       '.lg-body{overflow-y:auto;padding:20px 20px 30px;-webkit-overflow-scrolling:touch;'+
         'font-size:14px;line-height:1.95;color:#3B443E;}'+
       '.lg-doc{border-top:1px solid #E3E7E1;border-bottom:1px solid #E3E7E1;padding:14px 0;margin-bottom:8px;text-align:center;}'+
       '.lg-doc-t{font-size:18px;font-weight:700;color:#1F2724;letter-spacing:.02em;}'+
-      '.lg-doc-s{font-size:11.5px;color:#9AA29B;margin-top:5px;letter-spacing:.06em;}'+
+      '.lg-doc-s{font-size:12px;color:#9AA29B;margin-top:5px;letter-spacing:.06em;}'+
       '.lg-body h4{font-size:15px;color:#1F2724;margin:26px 0 8px;font-weight:700;letter-spacing:.02em;}'+
       '.lg-n{color:#14564A;}'+
       '.lg-body p{margin:0 0 10px;}'+
       '.lg-ol{margin:4px 0 12px;padding:0;list-style:none;counter-reset:lgi;}'+
       '.lg-ol>li{counter-increment:lgi;position:relative;padding-left:3.1em;margin-bottom:7px;}'+
       '.lg-ol>li::before{content:"（"counter(lgi,cjk-ideographic)"）";position:absolute;left:0;color:#5D6A62;}'+
-      '.lg-t{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:13.5px;}'+
+      '.lg-t{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:14px;}'+
       '.lg-t td{padding:8px 0;border-bottom:1px solid #EDF0EC;}'+
       '.lg-t td:last-child{text-align:right;color:#14564A;font-weight:600;padding-left:12px;}'+
       '.lg-foot{flex:none;padding:12px 18px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #EAEDE8;background:#fff;}'+
@@ -4998,7 +4863,7 @@ function appHandleBack(){
         'display:none;font-family:inherit;}'+
       '#pvBar.on{display:block;}'+
       '#pvBar button{background:rgba(255,255,255,.22);color:#fff;border:none;border-radius:999px;'+
-        'padding:4px 12px;font-size:12.5px;font-family:inherit;margin-left:10px;cursor:pointer;min-height:30px;}'+
+        'padding:4px 12px;font-size:12px;font-family:inherit;margin-left:10px;cursor:pointer;min-height:30px;}'+
       '#pvWrap{position:fixed;inset:0;background:rgba(18,22,20,.5);z-index:10061;display:none;align-items:flex-end;}'+
       '#pvWrap.on{display:flex;}'+
       '.pv-box{background:#fff;color:#1F2724;width:100%;border-radius:16px 16px 0 0;'+
@@ -5008,7 +4873,7 @@ function appHandleBack(){
       '.pv-opt{display:block;width:100%;text-align:left;background:#F6F8F7;border:1px solid #E1E7E3;'+
         'border-radius:11px;padding:13px 15px;margin-bottom:9px;font-family:inherit;cursor:pointer;min-height:56px;}'+
       '.pv-opt b{display:block;font-size:15px;color:#1F2724;font-weight:700;}'+
-      '.pv-opt span{font-size:12.5px;color:#7b8794;}'+
+      '.pv-opt span{font-size:12px;color:#7b8794;}'+
       '.pv-cancel{width:100%;background:#fff;color:#7b8794;border:1px solid #DDE2DA;border-radius:10px;'+
         'padding:12px;font-size:14px;font-family:inherit;margin-top:4px;min-height:46px;cursor:pointer;}';
     document.head.appendChild(s);
@@ -5108,7 +4973,7 @@ previewMode.init({
       '.bk-opt{display:block;width:100%;text-align:left;background:#F6F8F7;border:1px solid #E1E7E3;'+
         'border-radius:11px;padding:13px 15px;margin-bottom:9px;font-family:inherit;cursor:pointer;min-height:58px;}'+
       '.bk-opt b{display:block;font-size:15px;color:#1F2724;font-weight:700;}'+
-      '.bk-opt span{font-size:12.5px;color:#7b8794;}'+
+      '.bk-opt span{font-size:12px;color:#7b8794;}'+
       '.bk-opt.warn{background:#FDF6EC;border-color:#EBD9BC;}'+
       '.bk-opt.warn span{color:#9A6A1E;}'+
       '.bk-cancel{width:100%;background:#fff;color:#7b8794;border:1px solid #DDE2DA;border-radius:10px;'+
@@ -5180,7 +5045,7 @@ previewMode.init({
       '.ex-d{font-size:14px;color:#5B6F79;line-height:1.8;margin-bottom:20px;}'+
       '.ex-d b{color:'+accent+';}'+
       '.ex-go{width:100%;background:'+accent+';color:#fff;border:none;border-radius:12px;padding:14px;'+
-        'font-size:15.5px;font-weight:700;font-family:inherit;min-height:50px;cursor:pointer;}'+
+        'font-size:16px;font-weight:700;font-family:inherit;min-height:50px;cursor:pointer;}'+
       '.ex-later{width:100%;background:none;color:#8A928C;border:none;padding:12px;margin-top:6px;'+
         'font-size:14px;font-family:inherit;min-height:44px;cursor:pointer;}';
     document.head.appendChild(s);
@@ -5413,7 +5278,7 @@ previewMode.init({
     s.textContent =
       '#inBar{position:fixed;left:0;right:0;bottom:0;z-index:10096;max-width:520px;margin:0 auto;'+
         'display:none;padding:12px 44px calc(12px + env(safe-area-inset-bottom,0px)) 16px;'+
-        'background:#2E2E33;color:#fff;font-size:13.5px;line-height:1.6;font-family:inherit;'+
+        'background:#2E2E33;color:#fff;font-size:14px;line-height:1.6;font-family:inherit;'+
         'box-shadow:0 -2px 12px rgba(0,0,0,.25);cursor:pointer;'+
         'opacity:0;transition:opacity .35s ease;}'+
       '#inBar.on{display:block;}'+
@@ -5501,7 +5366,7 @@ appInstall.init({ appName:'生活管家' });
       '#cfWrap.on{display:flex;}'+
       '.cf-box{background:#fff;color:#1F2724;width:100%;max-width:330px;border-radius:18px;'+
         'padding:22px 20px 18px;box-shadow:0 12px 40px rgba(0,0,0,.2);}'+
-      '.cf-t{font-size:16.5px;font-weight:700;margin-bottom:8px;text-align:center;}'+
+      '.cf-t{font-size:16px;font-weight:700;margin-bottom:8px;text-align:center;}'+
       '.cf-m{font-size:14px;color:#5B6F79;line-height:1.8;margin-bottom:20px;text-align:center;'+
         'white-space:pre-wrap;word-break:break-word;}'+
       '.cf-btns{display:flex;gap:9px;}'+
@@ -5579,14 +5444,14 @@ appInstall.init({ appName:'生活管家' });
       '.up-body{overflow-y:auto;padding:16px 18px 24px;-webkit-overflow-scrolling:touch;}'+
       '.up-cmp{border:1px solid #E3E7E1;border-radius:12px;overflow:hidden;background:#fff;}'+
       '.up-row{display:grid;grid-template-columns:1fr 66px 74px;align-items:center;gap:6px;'+
-        'padding:11px 13px;border-top:1px solid #EFF2ED;font-size:13.5px;line-height:1.5;}'+
+        'padding:11px 13px;border-top:1px solid #EFF2ED;font-size:14px;line-height:1.5;}'+
       '.up-row:first-child{border-top:none;background:#F4F7F4;font-size:12px;font-weight:700;'+
         'color:#6B736D;letter-spacing:.04em;}'+
       '.up-row span:nth-child(2),.up-row span:nth-child(3){text-align:center;}'+
       '.up-no{color:#A9B2AB;}'+
       '.up-yes{color:'+accent+';font-weight:700;}'+
-      '.up-note{font-size:12.5px;color:#7b8794;margin-top:12px;line-height:1.7;}'+
-      '.up-line{display:block;text-align:center;margin-top:14px;font-size:13.5px;color:'+accent+';'+
+      '.up-note{font-size:12px;color:#7b8794;margin-top:12px;line-height:1.7;}'+
+      '.up-line{display:block;text-align:center;margin-top:14px;font-size:14px;color:'+accent+';'+
         'text-decoration:underline;}'+
       '.up-foot{flex:none;padding:10px 18px calc(14px + env(safe-area-inset-bottom));'+
         'border-top:1px solid #EAEDE8;background:#fff;}'+
@@ -5649,7 +5514,7 @@ appInstall.init({ appName:'生活管家' });
 
 /* 升級頁設定：生活管家 */
 upgradeSheet.init({
-  app:'cal', name:'生活管家', accent:'#3E9B8E', price:999, per:83, trial:21,
+  app:'cal', name:'生活管家', accent:'#3E9B8E', price:990, per:83, trial:21,
   lineUrl:'https://line.me/R/ti/p/@373pfdee',
   rows:[
     ['行程、待辦、記事', true, true],
