@@ -803,7 +803,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-19";
+const BUILD_ID = "1009-20";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1138,60 +1138,6 @@ function lsSaveCalendars(){ try{ localStorage.setItem("cal_calendars", JSON.stri
 function lsSaveRecords(){ try{ localStorage.setItem("cal_records", JSON.stringify(state.records)); }catch(e){ toast("儲存失敗，請稍後再試"); } }
 function lsSavePeople(){ try{ localStorage.setItem("cal_people", JSON.stringify(state.people)); }catch(e){ toast("儲存失敗，請稍後再試"); } }
 function lsSaveGoals(){ try{ localStorage.setItem("cal_goals", JSON.stringify(state.goals)); }catch(e){ toast("儲存失敗，請稍後再試"); } }
-
-/* ---------- 2.6 舊資料自動轉換（events/items → records） ---------- */
-const MAP_TYPE = { work:"work", life:"life", health:"health", important:"other" };
-const MAP_ITEMCAT = { food:"food", household:"daily", clothing:"clothing", travel:"travelgear", "3C":"electronics", other:"other" };
-function convertOld(oldE, oldI){
-  const out={};
-  Object.entries(oldE||{}).forEach(([id,e])=>{
-    if(!e) return;
-    out["mig_e_"+id]={
-      type:"task", title:e.title||"(未命名)", category:MAP_TYPE[e.type]||"life",
-      dateStart:e.date||"", dateEnd:"", start:e.start||"", end:e.end||"",
-      assignees:[], urgent:!!e.urgent||e.type==="important", countdown:!!e.countdown,
-      status:"pending", note:e.note||"", createdAt:Date.now()
-    };
-  });
-  Object.entries(oldI||{}).forEach(([id,it])=>{
-    if(!it) return;
-    out["mig_i_"+id]={
-      type:"task", title:it.name||"(未命名)", category:"shopping",
-      subcategory:MAP_ITEMCAT[it.category]||"other", qty:it.qty||1,
-      dateStart:"", dateEnd:"", start:"", end:"", assignees:[],
-      urgent:false, countdown:false, status:it.status||"pending",
-      note:it.note||"", createdAt:it.createdAt||Date.now()
-    };
-  });
-  return out;
-}
-function localMigrateIfNeeded(){
-  if(localStorage.getItem("cal_v2_migrated")) return;
-  let oldE={}, oldI={};
-  try{ oldE=JSON.parse(localStorage.getItem("cal_events")||"{}")||{}; }catch(e){}
-  try{ oldI=JSON.parse(localStorage.getItem("cal_items") ||"{}")||{}; }catch(e){}
-  const conv=convertOld(oldE,oldI);
-  if(Object.keys(conv).length){
-    let cur={}; try{ cur=JSON.parse(localStorage.getItem("cal_records")||"{}")||{}; }catch(e){}
-    Object.assign(cur,conv);
-    localStorage.setItem("cal_records", JSON.stringify(cur));
-  }
-  localStorage.setItem("cal_v2_migrated","1");
-}
-async function fbMigrateIfNeeded(){
-  if(localStorage.getItem("cal_v2_migrated_fb")) return;
-  try{
-    const es=await db.ref("events").once("value");
-    const is=await db.ref("items").once("value");
-    const conv=convertOld(es.val()||{}, is.val()||{});
-    if(Object.keys(conv).length){
-      const updates={};
-      Object.keys(conv).forEach(k=>updates["records/"+k]=conv[k]);
-      await db.ref().update(updates);
-    }
-    localStorage.setItem("cal_v2_migrated_fb","1");
-  }catch(e){ console.warn("FB 舊資料轉換略過", e); }
-}
 
 /* ============================================================
    3. Email 登入（家人用同一 email 共用；保留離線測試）
@@ -1746,27 +1692,9 @@ var _lob=$("logoutBtn"); if(_lob) _lob.addEventListener("click", doLogout);
 /* ============================================================
    4. 資料綁定
    ============================================================ */
-async function migrateAdminDataIfNeeded(){
-  if(state.user !== ADMIN_EMAIL) return;               // 只搬 admin 自己的
-  var base="users/"+emailKey(ADMIN_EMAIL)+"/";
-  try{
-    var flag=await db.ref(base+"_migrated").once("value");
-    if(flag.val()) return;                             // 已搬過，不重複
-    var mine=await db.ref(base+"records").once("value");
-    if(mine.val() && Object.keys(mine.val()).length){ await db.ref(base+"_migrated").set(true); return; }
-    var updates={};
-    for(const key of ["records","goals","calendars","people"]){
-      var snap=await db.ref(key).once("value");
-      var val=snap.val();
-      if(val && Object.keys(val).length) updates[key]=val;   // 複製共用空間資料
-    }
-    if(Object.keys(updates).length){ await db.ref(base.slice(0,-1)).update(updates); }
-    await db.ref(base+"_migrated").set(true);           // 標記已搬（舊資料不刪，保留當備份）
-  }catch(e){ console.warn("admin 資料搬移略過", e); }
-}
 function bindData(){
-  if(LOCAL_MODE){ localMigrateIfNeeded(); lsLoad(); ensureDefaultCalendar(); renderCalBar(); renderAll(); importPendingPurchase(); return; }
-  fbMigrateIfNeeded().then(migrateAdminDataIfNeeded).then(()=>{
+  if(LOCAL_MODE){ lsLoad(); ensureDefaultCalendar(); renderCalBar(); renderAll(); importPendingPurchase(); return; }
+  Promise.resolve().then(()=>{
     if(!state.calendarsBound){ uref("calendars").on("value", s=>{ state.calendars=s.val()||{}; ensureDefaultCalendar(); renderCalBar(); renderAll(); }); state.calendarsBound=true; }
     if(!state.recordsBound){ uref("records").on("value", s=>{ state.records=s.val()||{}; renderAll(); }); state.recordsBound=true; }
     if(!state.peopleBound){ uref("people").on("value", s=>{ state.people=s.val()||{}; renderAll(); }); state.peopleBound=true; }
