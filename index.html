@@ -803,7 +803,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-27";
+const BUILD_ID = "1009-28";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -4414,7 +4414,7 @@ function appHandleBack(){
       }, next==='disabled'?'停用':'恢復', next==='disabled');
     };
     document.getElementById('mDel').onclick=function(){
-      confirmBox('刪除「'+email+'」在'+app.name+'的帳號紀錄？\n\n只刪除訂閱紀錄，客戶自己的 App 資料會保留。', async function(){
+      confirmBox('刪除「'+email+'」在'+app.name+'的帳號紀錄？\n\n'+(active ? '⚠️ 這位客戶目前是付費中（到期 '+slash(st.expiry||'—')+'），刪除後完整版權限與到期日會消失，要重新開通。\n\n' : '')+'只刪除訂閱紀錄，客戶自己的 App 資料會保留。', async function(){
         try{ await firebase.database().ref(path).remove(); toast('已刪除帳號紀錄'); closeSheet(); await load(); }
         catch(e){ toast(fail('刪除', e)); }
       }, '刪除', true);
