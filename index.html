@@ -803,7 +803,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-25";
+const BUILD_ID = "1009-27";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1322,11 +1322,17 @@ async function verifyCustomer(email){
   }
   if(sub.status==="disabled") return { ok:false, msg:"此帳號已停用，請聯繫客服升級" };
   try{ db.ref("subscribers/"+key+"/lastSeen").set(now); }catch(e){}   // 記錄最後登入
-  var expMs = sub.expiry ? Date.parse(sub.expiry+"T23:59:59") : 0;
+  var subExpiry = sub.expiry;
+  if(sub.plan==="trial"){
+    // 試用到期日以「開始試用的時間」為準，不信任自己寫的到期日，避免被改成很久以後
+    var st0 = Number(sub.trialStartedAt||sub.createdAt||0);
+    if(st0>0){ var cap = _ymdTs(st0 + TRIAL_DAYS*86400000); if(!subExpiry || cap < subExpiry) subExpiry = cap; }
+  }
+  var expMs = subExpiry ? Date.parse(subExpiry+"T23:59:59") : 0;
   var expired = expMs && now>expMs;
   var effPlan = expired ? "free" : (sub.plan||"free");   // 過期→陽春free；否則照方案
-  savePlanCache(email, effPlan, sub.expiry);
-  return { ok:true, plan:effPlan, expiry:sub.expiry, expired:!!expired };
+  savePlanCache(email, effPlan, subExpiry);
+  return { ok:true, plan:effPlan, expiry:subExpiry, expired:!!expired };
 }
 function showTrialWelcome(expiry){
   try{
@@ -4183,6 +4189,7 @@ function appHandleBack(){
     SUBS_APPS.forEach(function(a){
       var d=S.data[a.id]; if(!d) return;
       Object.keys(d).forEach(function(k){
+        if(k===eKey('mp65p@hotmail.com')) return;   // 管理員自己不列入客戶名單
         if(!map[k]) map[k]={ key:k, email:'', apps:{} };
         var s=d[k]||{};
         if(!map[k].email) map[k].email = s.email || k;
