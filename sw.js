@@ -1,4 +1,4 @@
-// build 1009-20（每次更新 app 都改這行，瀏覽器才會偵測到新版並顯示「有新版本可用」）
+// build 1009-25（每次更新 app 都改這行，瀏覽器才會偵測到新版並顯示「有新版本可用」）
 // 生活管家 Service Worker
 const CACHE_NAME = 'cal-cache-v7';
 const CORE = [
