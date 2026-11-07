@@ -280,8 +280,6 @@
     padding:8px 12px;border-radius:10px;margin-bottom:10px;text-align:center}
   .urg-badge{font-size:13px;flex:none;line-height:1}
   .card.urgent-card{box-shadow:0 0 0 1.5px rgba(239,68,68,.45),var(--shadow)}
-  .countdown{display:inline-block;margin-top:5px;font-size:12px;font-weight:600;
-    color:#B45309;background:#FEF3E2;padding:2px 9px;border-radius:999px}
   /* ── 記事表單：待辦／純紀錄、何時區塊、更多選項 ── */
   .kind-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .field .kind-pick label.kind-opt{display:grid;grid-template-columns:auto 1fr;align-items:center;
@@ -372,27 +370,28 @@
   .goal-card .name{white-space:normal;overflow:visible;text-overflow:clip}
   .goal-card .acts{display:flex;flex-wrap:wrap;gap:6px;flex:none;width:100%;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
   .goal-card .acts .icon-btn{width:auto;min-width:34px;height:34px;padding:0 11px;white-space:nowrap;font-size:13px;display:inline-flex;align-items:center;justify-content:center}
-  .goal-card .goal-segs .seg{cursor:pointer}
   .goal-members{margin-top:10px;display:flex;flex-direction:column;gap:12px}
   .gmem{padding:8px 0;border-top:1px dashed var(--line)}
   .gmem:first-child{border-top:none}
   .gmem-hd{font-size:14px;color:var(--ink)}
-  .mem-done{font-size:12px;color:#2CA02C;font-weight:700;background:#E8F5E9;padding:1px 8px;border-radius:999px}
-  .gmem-rec{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
-  .gmem-sel,.gmem-input{padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px}
-  .gmem-input{width:90px}
   .mem-edit{display:flex;gap:6px;margin-bottom:6px}
   .mem-edit input{padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px;min-width:0}
   .goal-bar{flex:1;height:9px;border-radius:6px;background:var(--bg);overflow:hidden}
   .goal-fill{height:100%;border-radius:6px;transition:width .3s}
   .goal-pct{font-size:12px;font-weight:700;color:var(--muted);min-width:34px;text-align:right}
   .goal-sub{font-size:12px;color:var(--muted);margin-top:10px}
-  .goal-status{margin-top:8px;font-size:13px;font-weight:600;color:var(--muted)}
-  .goal-status.is-done{color:#2CA02C}
-  .goal-segs{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
-  .goal-segs .seg{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
-  .goal-segs .seg-done{background:#E8F5E9;color:#2CA02C;border-color:#A5D6A7;font-weight:600}
-  .goal-segs .seg-goal{font-weight:700;border-color:var(--accent,#2563eb);color:var(--accent,#2563eb)}
+  .goal-card.gclick{cursor:pointer}
+  .gchart{margin-top:10px}
+  .gchart-svg{display:block}
+  .gchart-svg text{fill:var(--faint);font-size:9px}
+  .gdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+  .gbig{font-size:22px;font-weight:800}
+  .gu{font-size:13px;color:var(--muted)}
+  .glegend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:6px 0 4px}
+  .ghist{max-height:40vh;overflow:auto;margin-top:6px}
+  .ghist-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .gdel{border:0;background:none;color:var(--faint);font-size:16px;padding:4px 8px}
+  .gnone{font-size:13px;color:var(--faint);text-align:center;padding:14px 0}
   .goal-ms{margin-top:12px;display:flex;flex-direction:column;gap:9px}
   .ms-divider{font-size:12px;color:var(--faint);margin:12px 0 6px;text-align:center}
   .ms-row{display:flex;align-items:flex-start;gap:8px;font-size:14px;color:var(--ink);padding:3px 0;line-height:1.5}
@@ -434,18 +433,12 @@
   .ms-marker{display:flex;align-items:center;gap:8px;padding:9px 12px;margin-bottom:8px;background:#F5F3FF;border:1px solid #E9E5FF;border-left:3px solid #7C3AED;border-radius:10px;cursor:pointer}
   .ms-marker-ico{font-size:15px}
   .ms-marker-txt{font-size:13px;color:#4C1D95;line-height:1.4}
-  .act-badge{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;background:#EF4444;color:#fff;font-size:12px;line-height:16px;border-radius:999px;text-align:center;font-weight:700}
-  .act-list{display:flex;flex-direction:column;gap:8px}
   .app-list{display:flex;flex-direction:column;gap:10px}
   .app-row{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--ink)}
   .app-row:active{background:var(--bg)}
   .app-ico{font-size:24px}
   .app-name{flex:1;font-size:15px;font-weight:600}
   .app-go{color:var(--muted);font-size:16px}
-  .act-item{display:flex;gap:10px;align-items:flex-start;padding:10px;background:#fff;border:1px solid var(--line);border-radius:10px}
-  .act-ico{font-size:16px}
-  .act-txt{font-size:14px;line-height:1.4}
-  .act-time{font-size:12px;color:var(--faint);margin-top:2px}
   .cell.sel .dot.logdot{box-shadow:0 0 0 1.5px rgba(255,255,255,.85)}
   .check.on{background:var(--done);border-color:var(--done)}
   .filters input[type=date]{flex:none;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
@@ -613,7 +606,6 @@
       <span id="appVerTag" style="font-size:12px;color:#aaa;font-weight:normal;white-space:nowrap;flex-shrink:0">v1.0</span>
     </div>
     <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
-      <button class="logout icobtn" id="activityBtn" style="position:relative">🔔<span id="activityBadge" class="act-badge" style="display:none"></span></button>
       
       <button class="logout icobtn" id="myAppsBtn" title="我的 App">📱</button>
       <button class="logout icobtn" id="calBtn" title="設定／切換行事曆">⚙️</button>
@@ -674,23 +666,24 @@
           <span class="filter-label">期間</span>
           <select id="ovYear"></select>
           <select id="ovMonth"></select>
-          <select id="ovDay"></select>
+          <select id="ovDay" style="display:none"></select>
         </div>
-        <div class="filter-row f4">
-          <span class="filter-label">篩選</span>
-          <select id="ovStatus">
+        <div class="filter-row">
+          <input id="ovSearch" type="search" autocomplete="off" placeholder="🔍 搜尋做過什麼（全部期間）" style="flex:1;min-width:0;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:14px">
+        </div>
+        <div class="filter-row">
+          <select id="ovStatus" style="flex:1;min-width:0">
+            <option value="done">已完成與紀錄</option>
             <option value="pending">未完成</option>
-            <option value="done">已完成</option>
             <option value="all">全部</option>
           </select>
-          <select id="ovKind">
-            <option value="all">全部類型</option>
-            <option value="scheduled">📅 行程</option>
-            <option value="todo">🎒 百寶袋</option>
-            <option value="log">📝 純紀錄</option>
-          </select>
-          <select id="ovCategory"><option value="all">全部分類</option></select>
-          <select id="ovAssignee"><option value="all">全部負責人</option></select>
+          <select id="ovKind" style="display:none"><option value="all">全部類型</option></select>
+          <button type="button" id="ovMoreBtn" class="btn-ghost" style="flex:none;padding:8px 12px;font-size:13px">更多篩選 ▾</button>
+          <button type="button" id="ovQuickBtn" class="add-btn" style="flex:none">＋ 記一筆</button>
+        </div>
+        <div class="filter-row" id="ovMoreBox" style="display:none">
+          <select id="ovCategory" style="flex:1;min-width:0"><option value="all">全部分類</option></select>
+          <select id="ovAssignee" style="flex:1;min-width:0"><option value="all">全部負責人</option></select>
         </div>
       </div>
       <div id="ovList"></div>
@@ -702,7 +695,6 @@
         <span></span>
         <button class="add-btn" id="addItemBtn">＋ 新增待購</button>
       </div>
-      <p class="shop-hint">勾選後自動完成並從清單消失，依購物子分類分組。已下單的放在最上面「待到貨」，到貨後勾選。</p>
       <div id="shopList"></div>
     </section>
 
@@ -711,7 +703,6 @@
         <span></span>
         <button class="add-btn" id="addGoalBtn">＋ 新增目標</button>
       </div>
-      <p class="shop-hint" id="goalYearEnd"></p>
       <div style="display:flex;align-items:center;gap:8px;margin:0 0 10px">
         <label style="font-size:13px;color:var(--muted)">年度</label>
         <select id="goalYearFilter" style="flex:none;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff"></select>
@@ -796,6 +787,28 @@ const state = {
   calendarsBound: false
 };
 let formAssignees = new Set();   // 編輯記事時暫存已選執行人
+let formAutoTouched = {cat:false, assign:false};   // 使用者手動改過就不再自動帶
+/* 依過去記事自動帶分類／負責人：標題相同或互相包含（至少 2 字），取最近一筆；待購不算 */
+function _normT(t){ return String(t||"").replace(/\s+/g,"").toLowerCase(); }
+function guessFromHistory(title){
+  const t=_normT(title); if(t.length<2) return null;
+  let best=null;
+  Object.values(state.records||{}).forEach(function(r){
+    if(!r || !r.title || r.category==="shopping" || !CAT_LABEL[r.category]) return;
+    const x=_normT(r.title); if(x.length<2) return;
+    if(x===t || x.indexOf(t)>=0 || t.indexOf(x)>=0){
+      const score=(x===t?1e15:0)+(r.createdAt||0);
+      if(!best || score>best.score) best={score, cat:r.category, assignees:r.assignees||[]};
+    }
+  });
+  return best;
+}
+function lastCat(){ try{ const v=localStorage.getItem("lastCat"); return (v && CAT_LABEL[v] && v!=="shopping")?v:"life"; }catch(e){ return "life"; } }
+function setLastCat(c){ try{ if(c && c!=="shopping" && CAT_LABEL[c]) localStorage.setItem("lastCat", c); }catch(e){} }
+function setIconPick(inputId, v){
+  const inp=$(inputId), pick=$(inputId+"_pick"); if(!inp||!pick) return;
+  inp.value=v; pick.querySelectorAll(".iconchip").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-v")===v); });
+}
 
 /* ---------- 1.5 分類定義 ---------- */
 const CAT_ORDER = ["life","work","health","travel","study","shopping","finance","activity","side","other"];
@@ -805,7 +818,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-31";
+const BUILD_ID = "1009-43";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -858,14 +871,6 @@ const HOLIDAYS = {
   "2027-10-25":"光復節","2027-12-24":"行憲紀念日(補假)","2027-12-25":"行憲紀念日","2027-12-31":"開國紀念日(補假)"
 };
 function holidayName(s){ return HOLIDAYS[s] || null; }
-function countdownText(dateStr){
-  const today=new Date(ymd(new Date())+"T00:00:00");
-  const d=new Date(dateStr+"T00:00:00");
-  const diff=Math.round((d-today)/86400000);
-  if(diff===0) return "今天";
-  if(diff>0) return "倒數 "+diff+" 天";
-  return "已過 "+(-diff)+" 天";
-}
 
 /* ---------- 2. 小工具 ---------- */
 function $(id){ return document.getElementById(id); }
@@ -967,13 +972,14 @@ function occursOn(r, dateStr){
   const b=r.dateStart.split("-").map(Number);
   const t=dateStr.split("-").map(Number);
   const n=Math.max(1, r.repeat.every||1), u=r.repeat.unit;
+  const dim=new Date(t[0],t[1],0).getDate();          // 該月有幾天
   if(u==="year"){
-    if(t[1]!==b[1] || t[2]!==b[2]) return false;     // 同月同日（閏2/29只會對到閏年）
+    if(t[1]!==b[1] || t[2]!==Math.min(b[2],dim)) return false;     // 同月同日（2/29 在平年算 2/28）
     const dy=t[0]-b[0];
     return dy>=0 && dy%n===0;
   }
   if(u==="month"){
-    if(t[2]!==b[2]) return false;                    // 同一號（31號只會對到有31天的月）
+    if(t[2]!==Math.min(b[2],dim)) return false;      // 同一號；31號遇到小月就算該月最後一天
     const md=(t[0]-b[0])*12+(t[1]-b[1]);
     return md>=0 && md%n===0;
   }
@@ -1005,8 +1011,12 @@ function addInterval(ymdStr, rep){
   const n=Math.max(1, rep.every||1);
   if(rep.unit==="day")        dt.setDate(dt.getDate()+n);
   else if(rep.unit==="week")  dt.setDate(dt.getDate()+7*n);
-  else if(rep.unit==="month") dt.setMonth(dt.getMonth()+n);
-  else if(rep.unit==="year")  dt.setFullYear(dt.getFullYear()+n);
+  else if(rep.unit==="month" || rep.unit==="year"){
+    const mm=(rep.unit==="month") ? p[1]-1+n : p[1]-1+12*n;
+    const y=p[0]+Math.floor(mm/12), m=((mm%12)+12)%12;
+    const dim=new Date(y,m+1,0).getDate();          // 1/31 加一個月 → 2/28（不跳到 3/3）
+    return ymd(new Date(y, m, Math.min(p[2],dim)));
+  }
   return ymd(dt);
 }
 // 從 base 日往後推，找到第一個 >= today 的日期（跳過已過的，避免堆積）
@@ -1028,91 +1038,11 @@ function buildNextRecord(r, baseDate){
   copy.createdAt=Date.now();
   return copy;
 }
-function _recSig(r){   // 記事識別碼：完全相同的視為重複
-  return [(r.cal||"main"),(r.title||"").trim(),(r.category||""),(r.dateStart||""),
-          (r.repeat?(r.repeat.unit+"_"+(r.repeat.every||1)):"no")].join("|");
-}
 function writeRecord(rec){
   if(LOCAL_MODE){ const key=genId(); state.records[key]=rec; lsSaveRecords(); }
   else { const key=uref("records").push().key; uref("records/"+key).set(rec); }
 }
 // 純紀錄(log)+重複：日期過了 → 生下一筆未來的，舊的留著當歷史（生日）
-// 一鍵清除重複記事（標題+分類+日期+重複規則完全相同 → 只留一筆）
-function scanDuplicateRecords(){
-  var groups={}, dupIds=[];
-  Object.keys(state.records).forEach(function(id){
-    var r=state.records[id]; if(!r) return;
-    if(r.category==="shopping") return;                    // 採購另計，不動
-    // 重複行程 & 一般行程：都要「完整起始日期」一模一樣才算重複（最保守，不誤刪）
-    var repSig = r.repeat ? (r.repeat.unit+"_"+(r.repeat.every||1)) : "";
-    var key=[(r.cal||"main"),(r.title||"").trim(),(r.category||""),(r.dateStart||""),(repSig||"no")].join("|");
-    if(!groups[key]) groups[key]=[];
-    groups[key].push(id);
-  });
-  // 重複組：保留「起始日最早」的那筆
-  Object.keys(groups).forEach(function(k){
-    var ids=groups[k];
-    if(ids.length>1){
-      ids.sort(function(a,b){ return String(state.records[a].dateStart||"").localeCompare(String(state.records[b].dateStart||"")); });
-    }
-  });
-  Object.keys(groups).forEach(function(k){
-    var ids=groups[k];
-    if(ids.length>1){ dupIds=dupIds.concat(ids.slice(1)); }  // 每組保留第一筆
-  });
-  return dupIds;
-}
-function cleanDuplicateRecords(){
-  if(!state.isAdmin){ toast("此功能限管理員"); return; }
-  var total=Object.keys(state.records||{}).length;
-  // 診斷：統計同標題+同日期的筆數
-  var byTitleDate={};
-  Object.keys(state.records||{}).forEach(function(id){
-    var r=state.records[id]; if(!r||r.category==="shopping") return;
-    var k=(r.title||"").trim()+" @ "+(r.dateStart||"無日期");
-    byTitleDate[k]=(byTitleDate[k]||0)+1;
-  });
-  var multi=Object.keys(byTitleDate).filter(function(k){ return byTitleDate[k]>1; });
-  var dup=scanDuplicateRecords();
-  if(!dup.length){
-    var diag="✅ 判重掃描：沒有完全相同的重複\n\n";
-    diag+="總記事數："+total+" 筆\n";
-    if(multi.length){
-      diag+="\n⚠️ 但發現同標題同日期的多筆：\n";
-      multi.slice(0,5).forEach(function(k){ diag+="・"+k+"（"+byTitleDate[k]+"筆）\n"; });
-      diag+="\n這些可能是重複規則不同，無法自動判定。\n要我用「標題+日期」清除嗎？請截圖給開發者。";
-    }
-    alert(diag); return;
-  }
-  // 列出各組摘要
-  var summary={};
-  Object.keys(state.records).forEach(function(id){
-    var r=state.records[id]; if(!r||r.category==="shopping") return;
-    var repSig=r.repeat?(r.repeat.unit+"_"+(r.repeat.every||1)):"";
-    var dp=repSig?"":(r.dateStart||"");
-    var key=[(r.cal||"main"),(r.title||"").trim(),(r.category||""),dp,(repSig||"no")].join("|");
-    summary[key]=(summary[key]||0)+1;
-  });
-  var lines=[];
-  Object.keys(summary).forEach(function(k){
-    if(summary[k]>1){ var t=k.split("|")[1]; lines.push("・"+t+"（"+summary[k]+"筆 → 留1筆）"); }
-  });
-  var msg="🧹 找到 "+dup.length+" 筆重複\n\n";
-  msg+=lines.slice(0,8).join("\n");
-  if(lines.length>8) msg+="\n…等 "+lines.length+" 組";
-  msg+="\n\n每組保留最早 1 筆，刪除其餘 "+dup.length+" 筆。\n確定清除？（無法復原）";
-  if(!confirm(msg)) return;
-  if(LOCAL_MODE){
-    dup.forEach(function(id){ delete state.records[id]; });
-    lsSaveRecords(); renderAll();
-    alert("✅ 已清除 "+dup.length+" 筆重複");
-  } else {
-    var ups={};
-    dup.forEach(function(id){ ups["records/"+id]=null; });
-    uref("").update(ups).then(function(){ alert("✅ 已清除 "+dup.length+" 筆重複"); })
-      .catch(function(){ alert("清除失敗，請稍後再試"); });
-  }
-}
 function processRecurrences(){
   const today=ymd(new Date());
   let changed=false;
@@ -1556,6 +1486,12 @@ async function autoLogin(){
 }
 
 // ===== 本地通知：今日行程提醒（方案B）=====
+function _dueShop(){
+  var out=[];
+  try{ curValues().forEach(function(r){ if(r && r.category==="shopping" && !isDone(r) && !r.ordered && _shopDue(r)) out.push(r); }); }catch(e){}
+  return out;
+}
+function _shopNames(a){ var n=a.slice(0,3).map(function(r){ return r.title||"商品"; }).join("、"); return n+(a.length>3?" 等 "+a.length+" 項":""); }
 function _todayTimedEvents(){
   var t=ymd(new Date()); var out=[];
   try{
@@ -1626,14 +1562,20 @@ function maybeNotifyToday(force){
     }catch(e){}
   }
   var all=_todayTimedEvents();                                     // 今天未完成(含逾期/無時間)
-  if(!all.length){ if(force) toast('今天沒有未完成的行程'); return; }
+  var shop=(isFirstToday||force)?_dueShop():[];                    // 該買的待購：只在今天第一次提醒
+  if(!all.length && !shop.length){ if(force) toast('今天沒有未完成的行程'); return; }
   var nowHM=String(new Date().getHours()).padStart(2,"0")+":"+String(new Date().getMinutes()).padStart(2,"0");
   var upcoming=all.filter(function(r){ return r.start && r.start>=nowHM; });   // 還沒到時間的
   var title, body;
   if(isFirstToday || force){                                       // 今天第一次 → 推全部
-    var first=upcoming[0]||all[0];
-    title = (first.start? '⏰ '+first.start+' ':'📅 ')+(first.title||'行程');
-    body  = '今天有 '+all.length+' 筆行程';
+    if(all.length){
+      var first=upcoming[0]||all[0];
+      title = (first.start? '⏰ '+first.start+' ':'📅 ')+(first.title||'行程');
+      body  = '今天有 '+all.length+' 筆行程'+(shop.length?'；該買：'+_shopNames(shop):'');
+    } else {
+      title = '🛒 該買：'+_shopNames(shop);
+      body  = '待購 '+shop.length+' 項';
+    }
   } else {                                                          // 之後 → 只提未完成
     if(!upcoming.length){ if(force) toast('今天沒有即將到來的行程'); return; }
     title = '⏰ '+upcoming[0].start+' '+(upcoming[0].title||'行程');
@@ -1653,9 +1595,9 @@ function enterApp(){
     var _newUser = localStorage.getItem(AUTH_KEY) || state.user;
     if(state._boundUser && state._boundUser !== _newUser && !LOCAL_MODE){   // 換帳號 → 斷開舊綁定、清狀態
       var ob = isEmail(state._boundUser) ? "users/"+emailKey(state._boundUser)+"/" : "";
-      try{ ["records","people","calendars","goals","activity"].forEach(function(p){ db.ref(ob+p).off(); }); }catch(e){}
-      state.recordsBound=false; state.peopleBound=false; state.calendarsBound=false; state.goalsBound=false; state.activityBound=false;
-      state.records={}; state.people={}; state.goals={}; state.calendars={}; state.activity=[];
+      try{ ["records","people","calendars","goals"].forEach(function(p){ db.ref(ob+p).off(); }); }catch(e){}
+      state.recordsBound=false; state.peopleBound=false; state.calendarsBound=false; state.goalsBound=false;
+      state.records={}; state.people={}; state.goals={}; state.calendars={};
     }
     state.user = _newUser;
     $("login").classList.add("hidden");
@@ -1664,7 +1606,7 @@ function enterApp(){
     applyPlanLocks();
     renderLegend();
     bindData();
-    restoreDeviceName();
+    dropOldActivity();
     renderAll();
     state._boundUser = _newUser;
     try{ setTimeout(maybeNotifyToday, 2500); }catch(e){}   // 開App推今日行程(資料載入後,一天一次)
@@ -1700,10 +1642,9 @@ function doLogout(){
   try{ uref("people").off(); }catch(e){}
   try{ uref("calendars").off(); }catch(e){}
   try{ uref("goals").off(); }catch(e){}
-  try{ uref("activity").off(); }catch(e){}
-  state.recordsBound=false; state.peopleBound=false; state.calendarsBound=false; state.goalsBound=false; state.activityBound=false;
+  state.recordsBound=false; state.peopleBound=false; state.calendarsBound=false; state.goalsBound=false;
   state.user=null; state.records={}; state.people={}; state.goals={}; state.calendars={}; state.isAdmin=false;
-  state.activity=[]; state._boundUser=null;
+  state._boundUser=null;
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem("cal_admin_on");
   try{ if(auth) auth.signOut(); }catch(e){}   // 登出 Firebase，下次要重新驗證
@@ -1731,7 +1672,6 @@ function bindData(){
     if(!state.recordsBound){ uref("records").on("value", s=>{ state.records=s.val()||{}; renderAll(); }); state.recordsBound=true; }
     if(!state.peopleBound){ uref("people").on("value", s=>{ state.people=s.val()||{}; renderAll(); }); state.peopleBound=true; }
     if(!state.goalsBound){ uref("goals").on("value", s=>{ state.goals=s.val()||{}; renderGoals(); }); state.goalsBound=true; }
-    bindActivity();
     setTimeout(importPendingPurchase, 800);
   });
 }
@@ -1759,7 +1699,7 @@ function importPendingPurchase(){
   writeRecord({
     category:"shopping", title:_title,
     subcategory:sub, qty:qty, unit:p.unit||"", invId:p.item_id||"", amount:null,
-    needStock:true, fromInv:true,
+    fromInv:true,
     dateStart:"", status:"pending", createdAt:Date.now(), cal:state.currentCal||"main"
   });
   toast("已從庫存帶入："+String(p.item_name)+" ×"+qty);
@@ -1808,97 +1748,24 @@ function invDict(){
   return out;
 }
 
-/* ===== ⑤ App 內通知（動態）===== */
-function deviceName(){ try{ return localStorage.getItem("cal_devname")||""; }catch(e){ return ""; } }
-function setDeviceNamePrompt(){
-  const v=prompt("設定暱稱（供家人辨識記事來源）", deviceName());
-  if(v===null) return;
-  const nm=(v||"").trim();
-  try{ localStorage.setItem("cal_devname",nm); }catch(e){}
-  try{ if(_firebaseReady && !LOCAL_MODE) uref("_devname").set(nm); }catch(e){}   // 同步雲端(清快取可還原)
-  renderActivityBadge(); toast("已設定暱稱");
-}
-function restoreDeviceName(){                     // 本機暱稱空 → 從雲端還原
-  try{
-    if(deviceName() || LOCAL_MODE || !_firebaseReady) return;
-    uref("_devname").once("value").then(function(s){
-      var nm=s.val(); if(nm && !deviceName()){ try{ localStorage.setItem("cal_devname",nm); }catch(e){} renderActivityBadge(); }
-    }).catch(function(){});
-  }catch(e){}
-}
-function activityLastSeen(){ try{ return Number(localStorage.getItem("cal_actseen")||0); }catch(e){ return 0; } }
-function setActivityLastSeen(ts){ try{ localStorage.setItem("cal_actseen", String(ts||0)); }catch(e){} }
-function pushActivity(title, kind){
-  if(LOCAL_MODE) return;                       // 本機模式無共享對象
-  try{ uref("activity").push({ title:(title||"").slice(0,60), kind:kind||"", actor:deviceName()||"有人", ts:Date.now() }); }catch(e){}
-}
-function bindActivity(){
-  if(LOCAL_MODE || state.activityBound) return;
-  try{
-    uref("activity").limitToLast(40).on("value", s=>{
-      const v=s.val()||{};
-      state.activity=Object.entries(v).map(([k,a])=>Object.assign({key:k},a)).sort((x,y)=>(y.ts||0)-(x.ts||0));
-      renderActivityBadge();
-    });
-    state.activityBound=true;
-    pruneActivity();
-  }catch(e){}
-}
-function pruneActivity(){
-  if(LOCAL_MODE) return;
-  const cutoff=Date.now()-60*24*60*60*1000;   // 60 天
-  try{
-    uref("activity").once("value", s=>{
-      const v=s.val(); if(!v) return;
-      const updates={};
-      Object.entries(v).forEach(([k,a])=>{ if(((a&&a.ts)||0)<cutoff) updates[k]=null; });
-      if(Object.keys(updates).length) uref("activity").update(updates);
-    });
-  }catch(e){}
-}
-function renderActivityBadge(){
-  const b=$("activityBadge"); if(!b) return;
-  const me=deviceName(), seen=activityLastSeen();
-  const n=(state.activity||[]).filter(a=>(a.ts||0)>seen && a.actor!==me).length;
-  if(n>0){ b.textContent=n>99?"99+":String(n); b.style.display=""; } else { b.style.display="none"; }
-}
-function actTimeText(ts){
-  if(!ts) return "";
-  const diff=Math.floor((Date.now()-ts)/60000);
-  if(diff<1) return "剛剛";
-  if(diff<60) return diff+" 分鐘前";
-  if(diff<1440) return Math.floor(diff/60)+" 小時前";
-  const d=new Date(ts);
-  return (d.getMonth()+1)+"/"+d.getDate()+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-}
-function openActivityPanel(){
-  const me=deviceName(); const list=(state.activity||[]);
-  let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
-    +'<span style="font-size:13px;color:var(--muted)">我的暱稱：<b>'+esc(me||"（未設定）")+'</b></span>'
-    +'<span>'+(((!LOCAL_MODE && list.length) || _hasStaleInv())?'<span class="manage-link" id="act_clear" style="margin-right:14px">清除動態</span>':'')+'<span class="manage-link" id="act_setname">設定暱稱</span></span></div>';
-  if(LOCAL_MODE){ html+='<div class="empty-state"><span class="eico">📡</span>本機模式沒有家人共享<span class="esub">動態只在雲端模式顯示</span></div>'; }
-  else if(list.length===0){ html+='<div class="empty-state"><span class="eico">📡</span>還沒有動態<span class="esub">家人新增記事後會出現在這裡</span></div>'; }
-  else {
-    html+='<div class="act-list">'+list.map(a=>{
-      const mine=a.actor===me;
-      return '<div class="act-item"><span class="act-ico">'+(KIND_ICO[a.kind]||"📝")+'</span><div class="act-body"><div class="act-txt"><b>'+esc(a.actor||"有人")+'</b> 新增了：'+esc(a.title)+(mine?' <span style="color:var(--faint)">（我）</span>':'')+'</div><div class="act-time">'+actTimeText(a.ts)+'</div></div></div>';
-    }).join("")+'</div>';
-  }
-  openSheet("🔔 動態", html, null, null, "關閉");
-  const sn=$("act_setname"); if(sn) sn.addEventListener("click", setDeviceNamePrompt);
-  const cl=$("act_clear"); if(cl) cl.addEventListener("click", clearActivity);
-  const newest=list.length?(list[0].ts||0):Date.now();
-  setActivityLastSeen(newest); renderActivityBadge();
-}
+/* 庫存回傳殘留（庫存 App 沒取走時才會有）：只在設定頁出現清除鈕 */
 function _hasStaleInv(){
   try{ return !!(localStorage.getItem("inv_done_callbacks") || localStorage.getItem("inv_update_ack")); }catch(e){ return false; }
 }
-function clearActivity(){
-  openConfirm("清除動態", "動態與殘留回傳會被清空，此動作無法復原。", function(){
+function clearStaleInv(){
+  openConfirm("清除庫存殘留回傳", "清掉還沒回傳給庫存的紀錄，此動作無法復原。", function(){
     try{ localStorage.removeItem("inv_done_callbacks"); localStorage.removeItem("inv_update_ack"); }catch(e){}
-    if(LOCAL_MODE){ closeSheet(); toast("已清除殘留回傳"); return; }
-    uref("activity").remove().then(()=>{ state.activity=[]; renderActivityBadge(); closeSheet(); toast("已清除動態與殘留回傳"); }).catch(e=>{ console.error(e); toast(failMsg("清除", e)); });
+    closeSheet(); toast("已清除");
   }, "清除");
+}
+// 舊的「動態」功能已移除：清掉雲端殘留資料與本機暱稱（只做一次）
+function dropOldActivity(){
+  try{
+    localStorage.removeItem("cal_devname"); localStorage.removeItem("cal_actseen");
+    if(LOCAL_MODE || localStorage.getItem("cal_act_cleaned")) return;
+    Promise.all([uref("activity").remove(), uref("_devname").remove()])
+      .then(()=>{ try{ localStorage.setItem("cal_act_cleaned","1"); }catch(e){} }).catch(()=>{});
+  }catch(e){}
 }
 
 /* 🎒 行事曆頁的百寶袋清單：無日期、未完成、非採購 */
@@ -1907,7 +1774,7 @@ function renderPocket(){
   const arr=curEntries().map(([id,r])=>Object.assign({id},r))
     .filter(r=>r.category!=="shopping" && !r.dateStart && recKind(r)!=="done" && recKind(r)!=="log");
   arr.sort((a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u)return u; return (b.createdAt||0)-(a.createdAt||0); });
-  if(arr.length===0){ wrap.innerHTML='<div class="empty-state" style="padding:14px">🎒 百寶袋是空的<span class="esub">上面隨手記一筆吧</span></div>'; return; }
+  if(arr.length===0){ wrap.innerHTML='<div class="empty-state" style="padding:14px">🎒 百寶袋是空的</div>'; return; }
   wrap.innerHTML="";
   arr.forEach(r=>wrap.appendChild(overviewCard(r,"todo")));
 }
@@ -1934,15 +1801,16 @@ function switchTab(t){
   if(t==="goals") renderGoals();
 }
 
-/* 跳出 App 再回來 → 回到「行事曆」今天（總覽預設＝當月＋逾期） */
+/* 跳出 App 再回來 → 回到「行事曆」今天（總覽預設＝當月已完成與紀錄） */
 function resetToTodayOverview(){
   if($("app").classList.contains("hidden")) return;   // 未登入不動
-  ovMode="todo";
+  ovMode="period";
   const t=new Date();
   if($("ovYear")) $("ovYear").value=String(t.getFullYear());
   if($("ovMonth")) $("ovMonth").value=String(t.getMonth()+1);
   if($("ovDay")){ $("ovDay").disabled=false; $("ovDay").value=""; }
-  if($("ovStatus")) $("ovStatus").value="pending";
+  if($("ovStatus")) $("ovStatus").value="done";
+  if($("ovSearch")) $("ovSearch").value="";
   if($("ovCategory")) $("ovCategory").value="all";
   if($("ovAssignee")) $("ovAssignee").value="all";
   switchTab("cal");   // 回到行事曆頁
@@ -2093,6 +1961,7 @@ function openCalManager(){
     + '<button type="button" class="set-row" id="notifyBtn" aria-pressed="false">'
       + '<span class="ic">🔔</span><span class="tx">今日行程通知</span>'
       + '<span class="set-val"><span class="noti-pill" id="notifyVal">已關閉</span></span></button>'
+    + (_hasStaleInv() ? row('clearInvStale','🧹','清除庫存殘留回傳','') : '')
     + '</div>';
 
   // 四支 App 共通
@@ -2113,7 +1982,6 @@ function openCalManager(){
     html+='<div class="set-list">'
       + row('goAdminFromCal','🔑','訂閱管理')
       + row('pvFromCal','🧪','預覽使用者畫面')
-      + row('cleanDupBtn','🧹','清除重複記事')
       + '</div>';
   }
 
@@ -2136,17 +2004,11 @@ function openCalManager(){
       } else { requestNotify(); }
     });
   }
+  if($("clearInvStale")) $("clearInvStale").addEventListener("click", clearStaleInv);
   if($("shareAppBtn")) $("shareAppBtn").addEventListener("click", shareApp);
   if($("supportBtn")) $("supportBtn").addEventListener("click", function(){ window.open(LINE_URL,"_blank","noopener"); });
   if($("installFromSettings")) $("installFromSettings").addEventListener("click", function(){
     appInstall.run(_deferredPrompt).then(function(used){ if(used) _deferredPrompt=null; });
-    return;
-    // 以下保留原本的分支，實際不會走到（appInstall 已經處理完）
-    if(_deferredPrompt){ _deferredPrompt.prompt(); _deferredPrompt.userChoice.then(function(){ _deferredPrompt=null; }); return; }
-    var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
-    alert("安裝到手機桌面\n\n"+(isIOS
-      ? "1. 請改用 Safari 開啟本頁\n2. 點下方「分享」⬆️\n3. 選「加入主畫面」"
-      : "1. 請改用 Chrome 開啟本頁\n2. 點瀏覽器選單（⋮）\n3. 選「安裝應用程式／加到主畫面」"));
   });
   if($("termsBtnSet")) $("termsBtnSet").addEventListener("click", function(){ legalDocs.open("terms"); });
   if($("pvFromCal")) $("pvFromCal").addEventListener("click", function(){ closeSettingsPage(); previewMode.open(); });
@@ -2158,7 +2020,6 @@ function openCalManager(){
     });
   });
   if($("goAdminFromCal")) $("goAdminFromCal").addEventListener("click", function(){ openAdminPanel(); });
-  if($("cleanDupBtn")) $("cleanDupBtn").addEventListener("click", cleanDuplicateRecords);
   if($("logoutFromSettings")) $("logoutFromSettings").addEventListener("click", function(){ closeSettingsPage(); doLogout(); });
   if($("backupExport")) $("backupExport").addEventListener("click", exportBackup);
   if($("backupImport")) $("backupImport").addEventListener("change", function(){ if(this.files&&this.files[0]) importBackup(this.files[0]); this.value=""; });
@@ -2357,7 +2218,7 @@ function renderDayEvents(){
   const msDay=goalMsForDay(state.selected);
   const msHtml=msDay.map(x=>'<div class="ms-marker"><span class="ms-marker-ico">🎯</span><span class="ms-marker-txt"><b>'+esc(x.goalTitle)+'</b>　'+esc(x.text)+(x.done?' ✓':'')+'</span></div>').join("");
 
-  if(list.length===0 && !msHtml){ wrap.innerHTML=holBanner+'<div class="empty-state"><span class="eico">📅</span>這天還沒有記事<span class="esub">點「新增記事」加入</span></div>'; return; }
+  if(list.length===0 && !msHtml){ wrap.innerHTML=holBanner+'<div class="empty-state"><span class="eico">📅</span>這天還沒有記事</div>'; return; }
 
   wrap.innerHTML=holBanner+msHtml;
   wrap.querySelectorAll(".ms-marker").forEach(el=>el.addEventListener("click", ()=>switchTab("goals")));
@@ -2374,7 +2235,6 @@ function renderDayEvents(){
     if(r.amount!=null && r.amount!=="") meta.push('💰 '+esc(r.amount));
     if(hasRepeat(r)) meta.push(repeatText(r.repeat));
     if(who.length) meta.push('<span class="who">👤 '+esc(who.join("、"))+'</span>');
-    if(r.countdown && r.dateStart && k!=="done") meta.push('⏳ '+countdownText(r.dateStart));
     card.innerHTML=
       (r.start? '<div class="time-col"><span class="tc-h">'+esc(r.start)+'</span><span class="tc-ap">'+(parseInt(r.start,10)<12?'AM':'PM')+'</span></div>' : '')+
       '<div class="stripe" style="background:'+color+'"></div>'+
@@ -2432,7 +2292,9 @@ function openMonthPicker(){
 /* ============================================================
    6.5 總覽（查詢／回顧，可篩選）
    ============================================================ */
-let ovMode = "todo";   // todo=待辦(逾期+今天未完成)；period=查特定期間
+let ovMode = "period";   // 總覽預設＝回顧當月（已完成與紀錄）；todo 模式保留但不再使用
+if($("ovSearch")) $("ovSearch").addEventListener("input", ()=>renderOverview());
+if($("ovMoreBtn")) $("ovMoreBtn").addEventListener("click", ()=>{ const bx=$("ovMoreBox"); const on=bx.style.display==="none"; bx.style.display=on?"flex":"none"; $("ovMoreBtn").textContent=on?"收起篩選 ▴":"更多篩選 ▾"; });
 ["ovStatus","ovKind","ovCategory","ovAssignee","ovYear","ovDay"].forEach(idd=>{
   const el=$(idd); if(el) el.addEventListener("change", ()=>{ ovMode="period"; renderOverview(); });
 });
@@ -2459,11 +2321,11 @@ function quickAddPocket(){
   const inp=$("pocketInput"); const title=(inp.value||"").trim();
   if(!title){ return; }
   const data={ kind:"todo", title, category:"other", dateStart:"", dateEnd:"",
-    start:"", end:"", assignees:[], urgent:false, countdown:false, note:"",
+    start:"", end:"", assignees:[], urgent:false, note:"",
     status:"pending", createdAt:Date.now(), cal:state.currentCal };
   if(LOCAL_MODE){ const key=genId(); state.records[key]=data; lsSaveRecords(); inp.value=""; renderAll(); return; }
   const key=uref("records").push().key;
-  uref("records/"+key).update(data).then(()=>{ inp.value=""; pushActivity(title, "todo"); }).catch(e=>{ console.error(e); toast(failMsg("儲存", e)); });
+  uref("records/"+key).update(data).then(()=>{ inp.value=""; }).catch(e=>{ console.error(e); toast(failMsg("儲存", e)); });
 }
 function showCalPane(which){
   const day = which!=="pocket";
@@ -2479,6 +2341,38 @@ if($("dpTabPocket")) $("dpTabPocket").addEventListener("click", ()=>showCalPane(
 $("pocketAddBtn").addEventListener("click", quickAddPocket);
 $("pocketInput").addEventListener("keydown", e=>{ if(e.key==="Enter") quickAddPocket(); });
 
+/* ＋記一筆：只填名稱、金額、分類，日期預設今天，存成「純紀錄」（有日期、不用勾完成） */
+function openQuickLog(){
+  if(!requireAuth()) return;
+  const html=
+    '<div class="field"><label>做了什麼</label><input id="ql_title" autocomplete="off" placeholder="例如：午餐、看牙醫"></div>'+
+    '<div class="two">'+
+      '<div class="field"><label>金額（選填）</label><input id="ql_amount" type="number" inputmode="decimal" placeholder="0"></div>'+
+      '<div class="field"><label>日期</label><input id="ql_date" type="date" value="'+ymd(new Date())+'"></div>'+
+    '</div>'+
+    '<div class="field"><label>分類</label><select id="ql_cat">'+CAT_ORDER.map(c=>'<option value="'+c+'"'+(c===lastCat()?" selected":"")+'>'+CAT_ICON[c]+' '+CAT_LABEL[c]+'</option>').join("")+'</select></div>';
+  openSheet("記一筆", html, function(){
+    const title=($("ql_title").value||"").trim(); const date=$("ql_date").value||ymd(new Date());
+    if(!title){ toast("請輸入做了什麼"); return; }
+    const av=$("ql_amount").value;
+    setLastCat($("ql_cat").value);
+    const rec={ kind:"log", isLog:true, title, category:$("ql_cat").value||"other",
+      dateStart:date, dateEnd:"", repeatUntil:"", start:"", end:"", assignees:[], urgent:false,
+      note:"", status:"pending", createdAt:Date.now(), spawned:false, cal:state.currentCal };
+    if(av!=="" && !isNaN(Number(av))) rec.amount=Number(av);
+    if(LOCAL_MODE){ state.records[genId()]=rec; lsSaveRecords(); closeSheet(); renderAll(); toast("已記一筆"); return; }
+    const key=uref("records").push().key;
+    uref("records/"+key).update(rec).then(()=>{ closeSheet(); toast("已記一筆"); }).catch(e=>{ console.error(e); toast(failMsg("儲存", e)); });
+  }, null, "儲存");
+  var qlTouched=false;
+  if($("ql_cat")) $("ql_cat").addEventListener("change", function(){ qlTouched=true; });
+  if($("ql_title")) $("ql_title").addEventListener("input", function(){
+    const g=guessFromHistory(this.value); if(g && !qlTouched && g.cat!=="shopping") $("ql_cat").value=g.cat;
+  });
+  setTimeout(()=>{ const i=$("ql_title"); if(i) i.focus(); }, 50);
+}
+if($("ovQuickBtn")) $("ovQuickBtn").addEventListener("click", openQuickLog);
+
 function refreshOverviewFilterOptions(){
   // 分類選單
   const cs=$("ovCategory"); if(cs){ const cur=cs.value;
@@ -2493,7 +2387,8 @@ function refreshOverviewFilterOptions(){
 }
 
 function overviewDateMatch(r){
-  const rg=recRange(r);
+  let rg=recRange(r);
+  if(!rg && r.doneDate && recKind(r)==="done") rg=[r.doneDate, r.doneDate];   // 沒有排定日、但完成了：用完成日歸到那個月
   if(!rg) return r.category!=="shopping";   // 無日期：🎒百寶袋顯示；採購(純待購)不灌進總覽
   const y=$("ovYear").value, m=$("ovMonth").value, d=$("ovDay").value;
   if(!y) return true;
@@ -2619,7 +2514,9 @@ function ovSpendHtml(){
 function renderOverview(){
   const wrap=$("ovList");
   const todo = (ovMode==="todo");
-  const statusF= todo ? "pending" : $("ovStatus").value;     // pending / done / all
+  const _q = (($("ovSearch")||{}).value||"").trim().toLowerCase();   // 搜尋：找全部期間、全部狀態
+  const searching = _q!=="";
+  const statusF= todo ? "pending" : (searching ? "all" : $("ovStatus").value);     // pending / done / all
   const catF=$("ovCategory").value;
   const whoF=$("ovAssignee").value;
   const kindF=($("ovKind")||{}).value||"all";               // 類型篩選
@@ -2633,6 +2530,7 @@ function renderOverview(){
     // 類型篩選：完成與否交給「狀態」篩，這裡只看本質類型（完成的行程也算行程）
     var baseKind = (k==="done") ? (r.dateStart ? "scheduled" : "todo") : k;
     if(kindF!=="all" && baseKind!==kindF) return false;
+    if(searching) return ((r.title||"")+" "+(r.note||"")).toLowerCase().indexOf(_q)>=0;
     if(todo){
       // 預設：當月 ＋ 逾期（未完成）。已完成不顯示；純紀錄當月才顯示
       if(k==="done") return false;
@@ -2667,8 +2565,8 @@ function renderOverview(){
   let total=order.reduce((n,k)=>n+buckets[k].length,0);
   var _dupN=findDuplicatePurchases().length;
   var _dupBtn=_dupN>0 ? '<button onclick="cleanDuplicatePurchases()" style="width:100%;margin-bottom:8px;padding:9px;border:none;border-radius:8px;background:#E377C2;color:#fff;font-size:14px;font-weight:600">🧹 清除重複採購（'+_dupN+' 筆）</button>' : '';
-  const hint = _dupBtn + ovSpendHtml() + (todo ? '<div class="ov-hint">📋 當月未完成 ＋ 逾期（用上方年／月／日可查其他期間）</div>' : '');
-  if(total===0){ wrap.innerHTML=hint+'<div class="empty-state">'+(todo?'<span class="eico">🎉</span>目前沒有當月或逾期未完成的事':'<span class="eico">🔍</span>沒有符合的記事<span class="esub">試著調整上方篩選</span>')+'</div>'; return; }
+  const hint = _dupBtn + (searching ? "" : ovSpendHtml()) + (searching ? '<div class="ov-hint">🔍 搜尋「'+esc(($("ovSearch")||{}).value.trim())+'」　'+total+' 筆</div>' : '') + (todo ? '<div class="ov-hint">📋 當月未完成 ＋ 逾期（用上方年／月／日可查其他期間）</div>' : '');
+  if(total===0){ wrap.innerHTML=hint+'<div class="empty-state">'+(todo?'<span class="eico">🎉</span>目前沒有當月或逾期未完成的事':'<span class="eico">🔍</span>沒有符合的記事')+'</div>'; return; }
 
   wrap.innerHTML=hint;
   order.forEach(k=>{
@@ -2748,7 +2646,7 @@ function toggleDoneWhole(id){
     patch.kind="done"; patch.status="done";
     patch.doneDate=ymd(new Date());
     if(r.category==="shopping"){ patch.ordered=null; patch.eta=null; }
-    if(r.category==="shopping" && r.needStock!==false){
+    if(r.category==="shopping"){
       if(r.invId) pushInvDone(r.invId, r.qty, r.title);                          // 已入庫→加數量
       else if(r.invNew) pushInvDone("", r.qty, r.title, {create:true, cat:r.invCat});  // 未入庫→新建入庫
     }
@@ -2785,23 +2683,51 @@ $("addItemBtn").addEventListener("click", ()=>{ if(!canAdvanced()){ showUpgrade(
 /* 待購分頁圖示上的數字＝還在等到貨的件數（沒有就不顯示），避免忘記 */
 function updateShopBadge(){
   const nb=$("navShop"); if(!nb) return;
-  let n=0; curEntries().forEach(([id,r])=>{ if(r && r.category==="shopping" && r.ordered && !isDone(r)) n++; });
+  let n=0; curEntries().forEach(([id,r])=>{ if(r && r.category==="shopping" && !isDone(r) && (r.ordered || _shopDue(r))) n++; });
   const old=nb.querySelector(".nbadge"); if(old) old.remove();
-  if(n>0){ const sp=document.createElement("span"); sp.className="nbadge"; sp.textContent=String(n); sp.title="待到貨 "+n+" 件"; nb.appendChild(sp); }
+  if(n>0){ const sp=document.createElement("span"); sp.className="nbadge"; sp.textContent=String(n); sp.title="待到貨／該買 "+n+" 件"; nb.appendChild(sp); }
+}
+function _lastSub(){ try{ var v=localStorage.getItem("shopLastSub"); return (v && SUBCAT_LABEL[v])?v:"food"; }catch(e){ return "food"; } }
+function _shopDue(r){ return !!(r && r.dateStart && r.dateStart<=ymd(new Date())); }
+function _shopLater(r){ return !!(r && r.dateStart && r.dateStart>ymd(new Date())); }
+function shopCardEl(r){
+      const card=document.createElement("div");
+      card.className="card item"+(r.urgent?" urgent-card":"");
+      card.innerHTML=
+        '<button class="check" data-check>'+'</button>'+
+        '<div class="body">'+
+          '<div class="row1">'+(r.urgent?'<span class="urg-badge">❗️</span>':'')+'<span class="name">'+esc(r.title)+'</span></div>'+
+          '<div class="meta"><span class="qty">數量 '+esc(r.qty||1)+'</span>'+
+            (r.amount!=null&&r.amount!==""?' <span>💰 '+esc(r.amount)+'</span>':'')+
+            (r.dateStart?(_shopDue(r)?' <span style="color:#e08a00;font-weight:600">🔔 該買了</span>':' <span>📅 '+esc(mdWk(r.dateStart))+'</span>'):'')+
+            (hasRepeat(r)?' <span>'+repeatText(r.repeat)+'</span>':'')+
+          '</div>'+
+          (r.note?'<div class="note">'+esc(r.note)+'</div>':'')+
+        '</div>'+
+        '<div class="acts">'+
+          '<button class="icon-btn" data-edit>✏️</button>'+
+          '<button class="icon-btn" data-del>🗑</button>'+
+        '</div>';
+      card.querySelector("[data-check]").addEventListener("click", ()=>toggleShopDone(r.id));
+      card.querySelector("[data-edit]").addEventListener("click", ()=>openEditor(r));
+      card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title));
+      return card;
 }
 function renderShop(){
   const wrap=$("shopList");
   const groups={}; SUBCAT_ORDER.forEach(s=>groups[s]=[]);
   const ordered=[];   // 已下單、還沒到貨
+  const later=[];     // 日期還沒到：先不佔清單
   curEntries().forEach(([id,r])=>{
     if(r && r.category==="shopping" && !isDone(r)){
       if(r.ordered){ ordered.push(Object.assign({id},r)); return; }
+      if(_shopLater(r)){ later.push(Object.assign({id},r)); return; }
       const sc=groups[r.subcategory]?r.subcategory:"other";
       groups[sc].push(Object.assign({id},r));
     }
   });
-  let total=ordered.length; SUBCAT_ORDER.forEach(s=>total+=groups[s].length);
-  if(total===0){ wrap.innerHTML='<div class="empty-state"><span class="eico">🛒</span>目前沒有待購項目<span class="esub">點「新增待購」加入</span></div>'; return; }
+  let total=ordered.length+later.length; SUBCAT_ORDER.forEach(s=>total+=groups[s].length);
+  if(total===0){ wrap.innerHTML='<div class="empty-state"><span class="eico">🛒</span>目前沒有待購項目</div>'; return; }
 
   wrap.innerHTML="";
   if(ordered.length){
@@ -2841,44 +2767,31 @@ function renderShop(){
   SUBCAT_ORDER.forEach(sc=>{
     const arr=groups[sc];
     if(arr.length===0) return;
-    arr.sort((a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0) return u; return (b.createdAt||0)-(a.createdAt||0); });
+    arr.sort((a,b)=>{ const u=(b.urgent?1:0)-(a.urgent?1:0); if(u!==0) return u; const dd=(_shopDue(b)?1:0)-(_shopDue(a)?1:0); if(dd!==0) return dd; return (b.createdAt||0)-(a.createdAt||0); });
     const head=document.createElement("div");
     head.className="group-head";
     head.innerHTML='<i class="dot" style="background:'+catColor("shopping")+'"></i>'+subcatIcon(sc)+' '+SUBCAT_LABEL[sc]+'<span class="gcount">'+arr.length+'</span>';
     wrap.appendChild(head);
-    arr.forEach(r=>{
-      const card=document.createElement("div");
-      card.className="card item"+(r.urgent?" urgent-card":"");
-      card.innerHTML=
-        '<button class="check" data-check>'+'</button>'+
-        '<div class="body">'+
-          '<div class="row1">'+(r.urgent?'<span class="urg-badge">❗️</span>':'')+'<span class="name">'+esc(r.title)+'</span></div>'+
-          '<div class="meta"><span class="qty">數量 '+esc(r.qty||1)+'</span>'+
-            (r.amount!=null&&r.amount!==""?' <span>💰 '+esc(r.amount)+'</span>':'')+
-            (r.dateStart?' <span>📅 '+esc(r.dateStart)+'</span>':'')+
-            (hasRepeat(r)?' <span>'+repeatText(r.repeat)+'</span>':'')+
-          '</div>'+
-          (r.note?'<div class="note">'+esc(r.note)+'</div>':'')+
-        '</div>'+
-        '<div class="acts">'+
-          '<button class="icon-btn" data-edit>✏️</button>'+
-          '<button class="icon-btn" data-del>🗑</button>'+
-        '</div>';
-      card.querySelector("[data-check]").addEventListener("click", ()=>toggleShopDone(r.id));
-      card.querySelector("[data-edit]").addEventListener("click", ()=>openEditor(r));
-      card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title));
-      wrap.appendChild(card);
-    });
+    arr.forEach(r=>wrap.appendChild(shopCardEl(r)));
   });
+  if(later.length){
+    const active=total-later.length;
+    const open=!!window._shopLaterOpen || active===0;
+    const lh=document.createElement("button");
+    lh.type="button"; lh.id="shopLaterToggle";
+    lh.style.cssText="width:100%;text-align:left;padding:12px 14px;margin:10px 0;border:1px solid var(--line,#ddd);background:var(--bg,#fff);color:var(--sub,#666);border-radius:12px;font-size:14px;font-weight:600;";
+    lh.textContent=(open?"▾ ":"▸ ")+"之後要買（"+later.length+"）";
+    lh.addEventListener("click",()=>{ window._shopLaterOpen=!window._shopLaterOpen; renderShop(); });
+    wrap.appendChild(lh);
+    if(open){ later.sort((x,y)=>String(x.dateStart).localeCompare(String(y.dateStart))); later.forEach(r=>wrap.appendChild(shopCardEl(r))); }
+  }
 }
 function toggleShopDone(id){
   if(!requireAuth()) return;
   const r=state.records[id]; if(!r) return;
   const patch={ kind:"done", status:"done", doneDate:ymd(new Date()), ordered:null, eta:null };   // 完成＝已到貨／已買到
-  if(r.needStock!==false){
-    if(r.invId) pushInvDone(r.invId, r.qty, r.title);                            // 已入庫→加數量
-    else if(r.invNew) pushInvDone("", r.qty, r.title, {create:true, cat:r.invCat});    // 未入庫→新建入庫
-  }
+  if(r.invId) pushInvDone(r.invId, r.qty, r.title);                            // 已入庫→加數量
+  else if(r.invNew) pushInvDone("", r.qty, r.title, {create:true, cat:r.invCat});    // 未入庫→新建入庫
   let next=null;
   // 重複採購（onDone）→ 以購買日往後推，生成下一筆
   if(hasRepeat(r) && (r.repeat.mode||"onDone")==="onDone" && !r.spawned){
@@ -2910,7 +2823,6 @@ function openPocketForm(rec){
   const done=!!r.doneDate || recKind(r)==="done";
   const cat=r.category||"other";
   const html=
-    '<p style="font-size:12px;color:var(--muted);margin:-2px 2px 12px;line-height:1.5">🎒 百寶袋：無日期暫存。<b>填上日期就升級成行程</b>、上月曆。</p>'+
     '<div class="field"><label>標題</label><input id="pk_title" autocomplete="off" value="'+esc(r.title||"")+'" placeholder="標題"></div>'+
     '<div class="field"><label>分類（選填）</label>'+
       iconPicker("pk_category", CAT_ORDER.filter(c=>c!=="shopping"), CAT_LABEL, CAT_ICON, cat)+'</div>'+
@@ -2920,7 +2832,11 @@ function openPocketForm(rec){
   openSheet(isEdit?"編輯百寶袋":"百寶袋", html,
     function(){ savePocket(isEdit?r.id:null, r); },
     isEdit?function(){ deleteRecord(r.id, r.title); }:null);
-  wireIconPicker("pk_category");
+  wireIconPicker("pk_category", function(){ pkTouched=true; });
+  var pkTouched=false;
+  if(!isEdit && $("pk_title")) $("pk_title").addEventListener("input", function(){
+    const g=guessFromHistory(this.value); if(g && !pkTouched && g.cat!=="shopping") setIconPick("pk_category", g.cat);
+  });
 }
 function savePocket(id, prev){
   if(!requireAuth()) return;
@@ -2962,10 +2878,10 @@ function savePocket(id, prev){
 function openRecordForm(rec, presets, asCopy){
   presets=presets||{};
   const isEdit=!!rec && !asCopy; const r=rec||{};
-  const cat =r.category || presets.category || "life";
+  const cat =r.category || presets.category || lastCat();
   const ds  = asCopy ? "" : (r.dateStart!==undefined ? r.dateStart : (presets.dateStart!==undefined ? presets.dateStart : state.selected));
   const isShop=cat==="shopping";
-  formAssignees=new Set(r.assignees||[]);
+  formAssignees=new Set(r.assignees||[]); formAutoTouched={cat:false, assign:false};
   const rep=r.repeat||{}; const repUnit=rep.unit||"none"; const repEvery=rep.every||1;
 
   const showKind = !isShop;
@@ -3007,8 +2923,7 @@ function openRecordForm(rec, presets, asCopy){
       '<input type="hidden" id="rec_invNew" value="'+(r.invNew?"1":"")+'">'+
       '<input type="hidden" id="rec_invCat" value="'+esc(r.invCat||"")+'">'+
       '<div class="field"><label>大分類 <span id="rec_subcatlock"></span></label>'+
-        '<select id="rec_subcategory">'+SUBCAT_ORDER.map(c=>'<option value="'+c+'"'+(((r.subcategory||"food")===c)?" selected":"")+'>'+SUBCAT_ICON[c]+' '+SUBCAT_LABEL[c]+'</option>').join("")+'</select></div>'+
-      '<div class="toggle-row" id="rec_needstockbox"><span>📦 需入庫管理（完成→更新庫存）</span><label class="switch"><input type="checkbox" id="rec_needstock"'+((r.needStock!==undefined?r.needStock:!!r.invId)?" checked":"")+(r.fromInv?" disabled":"")+'><span class="slider"></span></label></div>'+
+        '<select id="rec_subcategory">'+SUBCAT_ORDER.map(c=>'<option value="'+c+'"'+(((r.subcategory||_lastSub())===c)?" selected":"")+'>'+SUBCAT_ICON[c]+' '+SUBCAT_LABEL[c]+'</option>').join("")+'</select></div>'+
       '<div class="two">'+
         '<div class="field"><label>數量</label><input id="rec_qty" type="number" min="1" value="'+(r.qty||1)+'"></div>'+
         '<div class="field"><label>價格（選填）</label><input id="rec_price" type="number" inputmode="numeric" value="'+(isShop&&r.amount!=null?r.amount:"")+'" placeholder="例如 3990"></div>'+
@@ -3035,8 +2950,6 @@ function openRecordForm(rec, presets, asCopy){
       '</div>'+
       '<div id="rec_endhint" style="font-size:12px;color:var(--muted);margin:-2px 0 8px"></div>'+
       '<div class="when-btns">'+
-        '<button type="button" class="btn-ghost" id="rec_dp1">＋1天</button>'+
-        '<button type="button" class="btn-ghost" id="rec_dp7">＋7天</button>'+
         ((!!rec&&!asCopy)?'<button type="button" class="btn-ghost" id="rec_dup">📋 複製</button>':'')+
         '<span class="clr-btn" data-clr="rec_dateStart" style="margin-left:auto;font-size:12px;color:#A8A8B0;cursor:pointer;font-weight:600;align-self:center">✕ 清除</span>'+
       '</div>'+
@@ -3044,7 +2957,6 @@ function openRecordForm(rec, presets, asCopy){
         '<div class="field"><label>開始時間</label><input id="rec_start" type="time" value='+JSON.stringify(r.start||"")+'></div>'+
         '<div class="field"><label>結束時間</label><input id="rec_end" type="time" value='+JSON.stringify(r.end||"")+'></div>'+
       '</div>'+
-      '<div style="font-size:12px;color:var(--muted)">留空＝整天</div>'+
     '</div>'+
 
     // ── 執行人（符合條件才放主畫面）──
@@ -3059,9 +2971,8 @@ function openRecordForm(rec, presets, asCopy){
         '<input id="rec_amount" type="number" inputmode="numeric" value="'+(r.amount!=null?r.amount:"")+'" placeholder="例如 1200"></div></div>'+
       (assignOnMain ? '' : '<div id="rec_assignslot">'+assignHtml+'</div>')+
       (!canAdvanced()
-        ? '<div class="toggle-row" style="opacity:.55;cursor:pointer" onclick="showUpgrade(\'急迫與倒數\')"><span>❗️ 排在最上面　⏳ 顯示還有幾天</span><span style="font-size:18px">🔒</span></div>'
-        : ('<div class="toggle-row"><span>❗️ 排在最上面</span><label class="switch"><input type="checkbox" id="rec_urgent"'+(r.urgent?" checked":"")+'><span class="slider"></span></label></div>'+
-           '<div class="toggle-row" id="rec_cdbox"'+(isShop?' style="display:none"':'')+'><span>⏳ 顯示還有幾天</span><label class="switch"><input type="checkbox" id="rec_countdown"'+(r.countdown?" checked":"")+'><span class="slider"></span></label></div>')
+        ? '<div class="toggle-row" style="opacity:.55;cursor:pointer" onclick="showUpgrade(\'排在最上面\')"><span>❗️ 排在最上面</span><span style="font-size:18px">🔒</span></div>'
+        : ('<div class="toggle-row"><span>❗️ 排在最上面</span><label class="switch"><input type="checkbox" id="rec_urgent"'+(r.urgent?" checked":"")+'><span class="slider"></span></label></div>')
       )+
     '</div>';
 
@@ -3098,15 +3009,6 @@ function openRecordForm(rec, presets, asCopy){
     if($("rec_dateStart")) $("rec_dateStart").addEventListener("change", _syncEnd);
     if($("rec_dateEnd"))   $("rec_dateEnd").addEventListener("change", _guardEnd);
 
-    function _shift(n){
-      var el=$("rec_dateStart"); if(!el) return;
-      var base=el.value?_ymdToDate(el.value):new Date();
-      base.setDate(base.getDate()+n);
-      el.value=ymd(base);
-      _syncEnd();
-    }
-    if($("rec_dp1")) $("rec_dp1").addEventListener("click", function(){ _shift(1); });
-    if($("rec_dp7")) $("rec_dp7").addEventListener("click", function(){ _shift(7); });
     if($("rec_dup")) $("rec_dup").addEventListener("click", function(){ var keep=r; closeSheet(); setTimeout(function(){ openRecordForm(keep, null, true); }, 60); });
 
     // ── 重複：選了才給說明；結束欄位隨之變身 ──
@@ -3129,11 +3031,11 @@ function openRecordForm(rec, presets, asCopy){
       var isRep = !!(ru && ru.value && ru.value!=="none");
       var evEl=$("rec_repeatEvery"); if(evEl) evEl.style.display = isRep ? "" : "none";
       if(lab) lab.textContent = isRep ? "重複到期" : "結束";
-      if(hint) hint.textContent = isRep ? "不填＝一直重複" : "";
+      if(hint) hint.textContent = "";
       if(rh){
         if(isRep){
           var ev=Math.max(1, Number(($("rec_repeatEvery")||{}).value)||1);
-          rh.textContent="每 "+ev+" "+(REP_WORD[ru.value]||"")+"重複一次";
+          rh.textContent="";
         } else rh.textContent="";
       }
     }
@@ -3146,7 +3048,6 @@ function openRecordForm(rec, presets, asCopy){
       var lab=$("rec_assignlabel");
       if(lab) lab.textContent = isLog ? "由誰（可複選）" : "執行人（可複選）";
       // 純紀錄＝已發生的事，用不到「往後跳」與「重複」
-      ["rec_dp1","rec_dp7"].forEach(function(id){ var el=$(id); if(el) el.style.display = isLog ? "none" : ""; });
       var rb=$("rec_repeatbox");
       if(rb){
         rb.style.display = isLog ? "none" : "";
@@ -3164,7 +3065,7 @@ function openRecordForm(rec, presets, asCopy){
     // ── 更多選項：預設收合；有填過進階欄位就自動展開 ──
     function _advUsed(){
       if(r.amount!=null && r.amount!=="") return true;
-      if(r.urgent || r.countdown) return true;
+      if(r.urgent) return true;
       if(r.assignees && r.assignees.length) return true;
       return false;
     }
@@ -3195,16 +3096,26 @@ function openRecordForm(rec, presets, asCopy){
 
   renderAssigneeChips();
   wireIconPicker("rec_category", function(v){
+    formAutoTouched.cat=true;
     const shop=v==="shopping";
     const show=function(id, on){ const el=$(id); if(el) el.style.display = on ? "" : "none"; };
     show("rec_shopbox", shop);
     show("rec_titlebox", !shop);
     show("rec_amountbox", !shop);
-    show("rec_cdbox", !shop);
     show("rec_kindbox", !shop);        // 採購沒有待辦／純紀錄之分
     show("rec_endbox", !shop);
     show("rec_timebox", !shop);
   });
+  if(!isEdit && !asCopy && !isShop && $("rec_title")){
+    $("rec_title").addEventListener("input", function(){
+      const g=guessFromHistory(this.value); if(!g) return;
+      if(!formAutoTouched.cat) setIconPick("rec_category", g.cat);
+      if(!formAutoTouched.assign){
+        const ids=(g.assignees||[]).filter(function(id){ return state.people && state.people[id]; });
+        formAssignees=new Set(ids); renderAssigneeChips();
+      }
+    });
+  }
   function _lockSubcat(){
     const sc=$("rec_subcategory"); if(!sc) return;
     const locked=!!($("rec_invId") && $("rec_invId").value) || !!($("rec_invNew") && $("rec_invNew").value==="1");
@@ -3212,12 +3123,7 @@ function openRecordForm(rec, presets, asCopy){
     const hint=$("rec_subcatlock");
     if(hint) hint.textContent = locked ? "🔒 已依商品自動分類" : "（手動商品才需選）";
   }
-  function _syncNeedStock(){
-    const ns=$("rec_needstock");
-    const linked=!!($("rec_invId") && $("rec_invId").value) || !!($("rec_invNew") && $("rec_invNew").value==="1");
-    if(ns && !ns.disabled) ns.checked = linked;
-    _lockSubcat();
-  }
+  function _syncNeedStock(){ _lockSubcat(); }
   const _ps=$("rec_prodsearch"), _pr=$("rec_prodresults");
   function _renderProdResults(q){
     if(!_pr) return;
@@ -3229,15 +3135,10 @@ function openRecordForm(rec, presets, asCopy){
     const dict=invDict().filter(d=>String(d.name||"").toLowerCase().indexOf(ql)>=0).slice(0,6);
     let html=hits.map(it=>'<div class="prod-row" data-id="'+esc(String(it.id))+'" data-name="'+esc(it.name)+'" data-cat="'+esc(it.cat||"")+'">'+esc(it.name)+(it.unit?'<span class="prod-u">'+esc(it.unit)+'</span>':'')+'</div>').join("");
     html+=dict.map(d=>'<div class="prod-row" data-name="'+esc(d.name)+'" data-cat="'+esc(d.cat)+'" data-new="1">'+esc(d.name)+'<span class="prod-u" style="color:#c2410c">未入庫</span></div>').join("");
-    html+='<div class="prod-row prod-manual" data-manual="1">＋ 手動新增「'+esc(q)+'」（庫存沒有，不回傳）</div>';
+    if(!html){ _pr.style.display="none"; _pr.innerHTML=""; return; }
     _pr.innerHTML=html; _pr.style.display="";
     _pr.querySelectorAll(".prod-row").forEach(row=>row.addEventListener("click", function(){
-      if(this.getAttribute("data-manual")){
-        if($("rec_invId")) $("rec_invId").value="";
-        if($("rec_invNew")) $("rec_invNew").value="";
-        if($("rec_invCat")) $("rec_invCat").value="";
-        $("rec_title").value=q; _ps.value=q;
-      } else if(this.getAttribute("data-new")){
+      if(this.getAttribute("data-new")){
         const nm=this.getAttribute("data-name")||"", c=this.getAttribute("data-cat")||"";
         $("rec_title").value=nm; _ps.value=nm;
         if($("rec_invId")) $("rec_invId").value="";
@@ -3266,6 +3167,8 @@ function openRecordForm(rec, presets, asCopy){
       _renderProdResults(this.value);
     });
     _ps.addEventListener("focus", function(){ if(this.value.trim()) _renderProdResults(this.value); });
+    _ps.addEventListener("blur", function(){ setTimeout(function(){ if(_pr){ _pr.style.display="none"; } }, 250); });
+    if(_pr) _pr.addEventListener("mousedown", function(e){ e.preventDefault(); });
   }
   _lockSubcat();   // 開表單時：若已連到庫存品項就鎖住大分類
   if($("rec_manage")) $("rec_manage").addEventListener("click", openPeopleManager);
@@ -3283,6 +3186,7 @@ function renderAssigneeChips(){
   box.innerHTML=ppl.map(([id,p])=>'<button type="button" class="chip'+(formAssignees.has(id)?" on":"")+'" data-id="'+id+'">'+esc(p.name)+'</button>').join("");
   box.querySelectorAll(".chip").forEach(ch=>ch.addEventListener("click", ()=>{
     const id=ch.getAttribute("data-id");
+    formAutoTouched.assign=true;
     if(formAssignees.has(id)){ formAssignees.delete(id); ch.classList.remove("on"); }
     else { formAssignees.add(id); ch.classList.add("on"); }
   }));
@@ -3292,6 +3196,7 @@ function saveRecord(id, prev){
   const title=$("rec_title").value.trim();
   if(!title){ toast("請輸入標題"); return; }
   const category=$("rec_category").value;
+  setLastCat(category);
   const isShop=category==="shopping";
   const dateStart=$("rec_dateStart").value||"";
   var _endVal=$("rec_dateEnd").value||"";
@@ -3318,18 +3223,19 @@ function saveRecord(id, prev){
     end:   $("rec_end").value||"",
     assignees: Array.from(formAssignees),
     urgent:    (($("rec_urgent")||{}).checked||false),
-    countdown: $("rec_category").value==="shopping" ? false : (($("rec_countdown")||{}).checked||false),
+    countdown: null,
     note:      $("rec_note").value.trim(),
     status:    done ? "done" : "pending",
     createdAt: (prev&&prev.createdAt) ? prev.createdAt : Date.now()
   };
   if(isShop){
     data.subcategory=$("rec_subcategory").value||"other";
+    if(!($("rec_invId") && $("rec_invId").value) && !($("rec_invNew") && $("rec_invNew").value==="1")){ try{ localStorage.setItem("shopLastSub", data.subcategory); }catch(e){} }
     data.qty=Math.max(1, Number($("rec_qty").value)||1);
     data.invId = ($("rec_invId") && $("rec_invId").value) ? $("rec_invId").value : ((prev&&prev.invId)||null);
     data.invNew = ($("rec_invNew") && $("rec_invNew").value==="1") ? true : null;
     data.invCat = ($("rec_invCat") && $("rec_invCat").value) ? $("rec_invCat").value : null;
-    data.needStock = $("rec_needstock") ? !!$("rec_needstock").checked : !!(prev&&prev.needStock);
+    data.needStock = null;
     data.fromInv = (prev&&prev.fromInv) ? true : null;
     const pv=$("rec_price").value;
     data.amount = (pv!=="" && !isNaN(Number(pv))) ? Number(pv) : null;
@@ -3374,7 +3280,6 @@ function saveRecord(id, prev){
     try{
       const key=id||uref("records").push().key;
       await uref("records/"+key).update(data);
-      if(!id) pushActivity(title, kind);
       if(dateStart) state.selected=dateStart;
       closeSheet();
       if(data.repeat){ toast("已存:重複="+data.repeat.unit+" 起="+data.dateStart+" 到="+(data.repeatUntil||"無")); }
@@ -3420,68 +3325,140 @@ function deleteRecord(id, title, occDate){
    8.5 年度目標（3c）
    ============================================================ */
 $("addGoalBtn").addEventListener("click", ()=>{ openGoalForm(null); });
-if($("activityBtn")) $("activityBtn").addEventListener("click", openActivityPanel);
 if($("goalYearFilter")) $("goalYearFilter").addEventListener("change", renderGoals);
 
-function daysToYearEnd(year){
-  const end=new Date(year,11,31); const today=new Date(); today.setHours(0,0,0,0);
-  return Math.max(0, Math.ceil((end-today)/86400000));
-}
-// ---- 頻率型目標（每週N次，週一為起點）----
+/* ---- 目標：數值（量測／累加）＋清單 ---- */
+const GC=["#5B8DEF","#F2A385","#3E9B8E","#B07CC6","#E8C25C"];
 function _ymdToDate(ds){ const p=String(ds).split("-"); return new Date(Number(p[0]),Number(p[1])-1,Number(p[2])); }
-function _weekKey(d){ const dt=new Date(d.getFullYear(),d.getMonth(),d.getDate()); const day=(dt.getDay()+6)%7; dt.setDate(dt.getDate()-day); return dt.getFullYear()+"-"+(dt.getMonth()+1)+"-"+dt.getDate(); }
-function freqWeekCount(g){ const wk=_weekKey(new Date()); return (g.freqLog||[]).filter(ds=>_weekKey(_ymdToDate(ds))===wk).length; }
-function freqMonthCount(g){ const n=new Date(),ym=n.getFullYear()+"-"+(n.getMonth()+1); return (g.freqLog||[]).filter(ds=>{const d=_ymdToDate(ds);return (d.getFullYear()+"-"+(d.getMonth()+1))===ym;}).length; }
-function freqWeekDays(g){ const wk=_weekKey(new Date()); const W=["日","一","二","三","四","五","六"]; return (g.freqLog||[]).filter(ds=>_weekKey(_ymdToDate(ds))===wk).map(ds=>W[_ymdToDate(ds).getDay()]); }
-function bumpFreq(id){ if(!requireAuth())return; const g=state.goals[id]; if(!g)return; const log=(g.freqLog||[]).slice(); log.push(ymd(new Date())); saveGoalPatch(id,{freqLog:log}); toast("✅ 今天完成 +1"); }
-function undoFreq(id){ if(!requireAuth())return; const g=state.goals[id]; if(!g)return; const log=(g.freqLog||[]).slice(); if(!log.length){ toast("尚無紀錄"); return; } log.pop(); saveGoalPatch(id,{freqLog:log}); toast("已退回一次"); }
-function goalProgress(g){
-  if(g.type==="simple"){
-    return g.done ? { done:0, total:0, pct:100, complete:true } : { done:0, total:0, pct:0, simple:true };
+function _gmd(ds){ const p=String(ds).split("-"); return Number(p[1])+"/"+Number(p[2]); }
+function _gwhen(ds){ return ds===ymd(new Date()) ? "今天" : _gmd(ds); }
+function fmtV(e){ return fmtNum(e.v)+(e.v2!=null?"/"+fmtNum(e.v2):""); }
+function _dsort(a,b){ return a.d<b.d?-1:a.d>b.d?1:0; }
+function _mlog(m){ return (m.log||[]).slice().sort(_dsort); }
+function _gMulti(g){ const m=g.members||[]; return m.length>1 || !!(m[0]&&m[0].name); }
+function _cleanMember(m){
+  const o={name:m.name||""};
+  if(m.target!=null && m.target!=="" && !isNaN(Number(m.target))) o.target=Number(m.target);
+  if(m.start!=null && m.start!=="" && !isNaN(Number(m.start))) o.start=Number(m.start);
+  const lg=(m.log||[]).map(e=>{ const x={d:e.d,v:Number(e.v)}; if(e.v2!=null) x.v2=Number(e.v2); return x; });
+  if(lg.length) o.log=lg;
+  return o;
+}
+// 讀取時統一格式：舊的簡單型→清單、頻率型→累加、舊數值型→量測（只在記憶體轉換，下次儲存時寫回）
+function normalizeGoal(g0){
+  const g=Object.assign({},g0);
+  if(g.type==="simple"){ g.type="milestone"; g.milestones=[{text:g.title||"完成",done:!!g.done,date:null}]; return g; }
+  const cd=ymd(new Date(g.createdAt||Date.now()));
+  if(g.type==="freq"){
+    g.type="number"; g.mode="sum";
+    g.members=[{name:"",target:(Number(g.perWeek)||1)*52,log:(g.freqLog||[]).map(d=>({d,v:1}))}];
+    return g;
   }
+  if(g.type==="number" && !g.mode){
+    g.mode="last";
+    const src=(g.members&&g.members.length)?g.members:[{name:"",target:g.target,current:g.current,start:g.start}];
+    const today=ymd(new Date());
+    g.members=src.map(m=>{
+      const cur=Number(m.current)||0, tgt=Number(m.target)||0;
+      const st=(m.start!=null)?Number(m.start):((tgt<cur)?cur:0);
+      const log=[]; if(st!==cur && st!==0) log.push({d:cd,v:st}); log.push({d:today,v:cur});
+      return {name:m.name||"",target:tgt,start:st,log};
+    });
+  }
+  if(g.type==="number" && !Array.isArray(g.members)) g.members=[{name:""}];
+  return g;
+}
+function memberStat(g,m){
+  const log=_mlog(m), tgt=(m.target!=null&&m.target!==""&&!isNaN(Number(m.target)))?Number(m.target):null;
+  let cur=null, st=null;
+  if(g.mode==="sum"){ cur=log.reduce((s,e)=>s+(Number(e.v)||0),0); st=0; }
+  else { cur=log.length?Number(log[log.length-1].v):null; st=(m.start!=null)?Number(m.start):(log.length?Number(log[0].v):null); }
+  let pct=null, complete=false;
+  if(tgt!=null){
+    if(cur==null) pct=0;
+    else if(st==null||tgt===st) pct=(cur===tgt)?100:0;
+    else pct=Math.max(0,Math.min(100,Math.round((cur-st)/(tgt-st)*100)));
+    complete=pct>=100;
+  }
+  return { log, cur, tgt, pct, complete, last:log.length?log[log.length-1]:null };
+}
+function goalProgress(g){
   if(g.type==="milestone"){
     const ms=g.milestones||[]; const done=ms.filter(m=>m.done).length;
-    return { done, total:ms.length, pct: ms.length? Math.round(done/ms.length*100):0 };
+    return { done, total:ms.length, pct: ms.length? Math.round(done/ms.length*100):0, complete: ms.length>0 && done===ms.length };
   }
-  const tgt=Number(g.target)||0, cur=Number(g.current)||0;
-  const dir=g.dir||"up";
-  const st = (dir==="down") ? ((g.start!=null)?Number(g.start):cur) : 0;   // 遞增一律從0起算
-  let pct;
-  if(tgt===st) pct = (cur===tgt?100:0);
-  else pct = Math.max(0, Math.min(100, Math.round((cur-st)/(tgt-st)*100)));
-  return { done:cur, total:tgt, pct, complete: pct>=100 };
+  const st=(g.members||[]).map(m=>memberStat(g,m)).filter(s=>s.tgt!=null);
+  return { complete: st.length>0 && st.every(s=>s.complete) };
 }
-// 數值型分段間隔：依起始→目標、每 step 一階，回傳階段點與是否已達到
-function goalSegments(g){
-  if(g.type!=="number") return [];
-  const step=Math.abs(Number(g.step)||0); if(step<=0) return [];
-  const dir=g.dir||"up";
-  const tgt=Number(g.target)||0, cur=Number(g.current)||0;
-  let st;
-  if(dir==="down"){
-    const base=(g.start!=null)?Number(g.start):cur;
-    st=Math.max(base, cur, tgt+step);   // 穩定錨點：達標後關卡不塌縮、保留
-  } else {
-    st=0;   // 遞增一律從0起算
-  }
-  if(tgt===st) return [];
-  const up = tgt>st;
-  const n=Math.floor(Math.abs(tgt-st)/step);
-  const segs=[];
-  for(let i=1;i<=n;i++){
-    const v = up ? st+step*i : st-step*i;
-    if(up ? v>=tgt : v<=tgt) break;   // 等距關卡，不含目標
-    segs.push({ val:v, done: up? cur>=v : cur<=v, target:false });
-  }
-  segs.push({ val:tgt, done: up? cur>=tgt : cur<=tgt, target:true });   // 目標單獨標示
-  return segs;
+function numberPatch(g, members){
+  return { type:"number", mode:g.mode, members:members.map(_cleanMember),
+    current:null, start:null, dir:null, step:null, target:null, freqLog:null, perWeek:null, done:null };
 }
+
+/* ---- 圖：量測＝折線（每人一條，兩個數值時第二條淡色）；累加＝最近 8 週長條 ---- */
+function goalChartSvg(g, h, big){
+  if(g.type!=="number") return "";
+  const W=320, P=big?14:8, mem=g.members||[];
+  const num=(x)=>Number(x);
+  if(g.mode==="sum"){
+    const wk=ds=>{ const d=_ymdToDate(ds); d.setDate(d.getDate()-((d.getDay()+6)%7)); return d.getTime(); };
+    const n0=new Date(); n0.setHours(0,0,0,0); n0.setDate(n0.getDate()-((n0.getDay()+6)%7));
+    const N=8, weeks=[]; for(let j=N-1;j>=0;j--){ const d=new Date(n0); d.setDate(d.getDate()-7*j); weeks.push(d.getTime()); }
+    const tot=weeks.map(()=>mem.map(()=>0));
+    let any=false;
+    mem.forEach((m,i)=>(m.log||[]).forEach(e=>{ const j=weeks.indexOf(wk(e.d)); if(j>=0){ tot[j][i]+=num(e.v)||0; any=true; } }));
+    if(!any) return "";
+    const T=big?12:0, B=big?12:0, ph=h-2*P-T-B;
+    const mx=Math.max(1,...tot.map(a=>a.reduce((s,x)=>s+Math.max(0,x),0)));
+    const bw=(W-2*P)/N;
+    let s='<svg viewBox="0 0 '+W+' '+h+'" width="100%" class="gchart-svg">';
+    weeks.forEach((t,j)=>{
+      let y=h-P-B; const x=P+j*bw+4, w=bw-8; let sum=0;
+      tot[j].forEach((v,i)=>{ v=Math.max(0,v); if(v<=0) return; const bh=v/mx*ph; y-=bh; sum+=v;
+        s+='<rect x="'+x+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+bh.toFixed(1)+'" rx="3" fill="'+GC[i%GC.length]+'"/>'; });
+      if(big){
+        if(sum>0) s+='<text x="'+(x+w/2)+'" y="'+(y-3).toFixed(1)+'" text-anchor="middle">'+fmtNum(sum)+'</text>';
+        const d=new Date(t); s+='<text x="'+(x+w/2)+'" y="'+(h-2)+'" text-anchor="middle">'+(d.getMonth()+1)+'/'+d.getDate()+'</text>';
+      }
+    });
+    return s+'</svg>';
+  }
+  const pts=[]; mem.forEach((m,i)=>_mlog(m).forEach(e=>pts.push({i,t:_ymdToDate(e.d).getTime(),v:num(e.v),v2:e.v2!=null?num(e.v2):null})));
+  if(pts.length<2) return "";
+  const t0=Math.min(...pts.map(p=>p.t)), t1=Math.max(...pts.map(p=>p.t));
+  const ys=[]; pts.forEach(p=>{ ys.push(p.v); if(p.v2!=null) ys.push(p.v2); });
+  const dlo=Math.min(...ys), dhi=Math.max(...ys);
+  mem.forEach(m=>{ if(m.target!=null&&m.target!==""&&!isNaN(Number(m.target))) ys.push(Number(m.target)); });
+  let lo=Math.min(...ys), hi=Math.max(...ys); if(hi===lo){ hi+=1; lo-=1; }
+  const pad=(hi-lo)*0.08; lo-=pad; hi+=pad;
+  const L=big?26:0;
+  const X=t=>(t1===t0)?(L+W)/2:(P+L+(t-t0)/(t1-t0)*(W-2*P-L));
+  const Y=v=>h-P-(v-lo)/(hi-lo)*(h-2*P);
+  let s='<svg viewBox="0 0 '+W+' '+h+'" width="100%" class="gchart-svg">';
+  mem.forEach((m,i)=>{ if(m.target!=null&&m.target!==""&&!isNaN(Number(m.target))){
+    const y=Y(Number(m.target)).toFixed(1); s+='<line x1="'+(P+L)+'" x2="'+(W-P)+'" y1="'+y+'" y2="'+y+'" stroke="'+GC[i%GC.length]+'" stroke-width="1.5" stroke-dasharray="4 3" opacity=".55"/>'; } });
+  mem.forEach((m,i)=>{
+    const c=GC[i%GC.length], mp=pts.filter(p=>p.i===i);
+    [["v",2.5,1],["v2",2,.5]].forEach(([k,sw,op])=>{
+      const a=mp.filter(p=>p[k]!=null); if(!a.length) return;
+      if(a.length>1) s+='<polyline fill="none" stroke="'+c+'" stroke-width="'+sw+'" opacity="'+op+'" stroke-linejoin="round" stroke-linecap="round" points="'+a.map(p=>X(p.t).toFixed(1)+","+Y(p[k]).toFixed(1)).join(" ")+'"/>';
+      (big?a:[a[a.length-1]]).forEach(p=>{ s+='<circle cx="'+X(p.t).toFixed(1)+'" cy="'+Y(p[k]).toFixed(1)+'" r="'+(big?3:3.5)+'" fill="'+c+'" opacity="'+op+'"/>'; });
+    });
+  });
+  if(big){
+    s+='<text x="2" y="'+(Y(dhi)+3).toFixed(1)+'">'+fmtNum(dhi)+'</text><text x="2" y="'+(Y(dlo)+3).toFixed(1)+'">'+fmtNum(dlo)+'</text>';
+    const d0=new Date(t0), d1=new Date(t1);
+    s+='<text x="'+(P+L)+'" y="'+(h-1)+'">'+(d0.getMonth()+1)+'/'+d0.getDate()+'</text>';
+    if(t1!==t0) s+='<text x="'+(W-P)+'" y="'+(h-1)+'" text-anchor="end">'+(d1.getMonth()+1)+'/'+d1.getDate()+'</text>';
+  }
+  return s+'</svg>';
+}
+
+/* ---- 列表 ---- */
 function renderGoals(){
   const wrap=$("goalList"); if(!wrap) return;
   const yr=new Date().getFullYear();
-  const ye=$("goalYearEnd"); if(ye) ye.textContent="距離 "+yr+" 年底還有 "+daysToYearEnd(yr)+" 天";
-  let arr=Object.entries(state.goals||{}).map(([id,g])=>Object.assign({id},g));
-  // 年度篩選下拉：列出有資料的年份＋今年，預設今年
+  let arr=Object.entries(state.goals||{}).map(([id,g])=>normalizeGoal(Object.assign({id},g)));
   const sel=$("goalYearFilter");
   let yf=String(yr);
   if(sel){
@@ -3493,12 +3470,11 @@ function renderGoals(){
   }
   if(yf && yf!=="all") arr=arr.filter(g=>String(g.year||yr)===yf);
   arr.sort((a,b)=>((b.year||0)-(a.year||0)) || (_ordOf(a)-_ordOf(b)));
-  if(arr.length===0){ wrap.innerHTML='<div class="empty-state"><span class="eico">🎯</span>'+((yf&&yf!=="all")?(yf+' 年還沒有目標<span class="esub">切換年份，或點「＋ 新增目標」</span>'):'還沒有目標<span class="esub">點「＋ 新增目標」開始</span>')+'</div>'; return; }
+  if(arr.length===0){ wrap.innerHTML='<div class="empty-state"><span class="eico">🎯</span>'+((yf&&yf!=="all")?(yf+' 年還沒有目標'):'還沒有目標')+'</div>'; return; }
   wrap.innerHTML="";
-  // 已完成的目標收進最下面的摺疊區，列表只留進行中的（▲▼ 仍只在同一區內換順序）
   const isDone=g=>{ try{ return !!goalProgress(g).complete; }catch(e){ return false; } };
   const active=arr.filter(g=>!isDone(g)), finished=arr.filter(isDone);
-  active.forEach((g,i)=>wrap.appendChild(goalCard(g,i,active.length)));
+  active.forEach(g=>wrap.appendChild(goalCard(g)));
   if(finished.length){
     const open=!!window._goalsDoneOpen || active.length===0;
     const head=document.createElement("button");
@@ -3507,420 +3483,277 @@ function renderGoals(){
     head.textContent=(open?"▾ ":"▸ ")+"已完成的目標（"+finished.length+"）";
     head.addEventListener("click",()=>{ window._goalsDoneOpen=!window._goalsDoneOpen; renderGoals(); });
     wrap.appendChild(head);
-    if(open) finished.forEach((g,i)=>wrap.appendChild(goalCard(g,i,finished.length)));
+    if(open) finished.forEach(g=>wrap.appendChild(goalCard(g)));
   }
 }
 function _ordOf(g){ return g.order!=null?Number(g.order):(g.createdAt||0); }
-function moveGoal(id, delta){
-  if(!requireAuth()) return;
-  const g=state.goals[id]; if(!g) return;
-  const yr=new Date().getFullYear(), y=String(g.year||yr);
-  let list=Object.entries(state.goals).map(([k,v])=>Object.assign({id:k},v)).filter(x=>String(x.year||yr)===y);
-  const _dn=x=>{ try{ return !!goalProgress(x).complete; }catch(e){ return false; } };
-  const _gd=_dn(g); list=list.filter(x=>_dn(x)===_gd);   // 只和同一區（進行中／已完成）的目標互換
-  list.sort((a,b)=>_ordOf(a)-_ordOf(b));
-  const i=list.findIndex(x=>x.id===id), j=i+delta;
-  if(i<0||j<0||j>=list.length) return;
-  const tmp=list[i]; list[i]=list[j]; list[j]=tmp;
-  list.forEach((x,k)=>{ if(state.goals[x.id]) state.goals[x.id].order=k; });   // 重新編號
-  list.forEach(x=>saveGoalPatch(x.id,{order:state.goals[x.id].order}));
-  renderGoals();
-}
-function goalCard(g, idx, total){
+function goalCard(g){
   const card=document.createElement("div");
-  card.className="card goal-card";
-  const p=goalProgress(g); const col=catColor(g.category);
+  card.className="card goal-card"+(g.type==="number"?" gclick":"");
+  const col=catColor(g.category);
   let h='<div class="stripe" style="background:'+col+'"></div><div class="body">';
   h+='<div class="row1"><span class="name">'+esc(g.title)+'</span></div>';
   h+='<div class="meta">'+pillHtml(g.category)+' <span>'+esc(g.year||"")+'</span></div>';
-  if(g.type==="simple"){
-    h+='<div class="goal-status'+(p.complete?' is-done':'')+'">'+(p.complete?"已完成 🎉":"進行中")+'</div>';
-  } else if(g.type==="freq"){
-    const wc=freqWeekCount(g), pw=g.perWeek||1, mc=freqMonthCount(g);
-    const wpct=Math.min(100,Math.round(wc/pw*100));
-    const days=freqWeekDays(g);
-    h+='<div class="goal-prog"><div class="goal-bar"><div class="goal-fill" style="width:'+wpct+'%;background:'+col+'"></div></div><div class="goal-pct">本週 '+wc+'/'+pw+'</div></div>';
-    h+='<div class="goal-sub">本月共 '+mc+' '+esc(g.unit||"次")+(wc>=pw?'　本週達標 🎉':'')+(days.length?'　（'+days.join("、")+'）':'')+'</div>';
-  } else if(g.type==="number" && Array.isArray(g.members) && g.members.length){
-    const dir=g.dir||"up";
+  if(g.type==="milestone"){
+    const p=goalProgress(g);
+    h+='<div class="goal-sub">完成 '+p.done+' / '+p.total+' 項</div>';
+    const all=(g.milestones||[]).map((m,i)=>({m,i}));
+    const byDate=(a,b)=>{ const da=a.m.date||"9999-99-99", db=b.m.date||"9999-99-99"; return da<db?-1:da>db?1:a.i-b.i; };
+    const undone=all.filter(x=>!x.m.done).sort(byDate);
+    const done=all.filter(x=>x.m.done).sort(byDate);
+    const row=x=>'<label class="ms-row"><input type="checkbox" data-ms="'+x.i+'"'+(x.m.done?" checked":"")+'><span class="ms-body"><span class="ms-name'+(x.m.done?' ms-done':'')+'">'+esc(x.m.text)+'</span>'+(x.m.date?_msDate(x.m.date,x.m.done):'')+'</span></label>';
+    h+='<div class="goal-ms">'+undone.map(row).join("");
+    if(done.length) h+='<div class="ms-divider">─ 已完成 '+done.length+' ─</div>'+done.map(row).join("");
+    h+='</div>';
+  } else {
+    const unit=esc(g.unit||""), multi=_gMulti(g);
     h+='<div class="goal-members">';
-    g.members.forEach((m,mi)=>{
-      const cur=Number(m.current||0), tgt=Number(m.target||0);
-      const _mstart=(m.start!=null)?Number(m.start):Math.max(cur,tgt);
-      const segs=goalSegments({type:"number",dir:dir,step:g.step,target:tgt,current:cur,start:_mstart});
-      const complete = dir==="down"? cur<=tgt : cur>=tgt;
-      let info;
-      if(complete){ info='🎉 已達標'; }
-      else { const nx=segs.find(s=>!s.done&&!s.target);
-        if(nx){ const diff=dir==="down"?(cur-nx.val):(nx.val-cur); info='🎯下一關 '+fmtNum(nx.val)+'　還差 '+fmtNum(Math.max(0,diff)); }
-        else { const d=dir==="down"?(cur-tgt):(tgt-cur); info='還差 '+fmtNum(Math.max(0,d))+' 達標'; }
-      }
-      h+='<div class="gmem"><div class="gmem-hd">👤 '+esc(m.name)+'　<b>'+fmtNum(cur)+' → '+fmtNum(tgt)+'</b>'+(g.unit?' '+esc(g.unit):'')+(complete?' <span class="mem-done">已達標</span>':'')+'</div>';
-      h+='<div class="goal-sub">'+info+'</div>';
-      if(segs.length){ h+='<div class="goal-segs">'+segs.map(s=> s.target
-        ? '<span class="seg seg-goal'+(s.done?' seg-done':'')+'" data-mseg="'+mi+'" data-segval="'+s.val+'">🎯目標 '+fmtNum(s.val)+(s.done?' ✓':'')+'</span>'
-        : '<span class="seg'+(s.done?' seg-done':'')+'" data-mseg="'+mi+'" data-segval="'+s.val+'">'+(s.done?'🏆':'')+fmtNum(s.val)+(s.done?' ✓':'')+'</span>'
-      ).join("")+'</div>'; }
+    (g.members||[]).forEach((m,i)=>{
+      const s=memberStat(g,m);
+      const curTxt=s.last?(g.mode==="sum"?fmtNum(s.cur):fmtV(s.last)):"—";
+      const sub=[];
+      if(s.tgt!=null){ if(s.complete) sub.push("🎉 已達標"); else if(s.cur!=null) sub.push("還差 "+fmtNum(Math.abs(s.tgt-s.cur))+unit); }
+      if(s.last) sub.push("最近 "+_gwhen(s.last.d));
+      h+='<div class="gmem"><div class="gmem-hd">'+(multi?'<i class="gdot" style="background:'+GC[i%GC.length]+'"></i>'+esc(m.name)+'　':'')+
+        '<b class="gbig">'+curTxt+'</b> <span class="gu">'+unit+(s.tgt!=null?' / '+fmtNum(s.tgt):'')+'</span></div>';
+      if(s.pct!=null) h+='<div class="goal-prog"><div class="goal-bar"><div class="goal-fill" style="width:'+s.pct+'%;background:'+col+'"></div></div><div class="goal-pct">'+s.pct+'%</div></div>';
+      if(sub.length) h+='<div class="goal-sub">'+sub.join('　')+'</div>';
       h+='</div>';
     });
     h+='</div>';
-    h+='<div class="gmem-rec">記錄：<select id="memsel_'+g.id+'" class="gmem-sel">'+g.members.map((m,mi)=>'<option value="'+mi+'">'+esc(m.name)+'</option>').join("")+'</select><input type="number" id="meminp_'+g.id+'" class="gmem-input" placeholder="數值"><button class="icon-btn gmem-apply" data-memapply>套用</button></div>';
-  } else {
-    if(g.type==="milestone"){
-      h+='<div class="goal-sub">完成 '+p.done+' / '+p.total+' 項</div>';
-      const all=(g.milestones||[]).map((m,i)=>({m,i}));
-      const byDate=(a,b)=>{ const da=a.m.date||"9999-99-99", db=b.m.date||"9999-99-99"; return da<db?-1:da>db?1:a.i-b.i; };
-      const undone=all.filter(x=>!x.m.done).sort(byDate);
-      const done=all.filter(x=>x.m.done).sort(byDate);
-      const row=x=>'<label class="ms-row"><input type="checkbox" data-ms="'+x.i+'"'+(x.m.done?" checked":"")+'><span class="ms-body"><span class="ms-name'+(x.m.done?' ms-done':'')+'">'+esc(x.m.text)+'</span>'+(x.m.date?_msDate(x.m.date,x.m.done):'')+'</span></label>';
-      h+='<div class="goal-ms">';
-      h+=undone.map(row).join("");
-      if(done.length){ h+='<div class="ms-divider">─ 已完成 '+done.length+' ─</div>'+done.map(row).join(""); }
-      h+='</div>';
-    } else {
-      const dir=g.dir||"up", cur=Number(g.current||0), tgt=Number(g.target||0);
-      const segs=goalSegments(g);
-      let info="";
-      if(p.complete){ info='🎉 已達成目標！'; }
-      else {
-        const nx=segs.find(s=>!s.done && !s.target);
-        if(nx){ const diff=dir==="down"?(cur-nx.val):(nx.val-cur); info='🎯 下一關 '+fmtNum(nx.val)+(g.unit||'')+'　還差 '+fmtNum(Math.max(0,diff))+(g.unit||''); }
-        else { const diff=dir==="down"?(cur-tgt):(tgt-cur); info='還差 '+fmtNum(Math.max(0,diff))+(g.unit||'')+' 達標'; }
-      }
-      h+='<div class="goal-sub">'+info+'</div>';
-      if(segs.length){ h+='<div class="goal-segs">'+segs.map(s=>{
-        if(s.target) return '<span class="seg seg-goal'+(s.done?' seg-done':'')+'" data-segval="'+s.val+'">🎯目標 '+fmtNum(s.val)+(s.done?' ✓':'')+'</span>';
-        return '<span class="seg'+(s.done?' seg-done':'')+'" data-segval="'+s.val+'">'+(s.done?'🏆':'')+fmtNum(s.val)+(s.done?' ✓':'')+'</span>';
-      }).join("")+'</div>'; }
-    }
+    const svg=goalChartSvg(g,70,false); if(svg) h+='<div class="gchart">'+svg+'</div>';
   }
   h+='<div class="acts">';
-  h+='<button class="icon-btn" data-up'+(idx<=0?' disabled':'')+' title="上移">▲</button><button class="icon-btn" data-down'+(idx>=total-1?' disabled':'')+' title="下移">▼</button>';
-  if(g.type==="number") h+='<button class="icon-btn" data-prog>＋進度</button><button class="icon-btn" data-fin>✓ 標記完成</button>';
-  if(g.type==="freq") h+='<button class="icon-btn" data-bump>＋1 今天完成</button><button class="icon-btn" data-undo>↩︎ 退回</button>';
-  if(g.type==="simple") h+='<button class="icon-btn" data-done>'+(g.done?"↩︎ 取消完成":"✓ 標記完成")+'</button>';
-  if(g.type==="number") h+='<button class="icon-btn" data-extend title="提高目標、進度保留">➕ 延長</button>';
-  if(g.type==="milestone") h+='<button class="icon-btn" data-extend title="新增項目、已完成保留">➕ 加項目</button>';
-  h+='<button class="icon-btn" data-next title="複製此目標">📋 複製</button>';
-  h+='<button class="icon-btn" data-edit>✏️</button><button class="icon-btn" data-del>🗑</button></div></div>';
+  h+=(g.type==="number")?'<button class="icon-btn" data-rec>＋記錄</button>':'<button class="icon-btn" data-extend>＋ 加項目</button>';
+  h+='<button class="icon-btn" data-edit>✏️</button></div></div>';
   card.innerHTML=h;
   card.querySelector("[data-edit]").addEventListener("click", ()=>openGoalForm(g));
-  card.querySelector("[data-del]").addEventListener("click", ()=>deleteGoal(g.id, g.title));
-  const nb=card.querySelector("[data-next]"); if(nb) nb.addEventListener("click", ()=>copyGoalToNextYear(g));
-  const upb=card.querySelector("[data-up]"); if(upb&&!upb.disabled) upb.addEventListener("click", ()=>moveGoal(g.id,-1));
-  const dnb=card.querySelector("[data-down]"); if(dnb&&!dnb.disabled) dnb.addEventListener("click", ()=>moveGoal(g.id,1));
-  const xb=card.querySelector("[data-extend]"); if(xb) xb.addEventListener("click", ()=>extendGoal(g.id));
-  card.querySelectorAll("[data-segval]").forEach(el=>{
-    if(el.hasAttribute("data-mseg")) el.addEventListener("click", ()=>setMemberCurrent(g.id, Number(el.getAttribute("data-mseg")), Number(el.getAttribute("data-segval")), true));
-    else el.addEventListener("click", ()=>setGoalSegment(g.id, Number(el.getAttribute("data-segval"))));
-  });
-  const ma=card.querySelector("[data-memapply]");
-  if(ma) ma.addEventListener("click", ()=>{
-    const sel=card.querySelector("#memsel_"+g.id), inp=card.querySelector("#meminp_"+g.id);
-    if(!sel||!inp||inp.value==="") return;
-    setMemberCurrent(g.id, Number(sel.value), Number(inp.value), true);
-  });
-  const pb=card.querySelector("[data-prog]"); if(pb) pb.addEventListener("click", ()=>updateGoalProgress(g));
-  const fb=card.querySelector("[data-fin]"); if(fb) fb.addEventListener("click", ()=>markGoalDone(g.id));
-  const bp=card.querySelector("[data-bump]"); if(bp) bp.addEventListener("click", ()=>bumpFreq(g.id));
-  const ub=card.querySelector("[data-undo]"); if(ub) ub.addEventListener("click", ()=>undoFreq(g.id));
-  const dn=card.querySelector("[data-done]"); if(dn) dn.addEventListener("click", ()=>toggleGoalDone(g.id));
+  const rb=card.querySelector("[data-rec]"); if(rb) rb.addEventListener("click", ()=>openGoalRecord(g.id));
+  const xb=card.querySelector("[data-extend]"); if(xb) xb.addEventListener("click", ()=>addMilestone(g.id));
+  if(g.type==="number") card.addEventListener("click", e=>{ if(e.target.closest(".acts")) return; openGoalDetail(g.id); });
   card.querySelectorAll("[data-ms]").forEach(cb=>cb.addEventListener("change", function(){ toggleMilestone(g.id, Number(this.getAttribute("data-ms"))); }));
   return card;
 }
-function markGoalDone(id){
-  const g=state.goals[id]; if(!g) return;
-  const tgt=Number(g.target)||0;
-  saveGoalPatch(id, { current: tgt });   // 目前值＝目標值 → 100%、區間全達成
-}
-function setGoalSegment(id, val){
+
+/* ---- 記錄／明細 ---- */
+function openGoalRecord(id){
   if(!requireAuth()) return;
-  const g=state.goals[id]; if(!g||g.type!=="number") return;
-  const dir=g.dir||"up", cur=Number(g.current||0);
-  const backward = (dir==="down") ? (val>cur) : (val<cur);
-  if(backward && !confirm("確定將進度設為 "+fmtNum(val)+(g.unit||"")+"？")) return;
-  saveGoalPatch(id, { current: val });
-  toast("進度已更新："+fmtNum(val)+(g.unit||""));
+  const raw=state.goals[id]; if(!raw) return;
+  const g=normalizeGoal(raw); if(g.type!=="number") return;
+  const sum=g.mode==="sum", multi=_gMulti(g);
+  const html=(multi?'<div class="field"><label>誰</label><select id="gr_who">'+g.members.map((m,i)=>'<option value="'+i+'">'+esc(m.name)+'</option>').join("")+'</select></div>':'')+
+    '<div class="two"><div class="field"><label>'+(sum?"數量":"數值")+(g.unit?'（'+esc(g.unit)+'）':'')+'</label><input id="gr_v" inputmode="decimal" autocomplete="off" value="'+(sum?"1":"")+'"'+(sum?'':' placeholder="68.5　或　128/82"')+'></div>'+
+    '<div class="field"><label>日期</label><input id="gr_d" type="date" value="'+ymd(new Date())+'"></div></div>';
+  openSheet("記錄："+g.title, html, function(){
+    const mt=/^\s*(-?\d+(?:\.\d+)?)\s*(?:[\/／]\s*(-?\d+(?:\.\d+)?))?\s*$/.exec(($("gr_v").value||"").replace(/，/g,""));
+    if(!mt){ toast("請輸入數字"); return; }
+    if(sum && mt[2]!=null){ toast("累加只能輸入一個數字"); return; }
+    const e={ d:$("gr_d").value||ymd(new Date()), v:Number(mt[1]) }; if(mt[2]!=null) e.v2=Number(mt[2]);
+    const mi=multi?Number($("gr_who").value):0;
+    const members=g.members.map((x,i)=> i===mi ? Object.assign({},x,{log:_mlog(x).concat([e]).sort(_dsort)}) : x);
+    saveGoalPatch(id, numberPatch(g,members));
+    closeSheet(); toast("已記錄");
+  }, null, "儲存");
+  const vi=$("gr_v"); if(vi){ vi.focus(); if(vi.select) vi.select(); }
 }
-function setMemberCurrent(id, mi, val, confirmBackward){
-  if(!requireAuth()) return;
-  const g=state.goals[id]; if(!g||!Array.isArray(g.members)||!g.members[mi]) return;
-  const dir=g.dir||"up", cur=Number(g.members[mi].current||0);
-  const backward = (dir==="down") ? (val>cur) : (val<cur);
-  if(confirmBackward && backward && !confirm("確定將「"+g.members[mi].name+"」設為 "+fmtNum(val)+(g.unit||"")+"？")) return;
-  const members=g.members.map((m,i)=> i===mi ? Object.assign({},m,{current:val}) : m);
-  saveGoalPatch(id, { members });
-  toast(g.members[mi].name+"："+fmtNum(val)+(g.unit||""));
+function openGoalDetail(id){
+  const raw=state.goals[id]; if(!raw) return;
+  const g=normalizeGoal(raw); if(g.type!=="number") return;
+  const multi=_gMulti(g), unit=esc(g.unit||"");
+  let h="";
+  const svg=goalChartSvg(g,160,true); if(svg) h+='<div class="gchart">'+svg+'</div>';
+  if(multi) h+='<div class="glegend">'+g.members.map((m,i)=>'<span><i class="gdot" style="background:'+GC[i%GC.length]+'"></i>'+esc(m.name)+'</span>').join("")+'</div>';
+  const rows=[]; g.members.forEach((m,mi)=>_mlog(m).forEach((e,ei)=>rows.push({mi,ei,e,name:m.name})));
+  rows.sort((a,b)=>a.e.d<b.e.d?1:a.e.d>b.e.d?-1:(b.ei-a.ei));
+  h+= rows.length
+    ? '<div class="ghist">'+rows.map(r=>'<div class="ghist-row"><span>'+_gmd(r.e.d)+(multi?'　'+esc(r.name):'')+'</span><span><b>'+fmtV(r.e)+'</b> <span class="gu">'+unit+'</span><button type="button" class="gdel" data-gdel="'+r.mi+':'+r.ei+'">✕</button></span></div>').join("")+'</div>'
+    : '<div class="gnone">還沒有記錄</div>';
+  openSheet(g.title, h, null, null, "關閉");
+  document.querySelectorAll("[data-gdel]").forEach(b=>b.addEventListener("click", function(){
+    const [mi,ei]=this.getAttribute("data-gdel").split(":").map(Number);
+    if(!confirm("刪除這筆記錄？")) return;
+    const members=g.members.map((m,i)=>{ if(i!==mi) return m; const lg=_mlog(m); lg.splice(ei,1); return Object.assign({},m,{log:lg}); });
+    saveGoalPatch(id, numberPatch(g,members));
+    openGoalDetail(id);
+  }));
 }
-function extendGoal(id){
+
+/* ---- 清單 ---- */
+function addMilestone(id){
   if(!requireAuth()) return;
   const g=state.goals[id]; if(!g) return;
-  if(g.type==="number"){
-    const cur=Number(g.target)||0;
-    const v=prompt("延長目標：輸入新的目標值"+(g.unit?("（"+g.unit+"）"):""), cur);
-    if(v==null) return;
-    const nt=Number(v);
-    if(!(nt>0)){ toast("請輸入數字"); return; }
-    if(nt<=cur){ toast("新目標需大於目前 "+cur); return; }
-    saveGoalPatch(id, { target: nt });   // 進度保留，闖關自動補關卡
-    toast("目標已延長至 "+nt+(g.unit||""));
-  } else if(g.type==="milestone"){
-    const t=prompt("新增一個項目（要做的事）","");
-    if(t==null) return;
-    const txt=t.trim(); if(!txt) return;
-    const ms=(g.milestones||[]).slice();
-    ms.push({text:txt, done:false, date:null});   // 已完成保留，新項目加最後
-    saveGoalPatch(id, { milestones: ms });
-    toast("已新增項目："+txt);
-  }
-}
-function toggleGoalDone(id){
-  const g=state.goals[id]; if(!g) return;
-  saveGoalPatch(id, { done: !g.done });
-}
-function updateGoalProgress(g){
-  if(Array.isArray(g.members) && g.members.length){
-    // 多人目標：更新「下拉選的那個成員」
-    const sel=document.getElementById("memsel_"+g.id);
-    const mi=sel?Number(sel.value):0;
-    const m=g.members[mi]; if(!m){ return; }
-    const cur=prompt("更新「"+m.name+"」目前進度"+(g.unit?("（"+g.unit+"）"):""), m.current!=null?m.current:0);
-    if(cur===null) return;
-    const v=Number(cur); if(isNaN(v)){ toast("請輸入數字"); return; }
-    setMemberCurrent(g.id, mi, v, true);
-    return;
-  }
-  const cur=prompt("更新「"+g.title+"」目前進度"+(g.unit?("（"+g.unit+"）"):""), g.current!=null?g.current:0);
-  if(cur===null) return;
-  const v=Number(cur); if(isNaN(v)){ toast("請輸入數字"); return; }
-  saveGoalPatch(g.id, { current:v });
+  const gn=normalizeGoal(g);
+  const t=prompt("新增一個項目（要做的事）",""); if(t==null) return;
+  const txt=t.trim(); if(!txt) return;
+  const ms=(gn.milestones||[]).slice(); ms.push({text:txt, done:false, date:null});
+  saveGoalPatch(id, { type:"milestone", milestones:ms, done:null });
+  toast("已新增項目：「"+txt+"」");
 }
 function toggleMilestone(id, idx){
   const g=state.goals[id]; if(!g) return;
-  const ms=(g.milestones||[]).slice(); if(!ms[idx]) return;
+  const gn=normalizeGoal(g);
+  const ms=(gn.milestones||[]).slice(); if(!ms[idx]) return;
   ms[idx]={ text:ms[idx].text, done:!ms[idx].done, date:ms[idx].date||null };
-  saveGoalPatch(id, { milestones:ms });
+  saveGoalPatch(id, { type:"milestone", milestones:ms, done:null });
 }
 function saveGoalPatch(id, patch){
   if(!requireAuth()) return;
-  if(LOCAL_MODE){ Object.assign(state.goals[id], patch); lsSaveGoals(); renderGoals(); return; }
+  const merged=Object.assign({}, state.goals[id]||{}, patch);
+  Object.keys(patch).forEach(k=>{ if(patch[k]===null) delete merged[k]; });
+  state.goals[id]=merged;
+  if(LOCAL_MODE){ lsSaveGoals(); renderGoals(); return; }
+  renderGoals();
   uref("goals/"+id).update(patch).catch(e=>{ console.error(e); toast(failMsg("更新", e)); });
 }
-function copyGoalToNextYear(g){
-  if(!requireAuth()) return;
-  const copy=Object.assign({}, g); delete copy.id;
-  copy.year=(Number(g.year)||new Date().getFullYear());   // 年份維持，之後可在編輯改
-  copy.title=(g.title||"目標")+"（複本）";
-  copy.createdAt=Date.now(); copy.done=false;
-  if(copy.type==="milestone" && Array.isArray(copy.milestones)) copy.milestones=copy.milestones.map(m=>({text:m.text,done:false,date:m.date||null}));
-  if(copy.type==="number") copy.current=(copy.start!=null?copy.start:0);
-  if(copy.type==="freq") copy.freqLog=[];
-  const after=function(){ renderGoals(); toast("已複製目標"); };
-  if(LOCAL_MODE){ const key=genId(); state.goals[key]=copy; lsSaveGoals(); after(); return; }
-  const key=uref("goals").push().key;
-  uref("goals/"+key).update(copy).then(after).catch(e=>{ console.error(e); toast(failMsg("複製", e)); });
-}
 function deleteGoal(id, title){
-  if(!canAdvanced()){ showUpgrade("刪除目標"); return; }                 // 免費版：鎖刪除
+  if(!canAdvanced()){ showUpgrade("刪除目標"); return; }
   if(!requireAuth()) return;
-  openConfirm("刪除目標", "確定刪除「<b>"+esc(title||"此目標")+"</b>」嗎？進度紀錄會一併消失。", function(){
+  openConfirm("刪除目標", "確定刪除「<b>"+esc(title||"此目標")+"</b>」嗎？記錄會一併消失。", function(){
     if(LOCAL_MODE){ delete state.goals[id]; lsSaveGoals(); closeSheet(); renderGoals(); toast("已刪除"); return; }
     uref("goals/"+id).remove().then(()=>{ closeSheet(); toast("已刪除"); }).catch(e=>{ console.error(e); toast(failMsg("刪除", e)); });
   }, "刪除");
 }
 
-let goalMilestones=[];   // 編輯時暫存里程碑
-let goalMembers=[];      // 編輯時暫存多人成員
-// 單位下拉（基本選項 + 保留舊資料 + 其他自訂）
+/* ---- 新增／編輯表單 ---- */
+let goalMilestones=[];   // 編輯時暫存清單項目
+let goalMembers=[];      // 編輯時暫存成員（含記錄）
 function _unitSelect(cur){
-  var base=["公斤","天","次","元"];
-  var list=base.slice();
-  if(cur && list.indexOf(cur)<0) list.push(cur);        // 舊資料的單位自動保留
-  var h='<select id="g_unit_sel">';
-  h+='<option value=""'+(cur?"":" selected")+' disabled>請選擇</option>';
-  list.forEach(function(u){ h+='<option value="'+esc(u)+'"'+(cur===u?" selected":"")+'>'+esc(u)+'</option>'; });
-  h+='<option value="__other">其他…</option></select>';
-  h+='<input id="g_unit" type="hidden" value="'+esc(cur||"")+'">';
+  const list=["公斤","次","元","天","小時"];
+  if(cur && list.indexOf(cur)<0) list.push(cur);
+  let h='<select id="g_unit_sel"><option value=""'+(cur?"":" selected")+'>（無）</option>';
+  list.forEach(u=>{ h+='<option value="'+esc(u)+'"'+(cur===u?" selected":"")+'>'+esc(u)+'</option>'; });
+  h+='<option value="__other">其他…</option></select><input id="g_unit" type="hidden" value="'+esc(cur||"")+'">';
   return h;
 }
-// 目標間隔備註：依填入的間隔算出共幾關
-function _autoStep(){
-  var hint=$("g_stephint"), stepIn=$("g_step");
-  if(!hint||!stepIn) return;
-  var st=Math.abs(Number(stepIn.value)||0);
-  var u=($("g_unit")||{}).value||"";
-  hint.textContent = st>0 ? ("每 "+st+(u?" "+u:"")+" 一個關卡") : "";
-}
-
 function openGoalForm(goal){
-  if(!canAdvanced()){ showUpgrade(goal?"編輯目標":"新增目標"); return; }   // 免費版：鎖新增/編輯(可看、可更新進度)
-  const isEdit=!!goal; const g=goal||{};
-  const type=g.type||"number"; const cat=g.category||"life"; const yr=g.year||new Date().getFullYear();
-  const dir=g.dir||((g.target!=null&&g.start!=null&&Number(g.target)<Number(g.start))?"down":"up");
+  if(!canAdvanced()){ showUpgrade(goal?"編輯目標":"新增目標"); return; }
+  const isEdit=!!goal; const g=goal?normalizeGoal(goal):{};
+  const kind=g.type==="milestone"?"list":(g.mode||"last");
+  const cat=g.category||"life"; const yr=g.year||new Date().getFullYear();
   goalMilestones=(g.milestones||[]).map(m=>({text:m.text,done:!!m.done,date:m.date||""}));
-  goalMembers=(g.members&&g.members.length)?g.members.map(m=>({name:m.name||"",current:(m.current!=null?m.current:0),target:(m.target!=null?m.target:0)})):[{name:"我",current:0,target:0},{name:"老公",current:0,target:0}];
+  goalMembers=(g.members&&g.members.length)?g.members.map(m=>Object.assign({},m,{log:(m.log||[]).slice()})):[{name:"",log:[]}];
+  const multi=goalMembers.length>1 || !!(goalMembers[0]&&goalMembers[0].name);
+  const t0=goalMembers[0]&&goalMembers[0].target!=null?goalMembers[0].target:"";
+  const moreOpen=multi||!!g.note;
   const html=
-    '<div class="field"><label>目標名稱</label><input id="g_title" autocomplete="off" value="'+esc(g.title||"")+'" placeholder="例如：存到 30 萬"></div>'+
+    '<div class="field"><label>目標名稱</label><input id="g_title" autocomplete="off" value="'+esc(g.title||"")+'" placeholder="例如：減重、運動、血壓"></div>'+
     '<div class="two">'+
       '<div class="field"><label>年度</label><input id="g_year" type="number" value="'+yr+'"></div>'+
       '<div class="field"><label>類型</label><select id="g_type">'+
-        '<option value="number"'+(type==="number"?" selected":"")+'>數值型（進度條）</option>'+
-        '<option value="freq"'+(type==="freq"?" selected":"")+'>頻率型（每週N次）</option>'+
-        '<option value="milestone"'+(type==="milestone"?" selected":"")+'>里程碑型（清單）</option>'+
-        '<option value="simple"'+(type==="simple"?" selected":"")+'>簡單型（進行中／已完成）</option>'+
+        '<option value="last"'+(kind==="last"?" selected":"")+'>量測（體重）</option>'+
+        '<option value="sum"'+(kind==="sum"?" selected":"")+'>累加（次數）</option>'+
+        '<option value="list"'+(kind==="list"?" selected":"")+'>清單（步驟）</option>'+
       '</select></div>'+
     '</div>'+
     '<div class="field"><label>分類</label>'+iconPicker("g_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
-    '<div id="g_numbox"'+(type==="number"?"":' style="display:none"')+'>'+
-      '<div class="field"><label>目標值 <span style="color:#E8735C">*</span></label><input id="g_target" type="number" value="'+(g.target!=null?g.target:"")+'" placeholder="例如 65 或 300000"><div style="font-size:12px;color:var(--muted);margin-top:4px">無法用數字衡量的目標，建議改用簡單型或里程碑型</div></div>'+
+    '<div id="g_numbox"'+(kind==="list"?' style="display:none"':'')+'>'+
       '<div class="two">'+
-        '<div class="field"><label>目前 <span style="color:#E8735C">*</span></label><input id="g_current" type="number" value="'+(g.current!=null?g.current:"")+'" placeholder="例如 80"><div style="font-size:12px;color:var(--muted);margin-top:4px">例如減重填現在體重，從零開始填 0</div></div>'+
-        '<div class="field"><label>單位 <span style="color:#E8735C">*</span></label>'+_unitSelect(g.unit||"")+'<div style="font-size:12px;color:var(--muted);margin-top:4px">例如：公斤、元、次、天</div></div>'+
-      '</div>'+
-      '<div class="field"><label>目標間隔</label><input id="g_step" type="number" min="1" value="'+(g.step!=null?g.step:5)+'"><div id="g_stephint" style="font-size:12px;color:var(--muted);margin-top:4px"></div></div>'+
-      '<div class="field"><label>對象</label>'+
-      (canFull()
-        ? ('<select id="g_personmode">'+
-            '<option value="single"'+(!(g.members&&g.members.length)?" selected":"")+'>單人</option>'+
-            '<option value="multi"'+((g.members&&g.members.length)?" selected":"")+'>多人（各自進度）</option>'+
-          '</select>')
-        : ('<select id="g_personmode"><option value="single" selected>單人</option></select>'+
-           '<div onclick="showUpgrade(\'多人目標\')" style="font-size:12px;color:#8e44ad;margin-top:4px;cursor:pointer">🔒 多人目標（家人各自進度）為完整版功能，點此升級</div>')
-      )+'</div>'+
-      '<div id="g_singlevals"'+((g.members&&g.members.length)?' style="display:none"':'')+'></div>'+
-      '<div id="g_membersbox"'+((g.members&&g.members.length)?'':' style="display:none"')+'>'+
-        '<div class="label-row"><label>成員（各自目前/目標）</label><span class="manage-link" id="g_addmem">＋ 加成員</span></div>'+
-        '<div id="g_memlist"></div>'+
+        '<div class="field" id="g_single"'+(multi?' style="display:none"':'')+'><label>目標值</label><input id="g_target" type="number" step="any" value="'+t0+'"></div>'+
+        '<div class="field"><label>單位</label>'+_unitSelect(g.unit||"")+'</div>'+
       '</div>'+
     '</div>'+
-    '<div id="g_msbox"'+(type==="milestone"?"":' style="display:none"')+'>'+
-      '<div class="label-row"><label>里程碑清單</label><span class="manage-link" id="g_addms">＋ 加一項</span></div>'+
+    '<div id="g_msbox"'+(kind==="list"?"":' style="display:none"')+'>'+
+      '<div class="label-row"><label>清單項目</label><span class="manage-link" id="g_addms">＋ 加一項</span></div>'+
       '<div id="g_mslist"></div>'+
     '</div>'+
-    '<div id="g_freqbox"'+(type==="freq"?"":' style="display:none"')+'>'+
-      '<div class="two">'+
-        '<div class="field"><label>每週幾次</label><input id="g_perweek" type="number" min="1" value="'+(g.perWeek!=null?g.perWeek:3)+'"></div>'+
-        '<div class="field"><label>單位（選填）</label><input id="g_funit" autocomplete="off" value="'+esc(g.unit||"次")+'"></div>'+
+    '<button type="button" class="btn-ghost" id="g_moretoggle" style="width:100%;margin:2px 0 10px">'+(moreOpen?"收起 ▴":"更多選項 ▾")+'</button>'+
+    '<div id="g_more"'+(moreOpen?'':' style="display:none"')+'>'+
+      '<div id="g_multibox"'+(kind==="list"?' style="display:none"':'')+'>'+
+        '<div class="toggle-row"><span>多人（各自記錄）</span><label class="switch"><input type="checkbox" id="g_multi"'+(multi?" checked":"")+'><span class="slider"></span></label></div>'+
+        '<div id="g_membersbox"'+(multi?'':' style="display:none"')+'>'+
+          '<div class="label-row"><label>成員與各自目標值</label><span class="manage-link" id="g_addmem">＋ 加成員</span></div>'+
+          '<div id="g_memlist"></div>'+
+        '</div>'+
       '</div>'+
-      '<div style="font-size:12px;color:var(--faint);padding:2px 2px 0">每完成一次就在目標卡片按「＋1 今天完成」，每週一重新計算。</div>'+
-    '</div>'+
-    '<div class="field"><label>備註（可選）</label><textarea id="g_note" placeholder="補充說明">'+esc(g.note||"")+'</textarea></div>';
+      '<div class="field"><label>備註</label><textarea id="g_note">'+esc(g.note||"")+'</textarea></div>'+
+    '</div>';
   openSheet(isEdit?"編輯目標":"新增目標", html,
     function(){ saveGoal(isEdit?g.id:null, g); },
     isEdit?function(){ deleteGoal(g.id, g.title); }:null);
   wireIconPicker("g_category");
-  // 單位下拉 → 寫入 hidden；選「其他」跳輸入
-  var _us=$("g_unit_sel");
-  if(_us) _us.addEventListener("change", function(){
+  const us=$("g_unit_sel");
+  us.addEventListener("change", function(){
     if(this.value==="__other"){
-      var v=prompt("請輸入單位（例如：本、公里、小時）","");
+      const v=prompt("請輸入單位（例如：本、公里、mmHg）","");
       if(v && v.trim()){
-        var u=v.trim();
-        var opt=document.createElement("option"); opt.value=u; opt.textContent=u;
-        this.insertBefore(opt, this.options[this.options.length-1]);
-        this.value=u; $("g_unit").value=u;
+        const u=v.trim(), opt=document.createElement("option"); opt.value=u; opt.textContent=u;
+        this.insertBefore(opt, this.options[this.options.length-1]); this.value=u; $("g_unit").value=u;
       } else { this.value=$("g_unit").value||""; }
     } else { $("g_unit").value=this.value; }
-    _autoStep();
   });
-  // 填目標/目前 → 自動算刻度提示
-  ["g_target","g_current","g_step"].forEach(function(id){
-    var el=$(id); if(el) el.addEventListener("input", _autoStep);
-  });
-  _autoStep();
   $("g_type").addEventListener("change", function(){
-    $("g_numbox").style.display=this.value==="number"?"":"none";
-    $("g_msbox").style.display=this.value==="milestone"?"":"none";
-    $("g_freqbox").style.display=this.value==="freq"?"":"none";
+    const list=this.value==="list";
+    $("g_numbox").style.display=list?"none":"";
+    $("g_msbox").style.display=list?"":"none";
+    $("g_multibox").style.display=list?"none":"";
   });
-  if($("g_personmode")) $("g_personmode").addEventListener("change", function(){
-    const multi=this.value==="multi";
-    $("g_singlevals").style.display=multi?"none":"";
-    $("g_membersbox").style.display=multi?"":"none";
-    if(multi) renderMemEditor();
+  $("g_moretoggle").addEventListener("click", function(){
+    const bx=$("g_more"), on=bx.style.display==="none";
+    bx.style.display=on?"":"none"; this.textContent=on?"收起 ▴":"更多選項 ▾";
   });
-  if($("g_addmem")) $("g_addmem").addEventListener("click", function(){ goalMembers.push({name:"",current:0,target:0}); renderMemEditor(); });
-  renderMemEditor();
+  $("g_multi").addEventListener("change", function(){
+    if(this.checked){
+      if(!canFull() && !multi){ this.checked=false; showUpgrade("多人目標"); return; }
+      if(!goalMembers[0].name) goalMembers[0].name="我";
+      goalMembers[0].target=$("g_target").value;
+      if(goalMembers.length<2) goalMembers.push({name:"",log:[]});
+      $("g_single").style.display="none"; $("g_membersbox").style.display="";
+      renderMemEditor();
+    } else {
+      $("g_target").value=goalMembers[0].target!=null?goalMembers[0].target:"";
+      $("g_single").style.display=""; $("g_membersbox").style.display="none";
+    }
+  });
+  $("g_addmem").addEventListener("click", function(){ goalMembers.push({name:"",log:[]}); renderMemEditor(); });
   $("g_addms").addEventListener("click", function(){ goalMilestones.push({text:"",done:false,date:""}); renderMsEditor(); });
+  renderMemEditor();
   renderMsEditor();
 }
 function renderMsEditor(){
   const box=$("g_mslist"); if(!box) return;
-  box.innerHTML=goalMilestones.map((m,i)=>'<div class="ms-edit"><input data-mi="'+i+'" autocomplete="off" value="'+esc(m.text)+'" placeholder="里程碑 '+(i+1)+'"><input type="date" data-mdate="'+i+'" value="'+(m.date||"")+'" style="flex:none;width:140px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px"><button type="button" class="ms-del" data-md="'+i+'">✕</button></div>').join("")
-    || '<div style="font-size:12px;color:var(--faint);padding:4px 2px">達成目標的小步驟，例如：報名→上課→考試。點上方「＋ 加一項」新增（日期選填，填了會出現在行事曆）</div>';
+  box.innerHTML=goalMilestones.map((m,i)=>'<div class="ms-edit"><input data-mi="'+i+'" autocomplete="off" value="'+esc(m.text)+'" placeholder="項目 '+(i+1)+'"><input type="date" data-mdate="'+i+'" value="'+(m.date||"")+'" style="flex:none;width:140px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px"><button type="button" class="ms-del" data-md="'+i+'">✕</button></div>').join("");
   box.querySelectorAll("[data-mi]").forEach(inp=>inp.addEventListener("input", function(){ goalMilestones[Number(this.getAttribute("data-mi"))].text=this.value; }));
   box.querySelectorAll("[data-mdate]").forEach(inp=>inp.addEventListener("change", function(){ goalMilestones[Number(this.getAttribute("data-mdate"))].date=this.value; }));
   box.querySelectorAll("[data-md]").forEach(b=>b.addEventListener("click", function(){ goalMilestones.splice(Number(this.getAttribute("data-md")),1); renderMsEditor(); }));
 }
 function renderMemEditor(){
   const box=$("g_memlist"); if(!box) return;
-  box.innerHTML=goalMembers.map((m,i)=>'<div class="mem-edit"><input data-mn="'+i+'" autocomplete="off" value="'+esc(m.name)+'" placeholder="名字" style="flex:1.2"><input data-mc="'+i+'" type="number" value="'+(m.current!=null?m.current:0)+'" placeholder="目前" style="flex:1"><input data-mt="'+i+'" type="number" value="'+(m.target!=null?m.target:0)+'" placeholder="目標" style="flex:1"><button type="button" class="ms-del" data-mdel="'+i+'">✕</button></div>').join("")
-    || '<div style="font-size:12px;color:var(--faint);padding:4px 2px">點「＋ 加成員」新增</div>';
+  box.innerHTML=goalMembers.map((m,i)=>'<div class="mem-edit"><input data-mn="'+i+'" autocomplete="off" value="'+esc(m.name)+'" placeholder="名字" style="flex:1.2"><input data-mt="'+i+'" type="number" step="any" value="'+(m.target!=null?m.target:"")+'" placeholder="目標值" style="flex:1"><button type="button" class="ms-del" data-mdel="'+i+'">✕</button></div>').join("");
   box.querySelectorAll("[data-mn]").forEach(inp=>inp.addEventListener("input",function(){ goalMembers[Number(this.getAttribute("data-mn"))].name=this.value; }));
-  box.querySelectorAll("[data-mc]").forEach(inp=>inp.addEventListener("input",function(){ goalMembers[Number(this.getAttribute("data-mc"))].current=this.value; }));
   box.querySelectorAll("[data-mt]").forEach(inp=>inp.addEventListener("input",function(){ goalMembers[Number(this.getAttribute("data-mt"))].target=this.value; }));
-  box.querySelectorAll("[data-mdel]").forEach(b=>b.addEventListener("click",function(){ goalMembers.splice(Number(this.getAttribute("data-mdel")),1); renderMemEditor(); }));
+  box.querySelectorAll("[data-mdel]").forEach(b=>b.addEventListener("click",function(){ if(goalMembers.length<=1) return; goalMembers.splice(Number(this.getAttribute("data-mdel")),1); renderMemEditor(); }));
 }
 function saveGoal(id, prev){
   if(!requireAuth()) return;
   const title=$("g_title").value.trim(); if(!title){ toast("請輸入目標名稱"); return; }
-  const type=$("g_type").value;
+  const kind=$("g_type").value;
   const data={
     title, year:Number($("g_year").value)||new Date().getFullYear(),
-    type, category:$("g_category").value||"life",
+    category:$("g_category").value||"life",
     note:$("g_note").value.trim(),
     createdAt:(prev&&prev.createdAt)?prev.createdAt:Date.now()
   };
-  if(type==="number"){
-    // 必填驗證
-    const tv=$("g_target").value.trim(), cv=$("g_current").value.trim();
-    if(tv===""){ toast("請輸入目標值"); return; }
-    if(cv===""){ toast("請輸入目前的數值"); return; }
-    data.target=Number(tv)||0;
-    data.current=Number(cv)||0;
-    if(data.target===data.current){ toast("目標值和目前值相同"); return; }
-    data.dir=(data.target < data.current) ? "down" : "up";        // 自動判定方向
-    const stp=$("g_step").value;
-    const _diff=Math.abs(data.target-data.current);
-    data.step=(stp!=="") ? (Math.abs(Number(stp))||5) : 5;   // 預設間隔 5
-    // 起始值：遞增從0起算；遞減從目前值起算、編輯保留不漂移
-    if(data.dir==="down") data.start=(id && prev && prev.start!=null && (prev.dir||"up")==="down") ? (Number(prev.start)||0) : data.current;
-    else data.start=0;
-    data.unit=($("g_unit").value||"").trim();
-    if(!data.unit){ toast("請選擇單位"); return; }
-    const _multi = $("g_personmode") && $("g_personmode").value==="multi";
-    if(_multi){
-      const _pm = (prev && Array.isArray(prev.members)) ? prev.members : [];
-      data.members = goalMembers.filter(m=>(m.name||"").trim()).map(m=>{
-        const nm=m.name.trim(), cur=Number(m.current)||0, tgt=Number(m.target)||0;
-        const old=_pm.find(x=>x.name===nm);
-        const start=(old && old.start!=null) ? Number(old.start) : cur;   // 起始：沿用或以目前為起點，不漂移
-        return {name:nm, current:cur, target:tgt, start:start};
-      });
-      if(!data.members.length){ toast("請至少新增一位成員"); return; }
-      data.target=Number(data.members[0].target)||0;   // 相容欄位
-      data.current=Number(data.members[0].current)||0;
+  if(kind==="list"){
+    const ms=goalMilestones.filter(m=>(m.text||"").trim()).map(m=>({text:m.text.trim(),done:!!m.done,date:m.date||null}));
+    if(!ms.length){ toast("請至少新增一個項目"); return; }
+    Object.assign(data,{ type:"milestone", milestones:ms, mode:null, members:null, unit:null });
+  } else {
+    const multi=$("g_multi").checked;
+    let mem;
+    if(multi){
+      mem=goalMembers.filter(m=>(m.name||"").trim()).map(m=>Object.assign({},m,{name:m.name.trim()}));
+      if(!mem.length){ toast("請輸入成員名字"); return; }
     } else {
-      data.members=null;
+      mem=[Object.assign({},goalMembers[0]||{log:[]},{name:"",target:$("g_target").value.trim()})];
     }
-    data.milestones=null; data.progress=null; data.done=null;
-  } else if(type==="milestone"){
-    data.milestones=goalMilestones.filter(m=>(m.text||"").trim()).map(m=>({text:m.text.trim(),done:!!m.done,date:m.date||null}));
-    if(!data.milestones.length){ toast("請至少新增一個里程碑"); return; }
-    data.target=null; data.current=null; data.unit=null; data.progress=null; data.start=null; data.step=null; data.dir=null; data.done=null;
-  } else if(type==="freq"){
-    data.perWeek=Math.max(1, Number($("g_perweek").value)||1);
-    data.unit=($("g_funit")&&$("g_funit").value.trim())||"次";
-    data.freqLog=(prev&&Array.isArray(prev.freqLog))?prev.freqLog:[];
-    data.target=null; data.current=null; data.milestones=null; data.progress=null; data.start=null; data.step=null; data.dir=null; data.done=null;
-  } else {   // simple（進行中／已完成）
-    data.done=!!(prev&&prev.done);
-    data.target=null; data.current=null; data.unit=null; data.milestones=null; data.progress=null; data.start=null; data.step=null; data.dir=null;
+    Object.assign(data,{ type:"number", mode:kind, members:mem.map(_cleanMember), unit:($("g_unit").value||"").trim()||null, milestones:null });
   }
+  ["current","start","dir","step","target","freqLog","perWeek","done","progress"].forEach(k=>{ data[k]=null; });
+  if(data.type==="milestone"){ data.done=null; }
   if(LOCAL_MODE){
     const key=id||genId();
     const merged=Object.assign({}, state.goals[key]||{}, data);
-    ["target","current","unit","milestones","progress","start","step","dir","done"].forEach(k=>{ if(data[k]===null) delete merged[k]; });
+    Object.keys(data).forEach(k=>{ if(data[k]===null) delete merged[k]; });
     state.goals[key]=merged; lsSaveGoals(); closeSheet(); renderGoals(); toast(id?"已更新":"已新增"); return;
   }
   const key=id||uref("goals").push().key;
@@ -4015,6 +3848,13 @@ _startAppFlow();
   var link=document.getElementById("termsLink");
   if(link) link.addEventListener("click", function(e){ e.preventDefault(); legalDocs.open("terms"); });
 })();
+
+// 開關列：點文字也能切換（原本只有點右邊的小開關才有反應，點文字像「沒反應」）
+document.addEventListener("click", function(ev){
+  var t=ev.target; if(!t || !t.closest) return;
+  var row=t.closest(".toggle-row"); if(!row || t.closest(".switch")) return;
+  var cb=row.querySelector('input[type="checkbox"]'); if(cb && !cb.disabled) cb.click();
+});
 
 // PWA: 註冊 Service Worker（離線快取＋自動偵測新版）
 if('serviceWorker' in navigator){
