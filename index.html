@@ -820,7 +820,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-54";
+const BUILD_ID = "1009-57";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1676,7 +1676,7 @@ function bindData(){
     if(!state.recordsBound){ uref("records").on("value", s=>{ state.records=s.val()||{}; renderAll(); }); state.recordsBound=true; }
     if(!state.peopleBound){ uref("people").on("value", s=>{ state.people=s.val()||{}; renderAll(); }); state.peopleBound=true; }
     if(!state.goalsBound){ uref("goals").on("value", s=>{ state.goals=s.val()||{}; renderGoals(); }); state.goalsBound=true; }
-    if(!state.stockBound){ uref("stock").on("value", s=>{ state.stock=s.val()||{}; renderStockBanner(); }); uref("stockCfg").on("value", s=>{ state.stockCfg=s.val()||{}; renderStockBanner(); }); state.stockBound=true; }
+    if(!state.stockBound){ uref("stock").on("value", s=>{ state.stock=s.val()||{}; renderStockBanner(); try{ renderShop(); updateShopBadge(); }catch(e){} }); uref("stockCfg").on("value", s=>{ state.stockCfg=s.val()||{}; renderStockBanner(); }); state.stockBound=true; }
   });
 }
 function renderAll(){ processRecurrences(); renderStockBanner(); refreshOverviewFilterOptions(); renderCalendar(); renderDayEvents(); renderPocket(); renderOverview(); renderShop(); renderGoals(); if(typeof applyPlanLocks==="function") applyPlanLocks();   updateShopBadge();   updateAppBadge();                 // 同步桌面圖示紅點
@@ -1684,7 +1684,7 @@ function renderAll(){ processRecurrences(); renderStockBanner(); refreshOverview
 
 /* ===== 庫存提醒：讀「庫存管理」的物品（食材有效日期、家電保固）===== */
 function _stockInfo(it){
-  if(!it) return null;
+  if(!it || it.need) return null;          // 用完了(待買)的不提醒舊的有效日期
   const ap = it.kind==="appliance";
   const d = ap ? it.warrantyEnd : it.expiry;
   if(!d) return null;
@@ -1717,25 +1717,67 @@ function dropOldInvLink(){
 }
 // 採購完成 → 寫進共用庫存（users/<key>/stock），欄位與庫存管理一致
 const STK_KINDS=[["food","食材","🥬"],["med","藥品","💊"],["daily","生活用品","🧴"],["kitchen","廚房用品","🍳"],["appliance","家電","🔌"],["other","其他","📦"]];
+/* ===== 庫存管理「用完了」→ 待購清單 ===== */
+const STK_TO_SUB={food:"food",med:"other",daily:"daily",kitchen:"other",appliance:"electronics",other:"other"};
+function _nmKey(n){ return String(n||"").trim().toLowerCase(); }
+function _needRec(name){            // 庫存裡同名、標了待買的那一筆 → [id, rec]
+  const k=_nmKey(name), st=state.stock||{}; let hit=null;
+  Object.keys(st).forEach(function(id){ const x=st[id]; if(!hit && x && x.need && _nmKey(x.name)===k) hit=[id,x]; });
+  return hit;
+}
+function _stockNeedList(){          // 要顯示在待購清單的庫存待買項（同名的真採購項目已存在就不重複顯示）
+  const real={}; curEntries().forEach(function(e){ const r=e[1]; if(r && r.category==="shopping" && !isDone(r)) real[_nmKey(r.title)]=1; });
+  const out=[], st=state.stock||{};
+  Object.keys(st).forEach(function(id){ const x=st[id]; if(x && x.need && x.name && !real[_nmKey(x.name)]) out.push(Object.assign({}, x, {_stk:id, id:"stk_"+id, title:x.name, subcategory:STK_TO_SUB[x.kind]||"other", createdAt:x.needAt||0})); });
+  return out;
+}
+function restockNeed(id, rec, expiry, fromRecord){      // 買到了：清掉待買、更新有效日期（可不填）
+  const upd={ need:null, needAt:null, buyDate:ymd(new Date()) };
+  upd.expiry = (rec.kind==="food"||rec.kind==="med") ? (expiry||null) : (rec.expiry||null);
+  if(rec.kind==="food"||rec.kind==="med") upd.expiry = expiry||null; else delete upd.expiry;
+  toast("✅ 已買到「"+(rec.name||"")+"」"+(upd.expiry?"，有效到 "+upd.expiry:""),2400);
+  uref("stock/"+id).update(upd).catch(function(e){ console.error(e); toast("⚠️ 已買到，但庫存沒更新："+failMsg("更新", e),3500); });
+}
+function cancelStockNeed(id, name){
+  toast("已取消「"+name+"」的待買",2200);
+  uref("stock/"+id).update({ need:null, needAt:null }).catch(function(e){ console.error(e); toast(failMsg("取消", e)); });
+}
+function openStockBuy(id){
+  const rec=(state.stock||{})[id]; if(!rec) return;
+  if(rec.kind!=="food" && rec.kind!=="med"){ restockNeed(id, rec, null); return; }
+  openSheet("買到「"+(rec.name||"")+"」了", '<div class="field"><label>新的有效日期（選填）</label><input id="stk_exp" type="date"></div>',
+    function(){ const v=($("stk_exp")||{}).value||""; closeSheet(); restockNeed(id, rec, v); }, null, "完成");
+}
+function stockNeedCardEl(r){
+  const card=document.createElement("div"); card.className="card item";
+  const k=(STK_KINDS.filter(function(x){return x[0]===r.kind;})[0]||["","",""]);
+  card.innerHTML='<button class="check" data-check title="買到了"></button>'+
+    '<div class="body"><div class="row1"><span class="name">'+esc(r.title)+'</span></div>'+
+    '<div class="meta"><span>📦 庫存用完了</span>'+(k[1]?' <span>'+k[2]+' '+esc(k[1])+'</span>':'')+'</div></div>'+
+    '<div class="acts"><button class="icon-btn" data-del title="取消待買">✕</button></div>';
+  card.querySelector("[data-check]").addEventListener("click", function(){ openStockBuy(r._stk); });
+  card.querySelector("[data-del]").addEventListener("click", function(){ cancelStockNeed(r._stk, r.title); });
+  return card;
+}
 const KIND_NAME_STK={food:"食材",med:"藥品",daily:"生活用品",kitchen:"廚房用品",appliance:"家電",other:"其他"};
 function stockFromShop(r){
   if(!r || !r.stk) return null;
   const nm=String(r.title||"").trim(); if(!nm) return null;
-  if(LOCAL_MODE){ toast("✅ 已完成「"+nm+"」（本機模式無法加入庫存）",2800); return null; }
+  if(LOCAL_MODE){ toast("✅ 已完成「"+nm+"」（離線模式不能入庫）",2800); return null; }
   const st=state.stock||{};
   const nk=nm.toLowerCase();
   const dup=Object.keys(st).some(function(k){ const x=st[k]; return x && String(x.name||"").trim().toLowerCase()===nk; }) || (window.__stkBusy||{})[nk];
-  if(dup){ toast("✅ 已完成「"+nm+"」；庫存已有同名項目，沒有重複加入",2800); return null; }
+  if(dup){ toast("✅ 已完成「"+nm+"」（庫存已有，不重複加入）",2800); return null; }
   window.__stkBusy=window.__stkBusy||{}; window.__stkBusy[nk]=true;           // 連點或網路慢時，同名也只加一次
   const id=uref("stock").push().key;
   const rec={ name:nm, kind:r.stk, buyDate:ymd(new Date()), created:Date.now() };
   if((r.stk==="food"||r.stk==="med") && r.stkExp) rec.expiry=r.stkExp;
   if(r.amount!=null && !isNaN(Number(r.amount))) rec.price=Number(r.amount);
+  // 先立刻顯示結果（Firebase 要等伺服器回應才算完成，網路慢時會好幾秒沒反應），失敗再改提示
+  toast("✅ 已完成「"+nm+"」，並加入庫存（"+(KIND_NAME_STK[r.stk]||"庫存")+"）",2800);
   uref("stock/"+id).set(rec).then(function(){
     setTimeout(function(){ delete window.__stkBusy[nk]; }, 1500);
-    const k=KIND_NAME_STK[r.stk]||"庫存";
-    toast("✅ 已完成「"+nm+"」，並加入庫存（"+k+"）",2800);
-  }).catch(function(e){ delete window.__stkBusy[nk]; console.error(e); toast("⚠️ 「"+nm+"」已完成，但加入庫存失敗："+failMsg("加入庫存", e),2800); });
+  }).catch(function(e){ delete window.__stkBusy[nk]; console.error(e); toast("⚠️ 已完成，但沒加入庫存："+failMsg("加入", e),3500); });
   return id;
 }
 // 採購商品名歷史：打過的商品名 → 上次選的大分類
@@ -2656,7 +2698,9 @@ function toggleDoneWhole(id){
     patch.doneDate=ymd(new Date());
     if(r.category==="shopping"){
       patch.ordered=null; patch.eta=null;
-      if(r.stk && !r.stockId){ const sid=stockFromShop(r); if(sid) patch.stockId=sid; }
+      const _nd2=_needRec(String(r.title||"").trim());
+      if(_nd2){ restockNeed(_nd2[0], _nd2[1], r.stkExp||null, true); }
+      else if(r.stk && !r.stockId){ const sid=stockFromShop(r); if(sid) patch.stockId=sid; }
       else if(!r.stk) toast("✅ 已完成「"+String(r.title||"").trim()+"」",2200);
     }
     // 採購重複 → 以完成日往後推，生成下一筆（只生一次）
@@ -2686,6 +2730,7 @@ $("addItemBtn").addEventListener("click", ()=>{ if(!canAdvanced()){ showUpgrade(
 function updateShopBadge(){
   const nb=$("navShop"); if(!nb) return;
   let n=0; curEntries().forEach(([id,r])=>{ if(r && r.category==="shopping" && !isDone(r) && (r.ordered || _shopDue(r))) n++; });
+  try{ n+=_stockNeedList().length; }catch(e){}
   const old=nb.querySelector(".nbadge"); if(old) old.remove();
   if(n>0){ const sp=document.createElement("span"); sp.className="nbadge"; sp.textContent=String(n); sp.title="待到貨／該買 "+n+" 件"; nb.appendChild(sp); }
 }
@@ -2693,6 +2738,7 @@ function _lastSub(){ try{ var v=localStorage.getItem("shopLastSub"); return (v &
 function _shopDue(r){ return !!(r && r.dateStart && r.dateStart<=ymd(new Date())); }
 function _shopLater(r){ return !!(r && r.dateStart && r.dateStart>ymd(new Date())); }
 function shopCardEl(r){
+      if(r._stk) return stockNeedCardEl(r);
       const card=document.createElement("div");
       card.className="card item"+(r.urgent?" urgent-card":"");
       card.innerHTML=
@@ -2728,6 +2774,7 @@ function renderShop(){
       groups[sc].push(Object.assign({id},r));
     }
   });
+  _stockNeedList().forEach(function(r){ (groups[r.subcategory]||groups.other).push(r); });
   let total=ordered.length+later.length; SUBCAT_ORDER.forEach(s=>total+=groups[s].length);
   if(total===0){ wrap.innerHTML='<div class="empty-state"><span class="eico">🛒</span>目前沒有待購項目</div>'; return; }
 
@@ -2794,7 +2841,9 @@ function toggleShopDone(id){
   const patch={ kind:"done", status:"done", doneDate:ymd(new Date()), ordered:null, eta:null };   // 完成＝已到貨／已買到
   let next=null;
   const _nm=String(r.title||"").trim();
-  if(r.stk && !r.stockId){ const sid=stockFromShop(r); if(sid) patch.stockId=sid; }   // 有選入庫 → 寫進庫存（內含完成提示）
+  const _nd=_needRec(_nm);
+  if(_nd){ restockNeed(_nd[0], _nd[1], r.stkExp||null, true); }                      // 庫存裡正好是「用完了」的同名項 → 買到就恢復它
+  else if(r.stk && !r.stockId){ const sid=stockFromShop(r); if(sid) patch.stockId=sid; }   // 有選入庫 → 寫進庫存（內含完成提示）
   else if(!r.stk) toast("✅ 已完成「"+_nm+"」",2200);
   // 重複採購（onDone）→ 以購買日往後推，生成下一筆
   if(hasRepeat(r) && (r.repeat.mode||"onDone")==="onDone" && !r.spawned){
@@ -2930,7 +2979,7 @@ function openRecordForm(rec, presets, asCopy){
       '</div>'+
       '<div class="field"><label>📦 買到後加入庫存</label>'+
         '<select id="rec_stk"><option value="">不入庫</option>'+STK_KINDS.map(k=>'<option value="'+k[0]+'"'+(r.stk===k[0]?" selected":"")+'>'+k[2]+' '+k[1]+'</option>').join("")+'</select></div>'+
-      '<div class="field" id="rec_stkexpbox"'+((r.stk==="food"||r.stk==="med")?"":' style="display:none"')+'><label>有效期限（選填，之後可在庫存管理改）</label><input id="rec_stkexp" type="date" value="'+esc(r.stkExp||"")+'"></div>'+
+      '<div class="field" id="rec_stkexpbox"'+((r.stk==="food"||r.stk==="med")?"":' style="display:none"')+'><label>有效期限（選填）</label><input id="rec_stkexp" type="date" value="'+esc(r.stkExp||"")+'"></div>'+
       '<div class="toggle-row" id="rec_orderedbox"><span>🚚 已下單，等待到貨</span><label class="switch"><input type="checkbox" id="rec_ordered"'+(r.ordered?" checked":"")+'><span class="slider"></span></label></div>'+
       '<div class="field" id="rec_etabox"'+(r.ordered?"":' style="display:none"')+'><label>預計到貨日（選填）</label><input id="rec_eta" type="date" value="'+esc(r.eta||"")+'"></div>'+
     '</div>'+

@@ -50,6 +50,8 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 .tag{flex:0 0 auto;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:var(--surface2);color:var(--ink2)}
 .tag.expired{background:var(--warn-light);color:var(--warn)}
 .tag.soon{background:var(--amber-light);color:var(--amber)}
+.tag.need{background:#fde8d4;color:#b45309}
+.usedbtn{flex:0 0 auto;font-size:12px;font-weight:700;border-radius:999px;padding:5px 11px;border:1px solid var(--line,#ddd);background:var(--surface2);color:var(--ink2)}
 .tag.ok{background:var(--accent-light);color:var(--accent)}
 .empty{text-align:center;padding:48px 20px;color:var(--ink2);font-weight:600}
 .empty b{display:block;font-size:44px;margin-bottom:10px}
@@ -116,7 +118,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
       <button class="hbtn" id="goSet" title="設定">⚙️</button>
     </div>
     <div class="searchrow">
-      <input class="search" id="q" type="search" placeholder="🔍 搜尋名稱、位置、品牌">
+      <input class="search" id="q" type="search" placeholder="🔍 搜尋">
       <button class="addbtn" id="addBtn">＋ 新增</button>
     </div>
     <div class="chips" id="kindChips" style="flex-wrap:nowrap;gap:4px"></div>
@@ -136,7 +138,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-var APP_VER="v2.0", BUILD_ID="1009-52";
+var APP_VER="v2.0", BUILD_ID="1009-54";
 var ADMIN_EMAIL="mp65p@hotmail.com";
 var CAL_URL='https://handyassist-system.github.io/My-Schedule/';
 var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},kitchen:{n:'廚房用品',i:'🍳'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
@@ -193,6 +195,7 @@ function askConfirm(title,msg,onOk,okText){
 /* ───────── 狀態（有效日期／保固）───────── */
 function dateOf(it){ return it.kind==='appliance' ? (it.warrantyEnd||'') : (it.expiry||''); }
 function statusOf(it){
+  if(it.need) return null;                 // 用完了、待買：舊的有效日期不再提醒
   var d=dateOf(it); if(!d) return null;
   var n=diffDays(d,today()), thr=it.kind==='appliance'?cfg.warrantyDays:cfg.foodDays, ap=it.kind==='appliance';
   if(n<0) return {st:'expired',n:n,label:ap?'保固已過':'過期 '+(-n)+' 天'};
@@ -307,20 +310,30 @@ function render(){
     return true;
   });
   function key(it){ var s=statusOf(it); return s?s.n:99999; }
+  var needs=arr.filter(function(it){return it.need;}).sort(function(a,b){return (b.needAt||0)-(a.needAt||0);});
+  arr=arr.filter(function(it){return !it.need;});
   var alerts=arr.filter(isAlert).sort(function(a,b){return key(a)-key(b);});
   var rest=arr.filter(function(it){return !isAlert(it);}).sort(function(a,b){
     var ka=key(a),kb=key(b); if(ka!==kb) return ka-kb; return String(a.name).localeCompare(String(b.name),'zh-Hant');
   });
   var html='';
   if(!items.length){
-    html='<div class="empty"><b>📦</b>還沒有物品<span>按右上「＋ 新增」，記下東西放哪裡、食材的有效日期、家電的保固</span></div>';
-  } else if(!arr.length){
+    html='<div class="empty"><b>📦</b>還沒有物品<span>按右上「＋ 新增」開始記</span></div>';
+  } else if(!arr.length && !needs.length){
     html='<div class="empty"><b>🔍</b>找不到符合的物品</div>';
   } else {
+    if(needs.length) html+='<div class="sec">🛒 待買（'+needs.length+'）</div>'+needs.map(card).join('');
     if(alerts.length) html+='<div class="sec alert">⚠️ 快到期（'+alerts.length+'）</div>'+alerts.map(card).join('');
     if(rest.length) html+=(alerts.length?'<div class="sec">全部（'+rest.length+'）</div>':'')+rest.map(card).join('');
   }
   $('list').innerHTML=html;
+}
+var CONSUMABLE={food:1,med:1,daily:1};
+function toggleNeed(id){
+  if(locked()) return;
+  var it=items.find(function(x){return x.id===id;}); if(!it) return;
+  if(it.need){ delete it.need; delete it.needAt; writeItem(it); toast('已取消「'+it.name+'」的待買',2200); }
+  else { it.need=true; it.needAt=Date.now(); writeItem(it); toast('🛒 「'+it.name+'」已加入待買（生活管家看得到）',2600); }
 }
 function card(it){
   var s=statusOf(it), sub=[];
@@ -330,7 +343,8 @@ function card(it){
   return '<button class="card'+(s&&s.st!=='ok'?' '+s.st:'')+'" data-id="'+esc(it.id)+'">'
     +'<span class="ico">'+(KIND[it.kind]||KIND.other).i+'</span>'
     +'<span class="cbody"><div class="cname">'+esc(it.name)+'</div><div class="csub">'+esc(sub.join('・')||(KIND[it.kind]||KIND.other).n)+'</div></span>'
-    +(s?'<span class="tag '+s.st+'">'+s.label+'</span>':'')
+    +(it.need?'<span class="tag need">🛒 待買</span><span class="usedbtn" data-used="'+esc(it.id)+'">取消</span>'
+      :(s?'<span class="tag '+s.st+'">'+s.label+'</span>':'')+(CONSUMABLE[it.kind]?'<span class="usedbtn" data-used="'+esc(it.id)+'">用完了</span>':''))
     +'</button>';
 }
 
@@ -359,7 +373,7 @@ function kindFields(kind,it){
     var qs=kind==='med'?[[30,'1個月後'],[90,'3個月後'],[180,'半年後'],[365,'1年後']]:[[3,'3天後'],[7,'1週後'],[14,'2週後'],[30,'1個月後'],[90,'3個月後']];
     return '<div class="field"><label>有效日期</label><input id="fExp" type="date" value="'+esc(it.expiry||'')+'">'
       +'<div class="quick">'+qs.map(function(q){return '<button type="button" data-q="'+q[0]+'">'+q[1]+'</button>';}).join('')+'</div>'
-      +'<div class="hint">有填才會在快到期時提醒</div></div>';
+      +'<div class="hint">填了才會提醒</div></div>';
   }
   if(kind==='daily'||kind==='kitchen') return '';
   return '<div class="field"><label>有效日期（選填）</label><input id="fExp" type="date" value="'+esc(it.expiry||'')+'"></div>';
@@ -403,7 +417,7 @@ function openForm(it,keep){
     +'<div class="field"><label>名稱</label><input id="fName" value="'+esc(name||'')+'" placeholder="例：牛奶、冰箱、延長線"></div>'
     +'<div class="field"><label>放在哪裡</label><select id="fLoc">'+locOptions(loc||'')+'</select></div>'
     +kindFields(sheetKind,it&&it.kind===sheetKind?it:{})
-    +'<div class="field"><label>備註（選填）</label><textarea id="fNote" rows="2" style="resize:none" placeholder="序號、維修紀錄、放的細節…">'+esc(note||'')+'</textarea></div>';
+    +'<div class="field"><label>備註（選填）</label><textarea id="fNote" rows="2" style="resize:none" placeholder="例：序號、維修紀錄">'+esc(note||'')+'</textarea></div>';
   var f=(isEdit?'<button class="btn dg" id="bDel">刪除</button>':'')+'<button class="btn gh" id="bCancel">取消</button>'
     +(isEdit?'':'<button class="btn gh" id="bAgain">存＋再加</button>')+'<button class="btn pri" id="bSave">儲存</button>';
   openSheet(isEdit?'編輯物品':'新增物品',body,f,'form');
@@ -419,8 +433,9 @@ function saveForm(again){
   var loc=$('fLoc').value; if(loc==='__new__') loc='';
   var old=editId?items.find(function(x){return x.id===editId;}):null;
   var nk=name.toLowerCase(), same=items.filter(function(x){ return x.id!==editId && String(x.name||'').trim().toLowerCase()===nk; })[0];
-  if(same){ toast('已有「'+name+'」'+(same.loc?'（'+same.loc+'）':'')+'，不重複新增；請改名或直接編輯那一筆',3000); return; }
+  if(same && !(old && String(old.name||'').trim().toLowerCase()===nk)){ toast('「'+name+'」已經有了，請直接編輯那一筆',2800); return; }
   var it={id:editId||uid(),name:name,kind:sheetKind,loc:loc,note:($('fNote').value||'').trim(),created:(old&&old.created)||Date.now()};
+  if(old&&old.need){ it.need=true; it.needAt=old.needAt; }          // 編輯不會弄丟「待買」標記
   if(sheetKind==='appliance'){
     it.model=($('fModel').value||'').trim(); it.buyDate=$('fBuy').value||'';
     var y=parseFloat($('fWy').value)||0; it.warrantyYears=y||null;
@@ -445,7 +460,7 @@ function openSettings(){
     +'<div class="setttl">🔔 提醒（提前幾天）</div>'
     +'<div class="row2"><div class="field"><label>食材有效日期</label><input id="cFood" type="number" min="0" inputmode="numeric" value="'+cfg.foodDays+'"></div>'
     +'<div class="field"><label>家電保固</label><input id="cWar" type="number" min="0" inputmode="numeric" value="'+cfg.warrantyDays+'"></div></div>'
-    +'<div class="hint">提醒會顯示在這裡的「快到期」，也會出現在生活管家的總覽與通知</div>'
+    +'<div class="hint">快到期的會顯示在這裡和生活管家</div>'
     +'<div class="setttl">💾 備份</div>'
     +'<div style="display:flex;gap:8px"><button class="btn gh" id="bkOut" style="flex:1">⬇️ 匯出</button>'
     +'<label class="btn gh" style="flex:1;text-align:center;margin:0;line-height:24px">⬆️ 匯入<input id="bkIn" type="file" accept="application/json,.json" style="display:none"></label></div>';
@@ -479,7 +494,7 @@ function openSettings(){
       d.items.forEach(function(x){ if(x&&x.name){ x.id=x.id||uid(); writeItem(x); } });
       if(Array.isArray(d.locs)&&d.locs.length){ var a=getLocs().slice(); d.locs.forEach(function(l){if(a.indexOf(l)<0)a.push(l);}); saveLocs(a); }
       toast('已匯入 '+d.items.length+' 項'); closeSheet();
-    }catch(e){ toast('備份檔格式不對'); } };
+    }catch(e){ toast('這不是備份檔'); } };
     r.readAsText(this.files[0]);
   };
 }
@@ -536,7 +551,7 @@ $('goCal').onclick=function(){ location.href=CAL_URL; };
 $('q').addEventListener('input',render);
 $('kindChips').addEventListener('click',function(e){ var b=e.target.closest('[data-kind]'); if(!b) return; curKind=b.dataset.kind; render(); });
 $('locSel').addEventListener('change',function(){ curLoc=this.value; render(); });
-$('list').addEventListener('click',function(e){ var c=e.target.closest('[data-id]'); if(!c) return; var it=items.find(function(x){return x.id===c.dataset.id;}); if(it) openForm(it); });
+$('list').addEventListener('click',function(e){ var u=e.target.closest('[data-used]'); if(u){ e.stopPropagation(); toggleNeed(u.dataset.used); return; } var c=e.target.closest('[data-id]'); if(!c) return; var it=items.find(function(x){return x.id===c.dataset.id;}); if(it) openForm(it); });
 $('ovl').addEventListener('click',function(e){ if(e.target===$('ovl')) closeSheet(); });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeSheet(); });
 
