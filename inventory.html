@@ -35,7 +35,7 @@ header{position:sticky;top:0;z-index:40;background:var(--bg);padding:calc(10px +
 .chips{display:flex;gap:6px;overflow-x:auto;max-width:560px;margin:8px auto 0;padding-bottom:2px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .locsel{border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;font-size:14px;background:var(--surface);color:var(--ink2);min-height:34px;width:100%;outline:none}
-.chip{flex:1 1 auto;white-space:nowrap;padding:6px 6px !important;text-align:center;border:1.5px solid var(--border);background:var(--surface);color:var(--ink2);border-radius:20px;padding:6px 14px;font-size:13px;min-height:34px}
+.chip{flex:1 1 auto;white-space:nowrap;padding:6px 4px !important;font-size:12.5px !important;text-align:center;border:1.5px solid var(--border);background:var(--surface);color:var(--ink2);border-radius:20px;padding:6px 14px;font-size:13px;min-height:34px}
 .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
 main{max-width:560px;margin:0 auto;padding:6px 14px}
 .sec{font-size:12.5px;font-weight:700;color:var(--ink2);margin:14px 2px 6px}
@@ -119,7 +119,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
       <input class="search" id="q" type="search" placeholder="🔍 搜尋名稱、位置、品牌">
       <button class="addbtn" id="addBtn">＋ 新增</button>
     </div>
-    <div class="chips" id="kindChips" style="overflow-x:visible;flex-wrap:nowrap"></div>
+    <div class="chips" id="kindChips" style="flex-wrap:nowrap;gap:4px"></div>
     <div class="searchrow" style="margin-top:6px"><select id="locSel" class="locsel"></select></div>
   </header>
   <main id="list"></main>
@@ -136,10 +136,10 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-var APP_VER="v2.0", BUILD_ID="1009-48";
+var APP_VER="v2.0", BUILD_ID="1009-51";
 var ADMIN_EMAIL="mp65p@hotmail.com";
 var CAL_URL='https://handyassist-system.github.io/My-Schedule/';
-var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
+var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},kitchen:{n:'廚房用品',i:'🍳'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
 var DEFAULT_LOCS=['客廳','廚房','臥室','浴室','陽台','儲藏室'];
 var DEFAULT_CFG={foodDays:3,warrantyDays:30};
 var firebaseConfig={
@@ -361,7 +361,7 @@ function kindFields(kind,it){
       +'<div class="quick">'+qs.map(function(q){return '<button type="button" data-q="'+q[0]+'">'+q[1]+'</button>';}).join('')+'</div>'
       +'<div class="hint">有填才會在快到期時提醒</div></div>';
   }
-  if(kind==='daily') return '';
+  if(kind==='daily'||kind==='kitchen') return '';
   return '<div class="field"><label>有效日期（選填）</label><input id="fExp" type="date" value="'+esc(it.expiry||'')+'"></div>';
 }
 function updateWEnd(){

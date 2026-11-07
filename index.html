@@ -820,7 +820,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-49";
+const BUILD_ID = "1009-50";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1775,10 +1775,8 @@ function resetToTodayOverview(){
   if($("app").classList.contains("hidden")) return;   // 未登入不動
   ovMode="period";
   const t=new Date();
-  if($("ovYear")) $("ovYear").value=String(t.getFullYear());
-  if($("ovMonth")) $("ovMonth").value=String(t.getMonth()+1);
-  if($("ovDay")){ $("ovDay").disabled=false; $("ovDay").value=""; }
   if($("ovStatus")) $("ovStatus").value="pending";
+  syncOvPeriodForStatus();   // 未完成＝全部期間
   if($("ovSearch")) $("ovSearch").value="";
   if($("ovCategory")) $("ovCategory").value="all";
   if($("ovAssignee")) $("ovAssignee").value="all";
@@ -2262,24 +2260,41 @@ function openMonthPicker(){
 let ovMode = "period";   // 總覽預設＝回顧當月（已完成與紀錄）；todo 模式保留但不再使用
 if($("ovSearch")) $("ovSearch").addEventListener("input", ()=>renderOverview());
 if($("ovMoreBtn")) $("ovMoreBtn").addEventListener("click", ()=>{ const bx=$("ovMoreBox"); const on=bx.style.display==="none"; bx.style.display=on?"flex":"none"; $("ovMoreBtn").textContent=on?"收起篩選 ▴":"更多篩選 ▾"; });
+// 期間：年選「全部期間」時，月、日停用並忽略。
+// 未完成＝預設全部期間（不分月份）；想看某個月就自己選年、月。已完成／全部＝回顧當月。
+function updateOvPeriodEnable(){
+  const y=$("ovYear").value, m=$("ovMonth").value;
+  $("ovMonth").disabled=!y;
+  $("ovDay").disabled=!y || !m;
+  if(!y){ $("ovMonth").value=""; $("ovDay").value=""; }
+  else if(!m){ $("ovDay").value=""; }
+}
+function syncOvPeriodForStatus(){
+  const st=$("ovStatus").value, t=new Date();
+  if(st==="pending"){ $("ovYear").value=""; $("ovMonth").value=""; $("ovDay").value=""; }
+  else if(!$("ovYear").value){ $("ovYear").value=String(t.getFullYear()); $("ovMonth").value=String(t.getMonth()+1); $("ovDay").value=""; }
+  updateOvPeriodEnable();
+}
 ["ovStatus","ovKind","ovCategory","ovAssignee","ovYear","ovDay"].forEach(idd=>{
-  const el=$(idd); if(el) el.addEventListener("change", ()=>{ ovMode="period"; renderOverview(); });
+  const el=$(idd); if(el) el.addEventListener("change", ()=>{
+    if(idd==="ovStatus") syncOvPeriodForStatus();
+    if(idd==="ovYear") updateOvPeriodEnable();
+    ovMode="period"; renderOverview();
+  });
 });
 // 月份改變時：選「整年」就停用日；否則開放日
 $("ovMonth").addEventListener("change", function(){
-  const noMonth = this.value==="";
-  $("ovDay").disabled = noMonth;
-  if(noMonth) $("ovDay").value="";
+  updateOvPeriodEnable();
   ovMode="period"; renderOverview();
 });
 (function initOvPickers(){
-  const t=new Date();
-  let ys=""; for(let y=2020;y<=2035;y++) ys+='<option value="'+y+'">'+y+' 年</option>';
-  $("ovYear").innerHTML=ys; $("ovYear").value=String(t.getFullYear());
+  let ys='<option value="">全部期間</option>'; for(let y=2020;y<=2035;y++) ys+='<option value="'+y+'">'+y+' 年</option>';
+  $("ovYear").innerHTML=ys;
   let ms='<option value="">整年</option>'; for(let m=1;m<=12;m++) ms+='<option value="'+m+'">'+m+' 月</option>';
-  $("ovMonth").innerHTML=ms; $("ovMonth").value=String(t.getMonth()+1);
+  $("ovMonth").innerHTML=ms;
   let ds='<option value="">整月</option>'; for(let d=1;d<=31;d++) ds+='<option value="'+d+'">'+d+' 日</option>';
-  $("ovDay").innerHTML=ds; $("ovDay").value="";
+  $("ovDay").innerHTML=ds;
+  syncOvPeriodForStatus();
 })();
 
 /* 🎒 百寶袋：隨手記一筆（無日期記事，只有標題） */
