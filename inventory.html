@@ -136,7 +136,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-var APP_VER="v2.0", BUILD_ID="1009-51";
+var APP_VER="v2.0", BUILD_ID="1009-52";
 var ADMIN_EMAIL="mp65p@hotmail.com";
 var CAL_URL='https://handyassist-system.github.io/My-Schedule/';
 var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},kitchen:{n:'廚房用品',i:'🍳'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
@@ -418,6 +418,8 @@ function saveForm(again){
   var name=($('fName').value||'').trim(); if(!name){ toast('請輸入名稱'); return; }
   var loc=$('fLoc').value; if(loc==='__new__') loc='';
   var old=editId?items.find(function(x){return x.id===editId;}):null;
+  var nk=name.toLowerCase(), same=items.filter(function(x){ return x.id!==editId && String(x.name||'').trim().toLowerCase()===nk; })[0];
+  if(same){ toast('已有「'+name+'」'+(same.loc?'（'+same.loc+'）':'')+'，不重複新增；請改名或直接編輯那一筆',3000); return; }
   var it={id:editId||uid(),name:name,kind:sheetKind,loc:loc,note:($('fNote').value||'').trim(),created:(old&&old.created)||Date.now()};
   if(sheetKind==='appliance'){
     it.model=($('fModel').value||'').trim(); it.buyDate=$('fBuy').value||'';

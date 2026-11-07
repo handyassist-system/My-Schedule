@@ -820,7 +820,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-50";
+const BUILD_ID = "1009-54";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1033,7 +1033,7 @@ function buildNextRecord(r, baseDate){
   delete copy.id;
   copy.dateStart=nd;
   copy.doneDate=null; copy.status="pending"; copy.kind="scheduled";
-  copy.spawned=false;
+  copy.spawned=false; copy.stockId=null;
   copy.createdAt=Date.now();
   return copy;
 }
@@ -1714,6 +1714,29 @@ document.querySelectorAll(".stock-banner").forEach(function(el){ el.addEventList
 // 舊的庫存交換暫存（採購帶入、完成回傳）已不再使用：清掉一次
 function dropOldInvLink(){
   try{ ["inv_done_callbacks","inv_update_ack","inv_pending_purchase"].forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
+}
+// 採購完成 → 寫進共用庫存（users/<key>/stock），欄位與庫存管理一致
+const STK_KINDS=[["food","食材","🥬"],["med","藥品","💊"],["daily","生活用品","🧴"],["kitchen","廚房用品","🍳"],["appliance","家電","🔌"],["other","其他","📦"]];
+const KIND_NAME_STK={food:"食材",med:"藥品",daily:"生活用品",kitchen:"廚房用品",appliance:"家電",other:"其他"};
+function stockFromShop(r){
+  if(!r || !r.stk) return null;
+  const nm=String(r.title||"").trim(); if(!nm) return null;
+  if(LOCAL_MODE){ toast("✅ 已完成「"+nm+"」（本機模式無法加入庫存）",2800); return null; }
+  const st=state.stock||{};
+  const nk=nm.toLowerCase();
+  const dup=Object.keys(st).some(function(k){ const x=st[k]; return x && String(x.name||"").trim().toLowerCase()===nk; }) || (window.__stkBusy||{})[nk];
+  if(dup){ toast("✅ 已完成「"+nm+"」；庫存已有同名項目，沒有重複加入",2800); return null; }
+  window.__stkBusy=window.__stkBusy||{}; window.__stkBusy[nk]=true;           // 連點或網路慢時，同名也只加一次
+  const id=uref("stock").push().key;
+  const rec={ name:nm, kind:r.stk, buyDate:ymd(new Date()), created:Date.now() };
+  if((r.stk==="food"||r.stk==="med") && r.stkExp) rec.expiry=r.stkExp;
+  if(r.amount!=null && !isNaN(Number(r.amount))) rec.price=Number(r.amount);
+  uref("stock/"+id).set(rec).then(function(){
+    setTimeout(function(){ delete window.__stkBusy[nk]; }, 1500);
+    const k=KIND_NAME_STK[r.stk]||"庫存";
+    toast("✅ 已完成「"+nm+"」，並加入庫存（"+k+"）",2800);
+  }).catch(function(e){ delete window.__stkBusy[nk]; console.error(e); toast("⚠️ 「"+nm+"」已完成，但加入庫存失敗："+failMsg("加入庫存", e),2800); });
+  return id;
 }
 // 採購商品名歷史：打過的商品名 → 上次選的大分類
 function shopTitleMap(){
@@ -2623,11 +2646,19 @@ function toggleDoneWhole(id){
     patch.kind = r.dateStart ? "scheduled" : "todo";
     patch.status="pending";
     patch.doneDate=null;
+    if(r.stockId){                                       // 取消完成 → 把剛加進去的庫存撤回
+      if(!LOCAL_MODE) uref("stock/"+r.stockId).remove().catch(function(){});
+      patch.stockId=null;
+    }
   } else {
     // 完成 → 記下完成日（今天），排定日保持不變
     patch.kind="done"; patch.status="done";
     patch.doneDate=ymd(new Date());
-    if(r.category==="shopping"){ patch.ordered=null; patch.eta=null; }
+    if(r.category==="shopping"){
+      patch.ordered=null; patch.eta=null;
+      if(r.stk && !r.stockId){ const sid=stockFromShop(r); if(sid) patch.stockId=sid; }
+      else if(!r.stk) toast("✅ 已完成「"+String(r.title||"").trim()+"」",2200);
+    }
     // 採購重複 → 以完成日往後推，生成下一筆（只生一次）
     if(hasRepeat(r) && r.category==="shopping" && !r.spawned){
       patch.spawned=true;
@@ -2639,6 +2670,7 @@ function toggleDoneWhole(id){
   if(LOCAL_MODE){
     Object.assign(state.records[id], patch);
     if(patch.doneDate===null) delete state.records[id].doneDate;
+    if(patch.stockId===null) delete state.records[id].stockId;
     lsSaveRecords(); renderAll(); return;
   }
   uref("records/"+id).update(patch).catch(e=>{ console.error(e); toast(failMsg("更新", e)); });
@@ -2761,6 +2793,9 @@ function toggleShopDone(id){
   const r=state.records[id]; if(!r) return;
   const patch={ kind:"done", status:"done", doneDate:ymd(new Date()), ordered:null, eta:null };   // 完成＝已到貨／已買到
   let next=null;
+  const _nm=String(r.title||"").trim();
+  if(r.stk && !r.stockId){ const sid=stockFromShop(r); if(sid) patch.stockId=sid; }   // 有選入庫 → 寫進庫存（內含完成提示）
+  else if(!r.stk) toast("✅ 已完成「"+_nm+"」",2200);
   // 重複採購（onDone）→ 以購買日往後推，生成下一筆
   if(hasRepeat(r) && (r.repeat.mode||"onDone")==="onDone" && !r.spawned){
     patch.spawned=true;
@@ -2893,6 +2928,9 @@ function openRecordForm(rec, presets, asCopy){
         '<div class="field"><label>數量</label><input id="rec_qty" type="number" min="1" value="'+(r.qty||1)+'"></div>'+
         '<div class="field"><label>價格（選填）</label><input id="rec_price" type="number" inputmode="numeric" value="'+(isShop&&r.amount!=null?r.amount:"")+'" placeholder="例如 3990"></div>'+
       '</div>'+
+      '<div class="field"><label>📦 買到後加入庫存</label>'+
+        '<select id="rec_stk"><option value="">不入庫</option>'+STK_KINDS.map(k=>'<option value="'+k[0]+'"'+(r.stk===k[0]?" selected":"")+'>'+k[2]+' '+k[1]+'</option>').join("")+'</select></div>'+
+      '<div class="field" id="rec_stkexpbox"'+((r.stk==="food"||r.stk==="med")?"":' style="display:none"')+'><label>有效期限（選填，之後可在庫存管理改）</label><input id="rec_stkexp" type="date" value="'+esc(r.stkExp||"")+'"></div>'+
       '<div class="toggle-row" id="rec_orderedbox"><span>🚚 已下單，等待到貨</span><label class="switch"><input type="checkbox" id="rec_ordered"'+(r.ordered?" checked":"")+'><span class="slider"></span></label></div>'+
       '<div class="field" id="rec_etabox"'+(r.ordered?"":' style="display:none"')+'><label>預計到貨日（選填）</label><input id="rec_eta" type="date" value="'+esc(r.eta||"")+'"></div>'+
     '</div>'+
@@ -3081,6 +3119,9 @@ function openRecordForm(rec, presets, asCopy){
       }
     });
   }
+  if($("rec_stk")) $("rec_stk").addEventListener("change", function(){
+    const b=$("rec_stkexpbox"); if(b) b.style.display=(this.value==="food"||this.value==="med")?"":"none";
+  });
   const _ps=$("rec_prodsearch");
   if(_ps){
     const _map=shopTitleMap(); let _subTouched=false;
@@ -3155,12 +3196,14 @@ function saveRecord(id, prev){
     data.qty=Math.max(1, Number($("rec_qty").value)||1);
     data.invId = null; data.invNew = null; data.invCat = null; data.fromInv = null;   // 舊庫存連動欄位：存檔時順便清掉
     data.needStock = null;
+    data.stk = ($("rec_stk") && $("rec_stk").value) || null;
+    data.stkExp = ((data.stk==="food"||data.stk==="med") && $("rec_stkexp") && $("rec_stkexp").value) ? $("rec_stkexp").value : null;
     const pv=$("rec_price").value;
     data.amount = (pv!=="" && !isNaN(Number(pv))) ? Number(pv) : null;
     data.ordered = ($("rec_ordered") && $("rec_ordered").checked && !done) ? true : null;   // 已下單、還沒到貨
     data.eta = (data.ordered && $("rec_eta") && $("rec_eta").value) ? $("rec_eta").value : null;
   } else {
-    data.ordered=null; data.eta=null;
+    data.ordered=null; data.eta=null; data.stk=null; data.stkExp=null;
     data.subcategory=null; data.qty=null; data.invId=null; data.needStock=null; data.fromInv=null; data.invNew=null; data.invCat=null;
     const av=$("rec_amount").value;
     data.amount = (av!=="" && !isNaN(Number(av))) ? Number(av) : null;
@@ -3187,6 +3230,8 @@ function saveRecord(id, prev){
     if(data.doneDate===null) delete merged.doneDate;
     if(data.repeat===null) delete merged.repeat;
     if(data.ordered===null) delete merged.ordered;
+    if(data.stk===null) delete merged.stk;
+    if(data.stkExp===null) delete merged.stkExp;
     if(data.eta===null) delete merged.eta;
     state.records[key]=merged;
     lsSaveRecords();
