@@ -382,6 +382,7 @@
   .gdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
   .gbig{font-size:22px;font-weight:800}
   .gu{font-size:13px;color:var(--muted)}
+  .stock-banner{margin:0 0 10px;padding:10px 13px;border-radius:12px;background:#FDF3E3;color:#8A6112;font-size:13.5px;line-height:1.6;cursor:pointer}
   .gfields{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px}
   .gpre{display:flex;flex-wrap:wrap;gap:6px}
   .gpre button{border:1.5px solid var(--line);background:var(--surface);color:var(--sub);border-radius:18px;padding:6px 12px;font-size:13px;min-height:34px}
@@ -621,6 +622,7 @@
     </div>
     <!-- Calendar tab -->
     <section id="tabCal">
+      <div id="stockBanner2" class="stock-banner" style="display:none"></div>
       <div class="cal-head">
         <button class="nav-btn" id="prevMonth">‹</button>
         <button class="month-title" id="monthTitle">—</button>
@@ -660,7 +662,7 @@
 
     <!-- Overview tab -->
     <section id="tabOverview" class="hidden">
-      <div id="stockBanner" style="display:none;margin:0 0 10px;padding:10px 13px;border-radius:12px;background:#FDF3E3;color:#8A6112;font-size:13.5px;line-height:1.6;cursor:pointer"></div>
+      <div id="stockBanner" class="stock-banner" style="display:none"></div>
       <div class="filters">
         <div class="filter-row">
           <span class="filter-label">期間</span>
@@ -818,7 +820,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-46";
+const BUILD_ID = "1009-49";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1701,13 +1703,14 @@ function _stockAlertList(){
 }
 function _stockNames(a){ const n=a.slice(0,3).map(function(x){ return x.name+"（"+x.label+"）"; }).join("、"); return n+(a.length>3?" 等 "+a.length+" 項":""); }
 function renderStockBanner(){
-  const el=$("stockBanner"); if(!el) return;
   const a=_stockAlertList();
-  if(!a.length){ el.style.display="none"; el.innerHTML=""; return; }
-  el.style.display="";
-  el.innerHTML='⚠️ <b>庫存快到期 '+a.length+' 項</b>：'+esc(_stockNames(a))+' <span style="color:var(--muted)">›</span>';
+  document.querySelectorAll(".stock-banner").forEach(function(el){
+    if(!a.length){ el.style.display="none"; el.innerHTML=""; return; }
+    el.style.display="";
+    el.innerHTML='⚠️ <b>庫存快到期 '+a.length+' 項</b>：'+esc(_stockNames(a))+' <span style="color:var(--muted)">›</span>';
+  });
 }
-if($("stockBanner")) $("stockBanner").addEventListener("click", function(){ location.href="./inventory.html"; });
+document.querySelectorAll(".stock-banner").forEach(function(el){ el.addEventListener("click", function(){ location.href="./inventory.html"; }); });
 // 舊的庫存交換暫存（採購帶入、完成回傳）已不再使用：清掉一次
 function dropOldInvLink(){
   try{ ["inv_done_callbacks","inv_update_ack","inv_pending_purchase"].forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
