@@ -34,7 +34,8 @@ header{position:sticky;top:0;z-index:40;background:var(--bg);padding:calc(10px +
 .addbtn{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:0 16px;font-size:15px;font-weight:700;min-height:44px;white-space:nowrap}
 .chips{display:flex;gap:6px;overflow-x:auto;max-width:560px;margin:8px auto 0;padding-bottom:2px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;border:1.5px solid var(--border);background:var(--surface);color:var(--ink2);border-radius:20px;padding:6px 14px;font-size:13px;min-height:34px}
+.locsel{border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;font-size:14px;background:var(--surface);color:var(--ink2);min-height:34px;width:100%;outline:none}
+.chip{flex:1 1 auto;white-space:nowrap;padding:6px 6px !important;text-align:center;border:1.5px solid var(--border);background:var(--surface);color:var(--ink2);border-radius:20px;padding:6px 14px;font-size:13px;min-height:34px}
 .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
 main{max-width:560px;margin:0 auto;padding:6px 14px}
 .sec{font-size:12.5px;font-weight:700;color:var(--ink2);margin:14px 2px 6px}
@@ -118,7 +119,8 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
       <input class="search" id="q" type="search" placeholder="🔍 搜尋名稱、位置、品牌">
       <button class="addbtn" id="addBtn">＋ 新增</button>
     </div>
-    <div class="chips" id="locChips"></div>
+    <div class="chips" id="kindChips" style="overflow-x:visible;flex-wrap:nowrap"></div>
+    <div class="searchrow" style="margin-top:6px"><select id="locSel" class="locsel"></select></div>
   </header>
   <main id="list"></main>
 </div>
@@ -134,7 +136,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-var APP_VER="v2.0", BUILD_ID="1009-47";
+var APP_VER="v2.0", BUILD_ID="1009-48";
 var ADMIN_EMAIL="mp65p@hotmail.com";
 var CAL_URL='https://handyassist-system.github.io/My-Schedule/';
 var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
@@ -153,7 +155,7 @@ var db=null, FB_READY=false;
 try{ if(typeof firebase!=='undefined'){ firebase.initializeApp(firebaseConfig); db=firebase.database(); FB_READY=true; } }catch(e){ FB_READY=false; }
 
 var userEmail=null, items=[], locs=null, cfg=Object.assign({},DEFAULT_CFG);
-var READONLY=false, curLoc='', editId=null, sheetKind='food', _ovlMode='';
+var READONLY=false, curLoc='', curKind='', editId=null, sheetKind='food', _ovlMode='';
 var _listening=false;
 
 /* ───────── 工具 ───────── */
@@ -290,13 +292,17 @@ function migrateOnce(done){
 function render(){
   if($('appWrap').style.display==='none') return;
   // 位置按鈕
-  var L=getLocs(), chips='<button class="chip'+(curLoc===''?' on':'')+'" data-loc="">全部</button>';
-  L.forEach(function(l){ chips+='<button class="chip'+(curLoc===l?' on':'')+'" data-loc="'+esc(l)+'">'+esc(l)+'</button>'; });
-  $('locChips').innerHTML=chips;
+  var chips='<button class="chip'+(curKind===''?' on':'')+'" data-kind="">全部</button>';
+  Object.keys(KIND).forEach(function(k){ chips+='<button class="chip'+(curKind===k?' on':'')+'" data-kind="'+k+'">'+KIND[k].n+'</button>'; });
+  $('kindChips').innerHTML=chips;
+  var L=getLocs().slice(); if(curLoc&&curLoc!=='__none__'&&L.indexOf(curLoc)<0) L.push(curLoc);
+  var hasNone=items.some(function(it){return !it.loc;});
+  $('locSel').innerHTML='<option value="">📍 全部位置</option>'+L.map(function(l){return '<option value="'+esc(l)+'"'+(curLoc===l?' selected':'')+'>'+esc(l)+'</option>';}).join('')+(hasNone?'<option value="__none__"'+(curLoc==='__none__'?' selected':'')+'>（不指定）</option>':'');
   // 篩選
   var kw=($('q').value||'').trim().toLowerCase();
   var arr=items.filter(function(it){
-    if(curLoc && it.loc!==curLoc) return false;
+    if(curKind && it.kind!==curKind) return false;
+    if(curLoc==='__none__'){ if(it.loc) return false; } else if(curLoc && it.loc!==curLoc) return false;
     if(kw){ var hay=((it.name||'')+' '+(it.loc||'')+' '+(it.model||'')+' '+(it.note||'')+' '+(it.store||'')).toLowerCase(); if(hay.indexOf(kw)<0) return false; }
     return true;
   });
@@ -526,7 +532,8 @@ $('addBtn').onclick=function(){ sheetKind=sheetKind||'food'; openForm(null); };
 $('goSet').onclick=openSettings;
 $('goCal').onclick=function(){ location.href=CAL_URL; };
 $('q').addEventListener('input',render);
-$('locChips').addEventListener('click',function(e){ var b=e.target.closest('[data-loc]'); if(!b) return; curLoc=b.dataset.loc; render(); });
+$('kindChips').addEventListener('click',function(e){ var b=e.target.closest('[data-kind]'); if(!b) return; curKind=b.dataset.kind; render(); });
+$('locSel').addEventListener('change',function(){ curLoc=this.value; render(); });
 $('list').addEventListener('click',function(e){ var c=e.target.closest('[data-id]'); if(!c) return; var it=items.find(function(x){return x.id===c.dataset.id;}); if(it) openForm(it); });
 $('ovl').addEventListener('click',function(e){ if(e.target===$('ovl')) closeSheet(); });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeSheet(); });
