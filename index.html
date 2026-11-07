@@ -529,6 +529,8 @@
   line-height:1.25; white-space:nowrap; cursor:pointer; -webkit-tap-highlight-color:transparent;
 }
 .tabbar button .ic{ font-size:22px; line-height:1; }
+.tabbar button{ position:relative; }
+.tabbar .nbadge{ position:absolute; top:4px; left:calc(50% + 6px); min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:#e08a00; color:#fff; font-size:11px; font-weight:700; line-height:16px; text-align:center; }
 .tabbar button.active{ color:#3E9B8E; background:#E8F3F1; font-weight:700; }
 .tabbar button:active{ opacity:.65; }
 
@@ -700,7 +702,7 @@
         <span></span>
         <button class="add-btn" id="addItemBtn">＋ 新增待購</button>
       </div>
-      <p class="shop-hint">勾選後自動完成並從清單消失，依購物子分類分組。</p>
+      <p class="shop-hint">勾選後自動完成並從清單消失，依購物子分類分組。已下單的放在最上面「待到貨」，到貨後勾選。</p>
       <div id="shopList"></div>
     </section>
 
@@ -803,7 +805,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-28";
+const BUILD_ID = "1009-31";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1733,7 +1735,7 @@ function bindData(){
     setTimeout(importPendingPurchase, 800);
   });
 }
-function renderAll(){ processRecurrences(); refreshOverviewFilterOptions(); renderCalendar(); renderDayEvents(); renderPocket(); renderOverview(); renderShop(); renderGoals(); if(typeof applyPlanLocks==="function") applyPlanLocks();   updateAppBadge();                 // 同步桌面圖示紅點
+function renderAll(){ processRecurrences(); refreshOverviewFilterOptions(); renderCalendar(); renderDayEvents(); renderPocket(); renderOverview(); renderShop(); renderGoals(); if(typeof applyPlanLocks==="function") applyPlanLocks();   updateShopBadge();   updateAppBadge();                 // 同步桌面圖示紅點
 }
 
 /* ===== 庫存 App 整合（兩個 App 同源 handyassist-system.github.io，共用 localStorage） ===== */
@@ -2745,6 +2747,7 @@ function toggleDoneWhole(id){
     // 完成 → 記下完成日（今天），排定日保持不變
     patch.kind="done"; patch.status="done";
     patch.doneDate=ymd(new Date());
+    if(r.category==="shopping"){ patch.ordered=null; patch.eta=null; }
     if(r.category==="shopping" && r.needStock!==false){
       if(r.invId) pushInvDone(r.invId, r.qty, r.title);                          // 已入庫→加數量
       else if(r.invNew) pushInvDone("", r.qty, r.title, {create:true, cat:r.invCat});  // 未入庫→新建入庫
@@ -2779,19 +2782,62 @@ function toggleDoneWhole(id){
    ============================================================ */
 $("addItemBtn").addEventListener("click", ()=>{ if(!canAdvanced()){ showUpgrade("採購清單"); return; } openRecordForm(null, { category:"shopping", dateStart:"" }); });
 
+/* 待購分頁圖示上的數字＝還在等到貨的件數（沒有就不顯示），避免忘記 */
+function updateShopBadge(){
+  const nb=$("navShop"); if(!nb) return;
+  let n=0; curEntries().forEach(([id,r])=>{ if(r && r.category==="shopping" && r.ordered && !isDone(r)) n++; });
+  const old=nb.querySelector(".nbadge"); if(old) old.remove();
+  if(n>0){ const sp=document.createElement("span"); sp.className="nbadge"; sp.textContent=String(n); sp.title="待到貨 "+n+" 件"; nb.appendChild(sp); }
+}
 function renderShop(){
   const wrap=$("shopList");
   const groups={}; SUBCAT_ORDER.forEach(s=>groups[s]=[]);
+  const ordered=[];   // 已下單、還沒到貨
   curEntries().forEach(([id,r])=>{
     if(r && r.category==="shopping" && !isDone(r)){
+      if(r.ordered){ ordered.push(Object.assign({id},r)); return; }
       const sc=groups[r.subcategory]?r.subcategory:"other";
       groups[sc].push(Object.assign({id},r));
     }
   });
-  let total=0; SUBCAT_ORDER.forEach(s=>total+=groups[s].length);
+  let total=ordered.length; SUBCAT_ORDER.forEach(s=>total+=groups[s].length);
   if(total===0){ wrap.innerHTML='<div class="empty-state"><span class="eico">🛒</span>目前沒有待購項目<span class="esub">點「新增待購」加入</span></div>'; return; }
 
   wrap.innerHTML="";
+  if(ordered.length){
+    const todayS=ymd(new Date());
+    ordered.sort((a,b)=>{ const ea=a.eta||"9999", eb=b.eta||"9999"; if(ea!==eb) return ea.localeCompare(eb); return (b.createdAt||0)-(a.createdAt||0); });
+    const oh=document.createElement("div");
+    oh.className="group-head";
+    oh.innerHTML='<i class="dot" style="background:'+catColor("shopping")+'"></i>🚚 待到貨<span class="gcount">'+ordered.length+'</span>';
+    wrap.appendChild(oh);
+    ordered.forEach(r=>{
+      let etaTxt;
+      if(!r.eta) etaTxt='<span>🚚 未填到貨日</span>';
+      else if(r.eta<todayS){ const d=Math.round((new Date(todayS+"T00:00:00")-new Date(r.eta+"T00:00:00"))/86400000); etaTxt='<span style="color:#d64545;font-weight:600">🚚 預計 '+esc(mdWk(r.eta))+'，已過 '+d+' 天</span>'; }
+      else if(r.eta===todayS) etaTxt='<span style="color:#e08a00;font-weight:600">🚚 預計今天到</span>';
+      else etaTxt='<span>🚚 預計 '+esc(mdWk(r.eta))+' 到</span>';
+      const card=document.createElement("div");
+      card.className="card item"+(r.urgent?" urgent-card":"");
+      card.innerHTML=
+        '<button class="check" data-check title="已到貨"></button>'+
+        '<div class="body">'+
+          '<div class="row1">'+(r.urgent?'<span class="urg-badge">❗️</span>':'')+'<span class="name">'+esc(r.title)+'</span></div>'+
+          '<div class="meta">'+etaTxt+' <span class="qty">數量 '+esc(r.qty||1)+'</span>'+
+            (r.amount!=null&&r.amount!==""?' <span>💰 '+esc(r.amount)+'</span>':'')+
+          '</div>'+
+          (r.note?'<div class="note">'+esc(r.note)+'</div>':'')+
+        '</div>'+
+        '<div class="acts">'+
+          '<button class="icon-btn" data-edit>✏️</button>'+
+          '<button class="icon-btn" data-del>🗑</button>'+
+        '</div>';
+      card.querySelector("[data-check]").addEventListener("click", ()=>toggleShopDone(r.id));
+      card.querySelector("[data-edit]").addEventListener("click", ()=>openEditor(r));
+      card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title));
+      wrap.appendChild(card);
+    });
+  }
   SUBCAT_ORDER.forEach(sc=>{
     const arr=groups[sc];
     if(arr.length===0) return;
@@ -2828,7 +2874,7 @@ function renderShop(){
 function toggleShopDone(id){
   if(!requireAuth()) return;
   const r=state.records[id]; if(!r) return;
-  const patch={ kind:"done", status:"done", doneDate:ymd(new Date()) };
+  const patch={ kind:"done", status:"done", doneDate:ymd(new Date()), ordered:null, eta:null };   // 完成＝已到貨／已買到
   if(r.needStock!==false){
     if(r.invId) pushInvDone(r.invId, r.qty, r.title);                            // 已入庫→加數量
     else if(r.invNew) pushInvDone("", r.qty, r.title, {create:true, cat:r.invCat});    // 未入庫→新建入庫
@@ -2967,6 +3013,8 @@ function openRecordForm(rec, presets, asCopy){
         '<div class="field"><label>數量</label><input id="rec_qty" type="number" min="1" value="'+(r.qty||1)+'"></div>'+
         '<div class="field"><label>價格（選填）</label><input id="rec_price" type="number" inputmode="numeric" value="'+(isShop&&r.amount!=null?r.amount:"")+'" placeholder="例如 3990"></div>'+
       '</div>'+
+      '<div class="toggle-row" id="rec_orderedbox"><span>🚚 已下單，等待到貨</span><label class="switch"><input type="checkbox" id="rec_ordered"'+(r.ordered?" checked":"")+'><span class="slider"></span></label></div>'+
+      '<div class="field" id="rec_etabox"'+(r.ordered?"":' style="display:none"')+'><label>預計到貨日（選填）</label><input id="rec_eta" type="date" value="'+esc(r.eta||"")+'"></div>'+
     '</div>'+
 
     // ── 何時：開始 / 結束 / 時間 收在同一塊 ──
@@ -3022,6 +3070,8 @@ function openRecordForm(rec, presets, asCopy){
     isEdit?function(){ deleteRecord(r.id, r.title); }:null);
 
   (function(){
+    var _ord=$("rec_ordered");
+    if(_ord) _ord.addEventListener("change", function(){ $("rec_etabox").style.display = _ord.checked ? "" : "none"; });
 
     // ── 開始／結束連動：預設同一天；跨天的保持天數差一起平移 ──
     function _diffDays(a,b){ return Math.round((_ymdToDate(b)-_ymdToDate(a))/86400000); }
@@ -3283,7 +3333,10 @@ function saveRecord(id, prev){
     data.fromInv = (prev&&prev.fromInv) ? true : null;
     const pv=$("rec_price").value;
     data.amount = (pv!=="" && !isNaN(Number(pv))) ? Number(pv) : null;
+    data.ordered = ($("rec_ordered") && $("rec_ordered").checked && !done) ? true : null;   // 已下單、還沒到貨
+    data.eta = (data.ordered && $("rec_eta") && $("rec_eta").value) ? $("rec_eta").value : null;
   } else {
+    data.ordered=null; data.eta=null;
     data.subcategory=null; data.qty=null; data.invId=null; data.needStock=null; data.fromInv=null; data.invNew=null; data.invCat=null;
     const av=$("rec_amount").value;
     data.amount = (av!=="" && !isNaN(Number(av))) ? Number(av) : null;
@@ -3309,6 +3362,8 @@ function saveRecord(id, prev){
     if(data.amount===null) delete merged.amount;
     if(data.doneDate===null) delete merged.doneDate;
     if(data.repeat===null) delete merged.repeat;
+    if(data.ordered===null) delete merged.ordered;
+    if(data.eta===null) delete merged.eta;
     state.records[key]=merged;
     lsSaveRecords();
     if(dateStart) state.selected=dateStart;
@@ -3439,7 +3494,21 @@ function renderGoals(){
   if(yf && yf!=="all") arr=arr.filter(g=>String(g.year||yr)===yf);
   arr.sort((a,b)=>((b.year||0)-(a.year||0)) || (_ordOf(a)-_ordOf(b)));
   if(arr.length===0){ wrap.innerHTML='<div class="empty-state"><span class="eico">🎯</span>'+((yf&&yf!=="all")?(yf+' 年還沒有目標<span class="esub">切換年份，或點「＋ 新增目標」</span>'):'還沒有目標<span class="esub">點「＋ 新增目標」開始</span>')+'</div>'; return; }
-  wrap.innerHTML=""; arr.forEach((g,i)=>wrap.appendChild(goalCard(g,i,arr.length)));
+  wrap.innerHTML="";
+  // 已完成的目標收進最下面的摺疊區，列表只留進行中的（▲▼ 仍只在同一區內換順序）
+  const isDone=g=>{ try{ return !!goalProgress(g).complete; }catch(e){ return false; } };
+  const active=arr.filter(g=>!isDone(g)), finished=arr.filter(isDone);
+  active.forEach((g,i)=>wrap.appendChild(goalCard(g,i,active.length)));
+  if(finished.length){
+    const open=!!window._goalsDoneOpen || active.length===0;
+    const head=document.createElement("button");
+    head.type="button"; head.id="goalsDoneToggle";
+    head.style.cssText="width:100%;text-align:left;padding:12px 14px;margin:10px 0;border:1px solid var(--line,#ddd);background:var(--bg,#fff);color:var(--sub,#666);border-radius:12px;font-size:14px;font-weight:600;";
+    head.textContent=(open?"▾ ":"▸ ")+"已完成的目標（"+finished.length+"）";
+    head.addEventListener("click",()=>{ window._goalsDoneOpen=!window._goalsDoneOpen; renderGoals(); });
+    wrap.appendChild(head);
+    if(open) finished.forEach((g,i)=>wrap.appendChild(goalCard(g,i,finished.length)));
+  }
 }
 function _ordOf(g){ return g.order!=null?Number(g.order):(g.createdAt||0); }
 function moveGoal(id, delta){
@@ -3447,6 +3516,8 @@ function moveGoal(id, delta){
   const g=state.goals[id]; if(!g) return;
   const yr=new Date().getFullYear(), y=String(g.year||yr);
   let list=Object.entries(state.goals).map(([k,v])=>Object.assign({id:k},v)).filter(x=>String(x.year||yr)===y);
+  const _dn=x=>{ try{ return !!goalProgress(x).complete; }catch(e){ return false; } };
+  const _gd=_dn(g); list=list.filter(x=>_dn(x)===_gd);   // 只和同一區（進行中／已完成）的目標互換
   list.sort((a,b)=>_ordOf(a)-_ordOf(b));
   const i=list.findIndex(x=>x.id===id), j=i+delta;
   if(i<0||j<0||j>=list.length) return;
