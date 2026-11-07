@@ -351,11 +351,6 @@
   /* 分類圖示點選器 */
   select:disabled{background:var(--bg);color:var(--muted);opacity:1;cursor:not-allowed;border-style:dashed}
   #rec_subcatlock{color:var(--muted);font-weight:400;font-size:12px}
-  .prodresults{margin-top:6px;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
-  .prod-row{padding:11px 13px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
-  .prod-row:last-child{border-bottom:none}
-  .prod-row:active{background:var(--bg)}
-  .prod-u{color:var(--muted);font-size:13px}
   .prod-manual{color:var(--primary);font-weight:600}
   .iconpick{display:flex;flex-wrap:wrap;gap:7px}
   .iconchip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -387,6 +382,10 @@
   .gdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
   .gbig{font-size:22px;font-weight:800}
   .gu{font-size:13px;color:var(--muted)}
+  .gfields{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px}
+  .gpre{display:flex;flex-wrap:wrap;gap:6px}
+  .gpre button{border:1.5px solid var(--line);background:var(--surface);color:var(--sub);border-radius:18px;padding:6px 12px;font-size:13px;min-height:34px}
+  .gpre button.on{border-color:var(--primary);color:var(--primary);font-weight:700;background:var(--bg)}
   .glegend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:6px 0 4px}
   .ghist{max-height:40vh;overflow:auto;margin-top:6px}
   .ghist-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
@@ -661,6 +660,7 @@
 
     <!-- Overview tab -->
     <section id="tabOverview" class="hidden">
+      <div id="stockBanner" style="display:none;margin:0 0 10px;padding:10px 13px;border-radius:12px;background:#FDF3E3;color:#8A6112;font-size:13.5px;line-height:1.6;cursor:pointer"></div>
       <div class="filters">
         <div class="filter-row">
           <span class="filter-label">期間</span>
@@ -673,8 +673,8 @@
         </div>
         <div class="filter-row">
           <select id="ovStatus" style="flex:1;min-width:0">
-            <option value="done">已完成與紀錄</option>
             <option value="pending">未完成</option>
+            <option value="done">已完成與紀錄</option>
             <option value="all">全部</option>
           </select>
           <select id="ovKind" style="display:none"><option value="all">全部類型</option></select>
@@ -818,7 +818,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-43";
+const BUILD_ID = "1009-46";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -829,9 +829,6 @@ function renderVerTag(){
 renderVerTag();
 const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
 const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
-// 庫存 16 小類 → 行事曆 6 大類（衣物／旅遊備品庫存沒有，只能手動）
-const INV_CAT_TO_SUBCAT = { fruit:"food",veg:"food",meat:"food",frozen:"food",grain:"food",sauce:"food",canned:"food",drink:"food",snack:"food", personal:"daily",home:"daily",daily:"daily",medical:"daily",repair:"daily", elec:"electronics", other:"other" };
-function invSubcatOf(cat){ return INV_CAT_TO_SUBCAT[cat] || "other"; }
 const CAT_ICON = { life:"🏠", work:"💼", health:"🩺", travel:"✈️", study:"📚", shopping:"🛒", finance:"💰", activity:"🎉", side:"💡", other:"📦" };
 const SUBCAT_ICON = { food:"🥦", daily:"🧴", clothing:"👕", travelgear:"🧳", electronics:"🔌", other:"📦" };
 function catIcon(c){ return CAT_ICON[c] || "📦"; }
@@ -1563,7 +1560,8 @@ function maybeNotifyToday(force){
   }
   var all=_todayTimedEvents();                                     // 今天未完成(含逾期/無時間)
   var shop=(isFirstToday||force)?_dueShop():[];                    // 該買的待購：只在今天第一次提醒
-  if(!all.length && !shop.length){ if(force) toast('今天沒有未完成的行程'); return; }
+  var stk=(isFirstToday||force)?_stockAlertList():[];              // 庫存快到期：只在今天第一次提醒
+  if(!all.length && !shop.length && !stk.length){ if(force) toast('今天沒有未完成的行程'); return; }
   var nowHM=String(new Date().getHours()).padStart(2,"0")+":"+String(new Date().getMinutes()).padStart(2,"0");
   var upcoming=all.filter(function(r){ return r.start && r.start>=nowHM; });   // 還沒到時間的
   var title, body;
@@ -1571,10 +1569,13 @@ function maybeNotifyToday(force){
     if(all.length){
       var first=upcoming[0]||all[0];
       title = (first.start? '⏰ '+first.start+' ':'📅 ')+(first.title||'行程');
-      body  = '今天有 '+all.length+' 筆行程'+(shop.length?'；該買：'+_shopNames(shop):'');
-    } else {
+      body  = '今天有 '+all.length+' 筆行程'+(shop.length?'；該買：'+_shopNames(shop):'')+(stk.length?'；快到期：'+_stockNames(stk):'');
+    } else if(shop.length){
       title = '🛒 該買：'+_shopNames(shop);
-      body  = '待購 '+shop.length+' 項';
+      body  = '待購 '+shop.length+' 項'+(stk.length?'；快到期：'+_stockNames(stk):'');
+    } else {
+      title = '⚠️ 快到期：'+_stockNames(stk);
+      body  = '庫存有 '+stk.length+' 項快到期';
     }
   } else {                                                          // 之後 → 只提未完成
     if(!upcoming.length){ if(force) toast('今天沒有即將到來的行程'); return; }
@@ -1595,9 +1596,9 @@ function enterApp(){
     var _newUser = localStorage.getItem(AUTH_KEY) || state.user;
     if(state._boundUser && state._boundUser !== _newUser && !LOCAL_MODE){   // 換帳號 → 斷開舊綁定、清狀態
       var ob = isEmail(state._boundUser) ? "users/"+emailKey(state._boundUser)+"/" : "";
-      try{ ["records","people","calendars","goals"].forEach(function(p){ db.ref(ob+p).off(); }); }catch(e){}
-      state.recordsBound=false; state.peopleBound=false; state.calendarsBound=false; state.goalsBound=false;
-      state.records={}; state.people={}; state.goals={}; state.calendars={};
+      try{ ["records","people","calendars","goals","stock","stockCfg"].forEach(function(p){ db.ref(ob+p).off(); }); }catch(e){}
+      state.recordsBound=false; state.peopleBound=false; state.calendarsBound=false; state.goalsBound=false; state.stockBound=false;
+      state.records={}; state.people={}; state.goals={}; state.calendars={}; state.stock={}; state.stockCfg={};
     }
     state.user = _newUser;
     $("login").classList.add("hidden");
@@ -1607,6 +1608,7 @@ function enterApp(){
     renderLegend();
     bindData();
     dropOldActivity();
+    dropOldInvLink();
     renderAll();
     state._boundUser = _newUser;
     try{ setTimeout(maybeNotifyToday, 2500); }catch(e){}   // 開App推今日行程(資料載入後,一天一次)
@@ -1666,98 +1668,62 @@ var _lob=$("logoutBtn"); if(_lob) _lob.addEventListener("click", doLogout);
    4. 資料綁定
    ============================================================ */
 function bindData(){
-  if(LOCAL_MODE){ lsLoad(); ensureDefaultCalendar(); renderCalBar(); renderAll(); importPendingPurchase(); return; }
+  if(LOCAL_MODE){ lsLoad(); ensureDefaultCalendar(); renderCalBar(); renderAll(); return; }
   Promise.resolve().then(()=>{
     if(!state.calendarsBound){ uref("calendars").on("value", s=>{ state.calendars=s.val()||{}; ensureDefaultCalendar(); renderCalBar(); renderAll(); }); state.calendarsBound=true; }
     if(!state.recordsBound){ uref("records").on("value", s=>{ state.records=s.val()||{}; renderAll(); }); state.recordsBound=true; }
     if(!state.peopleBound){ uref("people").on("value", s=>{ state.people=s.val()||{}; renderAll(); }); state.peopleBound=true; }
     if(!state.goalsBound){ uref("goals").on("value", s=>{ state.goals=s.val()||{}; renderGoals(); }); state.goalsBound=true; }
-    setTimeout(importPendingPurchase, 800);
+    if(!state.stockBound){ uref("stock").on("value", s=>{ state.stock=s.val()||{}; renderStockBanner(); }); uref("stockCfg").on("value", s=>{ state.stockCfg=s.val()||{}; renderStockBanner(); }); state.stockBound=true; }
   });
 }
-function renderAll(){ processRecurrences(); refreshOverviewFilterOptions(); renderCalendar(); renderDayEvents(); renderPocket(); renderOverview(); renderShop(); renderGoals(); if(typeof applyPlanLocks==="function") applyPlanLocks();   updateShopBadge();   updateAppBadge();                 // 同步桌面圖示紅點
+function renderAll(){ processRecurrences(); renderStockBanner(); refreshOverviewFilterOptions(); renderCalendar(); renderDayEvents(); renderPocket(); renderOverview(); renderShop(); renderGoals(); if(typeof applyPlanLocks==="function") applyPlanLocks();   updateShopBadge();   updateAppBadge();                 // 同步桌面圖示紅點
 }
 
-/* ===== 庫存 App 整合（兩個 App 同源 handyassist-system.github.io，共用 localStorage） ===== */
-function importPendingPurchase(){
-  // 還沒登入就先不處理：此時 userBase() 是空字串，會寫到資料庫根目錄。
-  // 這裡不清掉暫存，登入完成後 bindData() 會再呼叫一次（第 1943 行）。
-  if(!LOCAL_MODE && !state.user) return;
-  let raw; try{ raw=localStorage.getItem("inv_pending_purchase"); }catch(e){ return; }
-  if(!raw) return;
-  localStorage.removeItem("inv_pending_purchase");
-  let p; try{ p=JSON.parse(raw); }catch(e){ return; }
-  if(!p || !p.item_name) return;
-  const sub=(p.subcategory && SUBCAT_LABEL[p.subcategory])?p.subcategory:"food";
-  const qty=Math.max(1,Number(p.quantity)||1);
-  const _title=String(p.item_name).slice(0,60);
-  // 防重：8秒內已建立同名同來源採購 → 跳過（擋 visibilitychange/pageshow 同時觸發造成的重複）
-  var _dup=Object.values(state.records).some(function(r){
-    return r && r.category==="shopping" && r.title===_title && ((r.invId||"")===(p.item_id||"")) && r.createdAt && (Date.now()-r.createdAt<8000);
-  });
-  if(_dup){ return; }
-  writeRecord({
-    category:"shopping", title:_title,
-    subcategory:sub, qty:qty, unit:p.unit||"", invId:p.item_id||"", amount:null,
-    fromInv:true,
-    dateStart:"", status:"pending", createdAt:Date.now(), cal:state.currentCal||"main"
-  });
-  toast("已從庫存帶入："+String(p.item_name)+" ×"+qty);
-  if(typeof switchTab==="function") switchTab("shop");
+/* ===== 庫存提醒：讀「庫存管理」的物品（食材有效日期、家電保固）===== */
+function _stockInfo(it){
+  if(!it) return null;
+  const ap = it.kind==="appliance";
+  const d = ap ? it.warrantyEnd : it.expiry;
+  if(!d) return null;
+  const cfg = state.stockCfg||{};
+  const thr = ap ? (cfg.warrantyDays==null?30:cfg.warrantyDays) : (cfg.foodDays==null?3:cfg.foodDays);
+  const n = Math.round((_ymdToDate(d) - _ymdToDate(ymd(new Date())))/86400000);
+  if(n>thr || (ap && n < -thr)) return null;
+  const label = n<0 ? (ap?"保固已過":"過期"+(-n)+"天") : n===0 ? (ap?"保固今天到期":"今天到期") : (ap?"保固剩"+n+"天":"剩"+n+"天");
+  return { name:it.name||"", n:n, label:label };
 }
-function pushInvDone(itemId, qty, name, opts){
-  if(!canAdvanced()) return;           // 完整版才與庫存連動
-  opts=opts||{};
-  if(!itemId && !opts.create) return;
-  try{
-    let q; try{ q=JSON.parse(localStorage.getItem("inv_done_callbacks")||"[]"); }catch(e){ q=[]; }
-    if(!Array.isArray(q)) q=[];
-    q.push({ item_id:itemId||"", qty_added:Math.max(1,Number(qty)||1), done_date:ymd(new Date()), item_name:(name||""), create:!!opts.create, cat:(opts.cat||"") });
-    localStorage.setItem("inv_done_callbacks", JSON.stringify(q));
-  }catch(e){}
-}
-// 監聽庫存 App 的「更新成功」回報 → 跳 ✅（庫存端需在更新後寫入 inv_update_ack 陣列）
-function pollInvAck(){
-  let raw; try{ raw=localStorage.getItem("inv_update_ack"); }catch(e){ return; }
-  if(!raw) return;
-  let arr; try{ arr=JSON.parse(raw); }catch(e){ try{localStorage.removeItem("inv_update_ack");}catch(_){} return; }
-  try{ localStorage.removeItem("inv_update_ack"); }catch(e){}
-  if(!Array.isArray(arr)) return;
-  arr.forEach(a=>{ if(a && a.item_name) toast("✅ 回傳成功："+a.item_name+" +"+(a.qty_added||1), 5000); });
-}
-setInterval(pollInvAck, 3000);
-// 只在「分頁回到前景」時處理，確保「✅ 回傳成功」是在你正看著的分頁跳出（不在背景被吃掉）
-window.addEventListener("focus", pollInvAck);
-document.addEventListener("visibilitychange", function(){ if(!document.hidden){ importPendingPurchase(); pollInvAck(); } });
-window.addEventListener("pageshow", function(){ importPendingPurchase(); });
-function invAllItems(){
-  let items; try{ items=JSON.parse(localStorage.getItem("inv_v7")||localStorage.getItem("inv_v6")||"[]"); }catch(e){ items=[]; }
-  if(!Array.isArray(items)) items=[];
-  return items.filter(it=>it&&it.name&&!it.is3c);
-}
-// 讀庫存「分類維護字典」的商品名（含還沒入庫的），排除已入庫同名
-function invDict(){
-  let cats; try{ cats=JSON.parse(localStorage.getItem("inv_cats")||"[]"); }catch(e){ cats=[]; }
-  if(!Array.isArray(cats)) cats=[];
-  const real=new Set(invAllItems().map(it=>String(it.name||"").replace(/\s/g,"")));
-  const seen=new Set(), out=[];
-  cats.forEach(c=>{ (c.items||[]).forEach(nm=>{
-    const k=String(nm||"").replace(/\s/g,""); if(!k||real.has(k)||seen.has(k)) return;
-    seen.add(k); out.push({name:nm, cat:c.id||""});
-  }); });
+function _stockAlertList(){
+  const out=[];
+  Object.keys(state.stock||{}).forEach(function(k){ const x=_stockInfo(state.stock[k]); if(x) out.push(x); });
+  out.sort(function(a,b){ return a.n-b.n; });
   return out;
 }
+function _stockNames(a){ const n=a.slice(0,3).map(function(x){ return x.name+"（"+x.label+"）"; }).join("、"); return n+(a.length>3?" 等 "+a.length+" 項":""); }
+function renderStockBanner(){
+  const el=$("stockBanner"); if(!el) return;
+  const a=_stockAlertList();
+  if(!a.length){ el.style.display="none"; el.innerHTML=""; return; }
+  el.style.display="";
+  el.innerHTML='⚠️ <b>庫存快到期 '+a.length+' 項</b>：'+esc(_stockNames(a))+' <span style="color:var(--muted)">›</span>';
+}
+if($("stockBanner")) $("stockBanner").addEventListener("click", function(){ location.href="./inventory.html"; });
+// 舊的庫存交換暫存（採購帶入、完成回傳）已不再使用：清掉一次
+function dropOldInvLink(){
+  try{ ["inv_done_callbacks","inv_update_ack","inv_pending_purchase"].forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
+}
+// 採購商品名歷史：打過的商品名 → 上次選的大分類
+function shopTitleMap(){
+  const m={}, ts={};
+  curValues().forEach(function(r){
+    if(r && r.category==="shopping" && r.title && r.subcategory){
+      const t=r.createdAt||0;
+      if(ts[r.title]==null || t>=ts[r.title]){ m[r.title]=r.subcategory; ts[r.title]=t; }
+    }
+  });
+  return m;
+}
 
-/* 庫存回傳殘留（庫存 App 沒取走時才會有）：只在設定頁出現清除鈕 */
-function _hasStaleInv(){
-  try{ return !!(localStorage.getItem("inv_done_callbacks") || localStorage.getItem("inv_update_ack")); }catch(e){ return false; }
-}
-function clearStaleInv(){
-  openConfirm("清除庫存殘留回傳", "清掉還沒回傳給庫存的紀錄，此動作無法復原。", function(){
-    try{ localStorage.removeItem("inv_done_callbacks"); localStorage.removeItem("inv_update_ack"); }catch(e){}
-    closeSheet(); toast("已清除");
-  }, "清除");
-}
 // 舊的「動態」功能已移除：清掉雲端殘留資料與本機暱稱（只做一次）
 function dropOldActivity(){
   try{
@@ -1809,7 +1775,7 @@ function resetToTodayOverview(){
   if($("ovYear")) $("ovYear").value=String(t.getFullYear());
   if($("ovMonth")) $("ovMonth").value=String(t.getMonth()+1);
   if($("ovDay")){ $("ovDay").disabled=false; $("ovDay").value=""; }
-  if($("ovStatus")) $("ovStatus").value="done";
+  if($("ovStatus")) $("ovStatus").value="pending";
   if($("ovSearch")) $("ovSearch").value="";
   if($("ovCategory")) $("ovCategory").value="all";
   if($("ovAssignee")) $("ovAssignee").value="all";
@@ -1961,7 +1927,6 @@ function openCalManager(){
     + '<button type="button" class="set-row" id="notifyBtn" aria-pressed="false">'
       + '<span class="ic">🔔</span><span class="tx">今日行程通知</span>'
       + '<span class="set-val"><span class="noti-pill" id="notifyVal">已關閉</span></span></button>'
-    + (_hasStaleInv() ? row('clearInvStale','🧹','清除庫存殘留回傳','') : '')
     + '</div>';
 
   // 四支 App 共通
@@ -2004,7 +1969,6 @@ function openCalManager(){
       } else { requestNotify(); }
     });
   }
-  if($("clearInvStale")) $("clearInvStale").addEventListener("click", clearStaleInv);
   if($("shareAppBtn")) $("shareAppBtn").addEventListener("click", shareApp);
   if($("supportBtn")) $("supportBtn").addEventListener("click", function(){ window.open(LINE_URL,"_blank","noopener"); });
   if($("installFromSettings")) $("installFromSettings").addEventListener("click", function(){
@@ -2646,18 +2610,6 @@ function toggleDoneWhole(id){
     patch.kind="done"; patch.status="done";
     patch.doneDate=ymd(new Date());
     if(r.category==="shopping"){ patch.ordered=null; patch.eta=null; }
-    if(r.category==="shopping"){
-      if(r.invId) pushInvDone(r.invId, r.qty, r.title);                          // 已入庫→加數量
-      else if(r.invNew) pushInvDone("", r.qty, r.title, {create:true, cat:r.invCat});  // 未入庫→新建入庫
-    }
-    /* 〔設計備註：回傳成功訊息〕
-       目前回傳正常運作，故「完成時」不跳任何訊息（保持安靜）。
-       若日後想要「✅ 回傳成功」提示，本檔已內建 pollInvAck()（每3秒監聽
-       localStorage 的 'inv_update_ack'）。只要在庫存 App 的 pollDone() 更新成功後寫入：
-          var ack=JSON.parse(localStorage.getItem('inv_update_ack')||'[]');
-          ack.push({ item_name: it.name, qty_added: (cb.qty_added||1) });
-          localStorage.setItem('inv_update_ack', JSON.stringify(ack));
-       行事曆收到後就會自動跳「✅ 回傳成功：○○ +N」，無需再改行事曆。*/
     // 採購重複 → 以完成日往後推，生成下一筆（只生一次）
     if(hasRepeat(r) && r.category==="shopping" && !r.spawned){
       patch.spawned=true;
@@ -2790,8 +2742,6 @@ function toggleShopDone(id){
   if(!requireAuth()) return;
   const r=state.records[id]; if(!r) return;
   const patch={ kind:"done", status:"done", doneDate:ymd(new Date()), ordered:null, eta:null };   // 完成＝已到貨／已買到
-  if(r.invId) pushInvDone(r.invId, r.qty, r.title);                            // 已入庫→加數量
-  else if(r.invNew) pushInvDone("", r.qty, r.title, {create:true, cat:r.invCat});    // 未入庫→新建入庫
   let next=null;
   // 重複採購（onDone）→ 以購買日往後推，生成下一筆
   if(hasRepeat(r) && (r.repeat.mode||"onDone")==="onDone" && !r.spawned){
@@ -2916,13 +2866,10 @@ function openRecordForm(rec, presets, asCopy){
     '<div class="field" id="rec_catbox"'+(isShop?' style="display:none"':'')+'><label>分類</label>'+
       iconPicker("rec_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
     '<div id="rec_shopbox"'+(isShop?"":' style="display:none"')+'>'+
-      '<div class="field"><label>商品（打字搜尋庫存；找不到可手動新增）</label>'+
-        '<input id="rec_prodsearch" type="text" autocomplete="off" placeholder="🔍 搜尋商品…" value="'+esc(r.title||"")+'">'+
-        '<div id="rec_prodresults" class="prodresults" style="display:none"></div></div>'+
-      '<input type="hidden" id="rec_invId" value="'+esc(r.invId||"")+'">'+
-      '<input type="hidden" id="rec_invNew" value="'+(r.invNew?"1":"")+'">'+
-      '<input type="hidden" id="rec_invCat" value="'+esc(r.invCat||"")+'">'+
-      '<div class="field"><label>大分類 <span id="rec_subcatlock"></span></label>'+
+      '<div class="field"><label>商品 <span style="color:var(--faint);font-weight:400">🕐 可選用過的</span></label>'+
+        '<input id="rec_prodsearch" list="rec_prod_hist" type="text" autocomplete="off" placeholder="商品名稱" value="'+esc(r.title||"")+'">'+
+        '<datalist id="rec_prod_hist">'+Object.keys(shopTitleMap()).slice(0,80).map(t=>'<option value="'+esc(t)+'">').join("")+'</datalist></div>'+
+      '<div class="field"><label>大分類</label>'+
         '<select id="rec_subcategory">'+SUBCAT_ORDER.map(c=>'<option value="'+c+'"'+(((r.subcategory||_lastSub())===c)?" selected":"")+'>'+SUBCAT_ICON[c]+' '+SUBCAT_LABEL[c]+'</option>').join("")+'</select></div>'+
       '<div class="two">'+
         '<div class="field"><label>數量</label><input id="rec_qty" type="number" min="1" value="'+(r.qty||1)+'"></div>'+
@@ -3116,61 +3063,17 @@ function openRecordForm(rec, presets, asCopy){
       }
     });
   }
-  function _lockSubcat(){
-    const sc=$("rec_subcategory"); if(!sc) return;
-    const locked=!!($("rec_invId") && $("rec_invId").value) || !!($("rec_invNew") && $("rec_invNew").value==="1");
-    sc.disabled = locked;   // 選到庫存品項/未入庫字典→鎖住大分類
-    const hint=$("rec_subcatlock");
-    if(hint) hint.textContent = locked ? "🔒 已依商品自動分類" : "（手動商品才需選）";
-  }
-  function _syncNeedStock(){ _lockSubcat(); }
-  const _ps=$("rec_prodsearch"), _pr=$("rec_prodresults");
-  function _renderProdResults(q){
-    if(!_pr) return;
-    q=(q||"").trim();
-    if(!q){ _pr.style.display="none"; _pr.innerHTML=""; return; }
-    const ql=q.toLowerCase();
-    const all=invAllItems();
-    const hits=all.filter(it=>String(it.name||"").toLowerCase().indexOf(ql)>=0).slice(0,8);
-    const dict=invDict().filter(d=>String(d.name||"").toLowerCase().indexOf(ql)>=0).slice(0,6);
-    let html=hits.map(it=>'<div class="prod-row" data-id="'+esc(String(it.id))+'" data-name="'+esc(it.name)+'" data-cat="'+esc(it.cat||"")+'">'+esc(it.name)+(it.unit?'<span class="prod-u">'+esc(it.unit)+'</span>':'')+'</div>').join("");
-    html+=dict.map(d=>'<div class="prod-row" data-name="'+esc(d.name)+'" data-cat="'+esc(d.cat)+'" data-new="1">'+esc(d.name)+'<span class="prod-u" style="color:#c2410c">未入庫</span></div>').join("");
-    if(!html){ _pr.style.display="none"; _pr.innerHTML=""; return; }
-    _pr.innerHTML=html; _pr.style.display="";
-    _pr.querySelectorAll(".prod-row").forEach(row=>row.addEventListener("click", function(){
-      if(this.getAttribute("data-new")){
-        const nm=this.getAttribute("data-name")||"", c=this.getAttribute("data-cat")||"";
-        $("rec_title").value=nm; _ps.value=nm;
-        if($("rec_invId")) $("rec_invId").value="";
-        if($("rec_invNew")) $("rec_invNew").value="1";
-        if($("rec_invCat")) $("rec_invCat").value=c;
-        const sc=$("rec_subcategory"); if(sc) sc.value=invSubcatOf(c);
-      } else {
-        const nm=this.getAttribute("data-name")||"", id=this.getAttribute("data-id")||"", c=this.getAttribute("data-cat")||"";
-        $("rec_title").value=nm; _ps.value=nm;
-        if($("rec_invId")) $("rec_invId").value=id;
-        if($("rec_invNew")) $("rec_invNew").value="";
-        if($("rec_invCat")) $("rec_invCat").value="";
-        const sc=$("rec_subcategory"); if(sc) sc.value=invSubcatOf(c);
-      }
-      _syncNeedStock();
-      _pr.style.display="none"; _pr.innerHTML="";
-    }));
-  }
+  const _ps=$("rec_prodsearch");
   if(_ps){
-    _ps.addEventListener("input", function(){
-      $("rec_title").value=this.value;          // 打什麼就是品名
-      if($("rec_invId")) $("rec_invId").value="";  // 重打 → 先解除連結，點到結果才重連
-      if($("rec_invNew")) $("rec_invNew").value="";
-      if($("rec_invCat")) $("rec_invCat").value="";
-      _syncNeedStock();
-      _renderProdResults(this.value);
-    });
-    _ps.addEventListener("focus", function(){ if(this.value.trim()) _renderProdResults(this.value); });
-    _ps.addEventListener("blur", function(){ setTimeout(function(){ if(_pr){ _pr.style.display="none"; } }, 250); });
-    if(_pr) _pr.addEventListener("mousedown", function(e){ e.preventDefault(); });
+    const _map=shopTitleMap(); let _subTouched=false;
+    if($("rec_subcategory")) $("rec_subcategory").addEventListener("change", function(){ _subTouched=true; });
+    const _syncProd=function(){
+      $("rec_title").value=_ps.value;              // 打什麼就是品名
+      const sub=_map[_ps.value.trim()];            // 買過的商品：自動帶上次的大分類
+      if(sub && !_subTouched && $("rec_subcategory")) $("rec_subcategory").value=sub;
+    };
+    _ps.addEventListener("input", _syncProd); _ps.addEventListener("change", _syncProd);
   }
-  _lockSubcat();   // 開表單時：若已連到庫存品項就鎖住大分類
   if($("rec_manage")) $("rec_manage").addEventListener("click", openPeopleManager);
   if($("rec_addperson")) $("rec_addperson").addEventListener("click", async function(){
     const nm=$("rec_newperson").value.trim();
@@ -3230,13 +3133,10 @@ function saveRecord(id, prev){
   };
   if(isShop){
     data.subcategory=$("rec_subcategory").value||"other";
-    if(!($("rec_invId") && $("rec_invId").value) && !($("rec_invNew") && $("rec_invNew").value==="1")){ try{ localStorage.setItem("shopLastSub", data.subcategory); }catch(e){} }
+    try{ localStorage.setItem("shopLastSub", data.subcategory); }catch(e){}
     data.qty=Math.max(1, Number($("rec_qty").value)||1);
-    data.invId = ($("rec_invId") && $("rec_invId").value) ? $("rec_invId").value : ((prev&&prev.invId)||null);
-    data.invNew = ($("rec_invNew") && $("rec_invNew").value==="1") ? true : null;
-    data.invCat = ($("rec_invCat") && $("rec_invCat").value) ? $("rec_invCat").value : null;
+    data.invId = null; data.invNew = null; data.invCat = null; data.fromInv = null;   // 舊庫存連動欄位：存檔時順便清掉
     data.needStock = null;
-    data.fromInv = (prev&&prev.fromInv) ? true : null;
     const pv=$("rec_price").value;
     data.amount = (pv!=="" && !isNaN(Number(pv))) ? Number(pv) : null;
     data.ordered = ($("rec_ordered") && $("rec_ordered").checked && !done) ? true : null;   // 已下單、還沒到貨
@@ -3332,7 +3232,8 @@ const GC=["#5B8DEF","#F2A385","#3E9B8E","#B07CC6","#E8C25C"];
 function _ymdToDate(ds){ const p=String(ds).split("-"); return new Date(Number(p[0]),Number(p[1])-1,Number(p[2])); }
 function _gmd(ds){ const p=String(ds).split("-"); return Number(p[1])+"/"+Number(p[2]); }
 function _gwhen(ds){ return ds===ymd(new Date()) ? "今天" : _gmd(ds); }
-function fmtV(e){ return fmtNum(e.v)+(e.v2!=null?"/"+fmtNum(e.v2):""); }
+function fmtV(e){ return fmtNum(e.v)+(e.v2!=null?"/"+fmtNum(e.v2):"")+(e.v3!=null?"/"+fmtNum(e.v3):""); }
+function _gFields(g){ return (g.mode==="last" && Array.isArray(g.fields) && g.fields.length>=2) ? g.fields : null; }
 function _dsort(a,b){ return a.d<b.d?-1:a.d>b.d?1:0; }
 function _mlog(m){ return (m.log||[]).slice().sort(_dsort); }
 function _gMulti(g){ const m=g.members||[]; return m.length>1 || !!(m[0]&&m[0].name); }
@@ -3340,7 +3241,7 @@ function _cleanMember(m){
   const o={name:m.name||""};
   if(m.target!=null && m.target!=="" && !isNaN(Number(m.target))) o.target=Number(m.target);
   if(m.start!=null && m.start!=="" && !isNaN(Number(m.start))) o.start=Number(m.start);
-  const lg=(m.log||[]).map(e=>{ const x={d:e.d,v:Number(e.v)}; if(e.v2!=null) x.v2=Number(e.v2); return x; });
+  const lg=(m.log||[]).map(e=>{ const x={d:e.d,v:Number(e.v)}; if(e.v2!=null) x.v2=Number(e.v2); if(e.v3!=null) x.v3=Number(e.v3); return x; });
   if(lg.length) o.log=lg;
   return o;
 }
@@ -3366,6 +3267,11 @@ function normalizeGoal(g0){
     });
   }
   if(g.type==="number" && !Array.isArray(g.members)) g.members=[{name:""}];
+  // 舊的「128/82」記法（沒有項目名稱）→ 補成 項目1／項目2，之後可在編輯裡改名
+  if(g.type==="number" && g.mode==="last" && !(Array.isArray(g.fields) && g.fields.length>=2)){
+    let n=0; (g.members||[]).forEach(m=>(m.log||[]).forEach(e=>{ if(e.v3!=null) n=Math.max(n,3); else if(e.v2!=null) n=Math.max(n,2); }));
+    if(n>=2) g.fields=Array.from({length:n},(_,i)=>({name:"項目"+(i+1)}));
+  }
   return g;
 }
 function memberStat(g,m){
@@ -3423,24 +3329,30 @@ function goalChartSvg(g, h, big){
     });
     return s+'</svg>';
   }
-  const pts=[]; mem.forEach((m,i)=>_mlog(m).forEach(e=>pts.push({i,t:_ymdToDate(e.d).getTime(),v:num(e.v),v2:e.v2!=null?num(e.v2):null})));
+  const fl=_gFields(g), KEYS=["v","v2","v3"];
+  const fcol=(i,k)=>(fl&&mem.length===1)?GC[k%GC.length]:GC[i%GC.length];
+  const fop=k=>(fl&&mem.length===1)?1:[1,.5,.35][k];
+  const pts=[]; mem.forEach((m,i)=>_mlog(m).forEach(e=>{ const q={i,t:_ymdToDate(e.d).getTime()}; KEYS.forEach(k=>{ q[k]=e[k]!=null?num(e[k]):null; }); pts.push(q); }));
   if(pts.length<2) return "";
   const t0=Math.min(...pts.map(p=>p.t)), t1=Math.max(...pts.map(p=>p.t));
-  const ys=[]; pts.forEach(p=>{ ys.push(p.v); if(p.v2!=null) ys.push(p.v2); });
+  const ys=[]; pts.forEach(p=>KEYS.forEach(k=>{ if(p[k]!=null) ys.push(p[k]); }));
   const dlo=Math.min(...ys), dhi=Math.max(...ys);
-  mem.forEach(m=>{ if(m.target!=null&&m.target!==""&&!isNaN(Number(m.target))) ys.push(Number(m.target)); });
+  const tl=[], okT=x=>x!=null&&x!==""&&!isNaN(Number(x));
+  if(fl){ fl.forEach((f,k)=>{ if(okT(f.target)) tl.push({v:Number(f.target),c:fcol(0,k)}); }); }
+  else mem.forEach((m,i)=>{ if(okT(m.target)) tl.push({v:Number(m.target),c:GC[i%GC.length]}); });
+  tl.forEach(x=>ys.push(x.v));
   let lo=Math.min(...ys), hi=Math.max(...ys); if(hi===lo){ hi+=1; lo-=1; }
   const pad=(hi-lo)*0.08; lo-=pad; hi+=pad;
   const L=big?26:0;
   const X=t=>(t1===t0)?(L+W)/2:(P+L+(t-t0)/(t1-t0)*(W-2*P-L));
   const Y=v=>h-P-(v-lo)/(hi-lo)*(h-2*P);
   let s='<svg viewBox="0 0 '+W+' '+h+'" width="100%" class="gchart-svg">';
-  mem.forEach((m,i)=>{ if(m.target!=null&&m.target!==""&&!isNaN(Number(m.target))){
-    const y=Y(Number(m.target)).toFixed(1); s+='<line x1="'+(P+L)+'" x2="'+(W-P)+'" y1="'+y+'" y2="'+y+'" stroke="'+GC[i%GC.length]+'" stroke-width="1.5" stroke-dasharray="4 3" opacity=".55"/>'; } });
+  tl.forEach(x=>{ const y=Y(x.v).toFixed(1); s+='<line x1="'+(P+L)+'" x2="'+(W-P)+'" y1="'+y+'" y2="'+y+'" stroke="'+x.c+'" stroke-width="1.5" stroke-dasharray="4 3" opacity=".55"/>'; });
   mem.forEach((m,i)=>{
-    const c=GC[i%GC.length], mp=pts.filter(p=>p.i===i);
-    [["v",2.5,1],["v2",2,.5]].forEach(([k,sw,op])=>{
+    const mp=pts.filter(p=>p.i===i);
+    KEYS.forEach((k,ki)=>{
       const a=mp.filter(p=>p[k]!=null); if(!a.length) return;
+      const c=fcol(i,ki), op=fop(ki), sw=ki===0?2.5:2;
       if(a.length>1) s+='<polyline fill="none" stroke="'+c+'" stroke-width="'+sw+'" opacity="'+op+'" stroke-linejoin="round" stroke-linecap="round" points="'+a.map(p=>X(p.t).toFixed(1)+","+Y(p[k]).toFixed(1)).join(" ")+'"/>';
       (big?a:[a[a.length-1]]).forEach(p=>{ s+='<circle cx="'+X(p.t).toFixed(1)+'" cy="'+Y(p[k]).toFixed(1)+'" r="'+(big?3:3.5)+'" fill="'+c+'" opacity="'+op+'"/>'; });
     });
@@ -3506,7 +3418,7 @@ function goalCard(g){
     if(done.length) h+='<div class="ms-divider">─ 已完成 '+done.length+' ─</div>'+done.map(row).join("");
     h+='</div>';
   } else {
-    const unit=esc(g.unit||""), multi=_gMulti(g);
+    const unit=esc(g.unit||""), multi=_gMulti(g), fl=_gFields(g);
     h+='<div class="goal-members">';
     (g.members||[]).forEach((m,i)=>{
       const s=memberStat(g,m);
@@ -3515,13 +3427,14 @@ function goalCard(g){
       if(s.tgt!=null){ if(s.complete) sub.push("🎉 已達標"); else if(s.cur!=null) sub.push("還差 "+fmtNum(Math.abs(s.tgt-s.cur))+unit); }
       if(s.last) sub.push("最近 "+_gwhen(s.last.d));
       h+='<div class="gmem"><div class="gmem-hd">'+(multi?'<i class="gdot" style="background:'+GC[i%GC.length]+'"></i>'+esc(m.name)+'　':'')+
-        '<b class="gbig">'+curTxt+'</b> <span class="gu">'+unit+(s.tgt!=null?' / '+fmtNum(s.tgt):'')+'</span></div>';
+        (fl?'<span class="gu">'+esc(fl.map(f=>f.name).join("/"))+'　</span>':'')+'<b class="gbig">'+curTxt+'</b> <span class="gu">'+unit+(fl?(fl.some(f=>f.target!=null)?' 目標 '+fl.map(f=>f.target!=null?fmtNum(f.target):"–").join("/"):''):(s.tgt!=null?' / '+fmtNum(s.tgt):''))+'</span></div>';
       if(s.pct!=null) h+='<div class="goal-prog"><div class="goal-bar"><div class="goal-fill" style="width:'+s.pct+'%;background:'+col+'"></div></div><div class="goal-pct">'+s.pct+'%</div></div>';
       if(sub.length) h+='<div class="goal-sub">'+sub.join('　')+'</div>';
       h+='</div>';
     });
     h+='</div>';
     const svg=goalChartSvg(g,70,false); if(svg) h+='<div class="gchart">'+svg+'</div>';
+    if(svg && fl && !multi) h+='<div class="glegend">'+fl.map((f,k)=>'<span><i class="gdot" style="background:'+GC[k%GC.length]+'"></i>'+esc(f.name)+'</span>').join("")+'</div>';
   }
   h+='<div class="acts">';
   h+=(g.type==="number")?'<button class="icon-btn" data-rec>＋記錄</button>':'<button class="icon-btn" data-extend>＋ 加項目</button>';
@@ -3540,21 +3453,34 @@ function openGoalRecord(id){
   if(!requireAuth()) return;
   const raw=state.goals[id]; if(!raw) return;
   const g=normalizeGoal(raw); if(g.type!=="number") return;
-  const sum=g.mode==="sum", multi=_gMulti(g);
+  const sum=g.mode==="sum", multi=_gMulti(g), fl=_gFields(g), u=g.unit?'（'+esc(g.unit)+'）':'';
+  const dateF='<div class="field"><label>日期</label><input id="gr_d" type="date" value="'+ymd(new Date())+'"></div>';
   const html=(multi?'<div class="field"><label>誰</label><select id="gr_who">'+g.members.map((m,i)=>'<option value="'+i+'">'+esc(m.name)+'</option>').join("")+'</select></div>':'')+
-    '<div class="two"><div class="field"><label>'+(sum?"數量":"數值")+(g.unit?'（'+esc(g.unit)+'）':'')+'</label><input id="gr_v" inputmode="decimal" autocomplete="off" value="'+(sum?"1":"")+'"'+(sum?'':' placeholder="68.5　或　128/82"')+'></div>'+
-    '<div class="field"><label>日期</label><input id="gr_d" type="date" value="'+ymd(new Date())+'"></div></div>';
+    (fl
+      ? '<div class="gfields">'+fl.map((f,k)=>'<div class="field"><label>'+esc(f.name)+(k===0?u:'')+'</label><input id="gr_f'+k+'" inputmode="decimal" autocomplete="off"></div>').join("")+'</div>'+dateF
+      : '<div class="two"><div class="field"><label>'+(sum?"數量":"數值")+u+'</label><input id="gr_v" inputmode="decimal" autocomplete="off" value="'+(sum?"1":"")+'"'+(sum?'':' placeholder="例如 68.5"')+'></div>'+dateF+'</div>');
+  const num=(el)=>{ const t=((el&&el.value)||"").replace(/[,，\s]/g,""); if(t==="") return null; const n=Number(t); return isNaN(n)?NaN:n; };
   openSheet("記錄："+g.title, html, function(){
-    const mt=/^\s*(-?\d+(?:\.\d+)?)\s*(?:[\/／]\s*(-?\d+(?:\.\d+)?))?\s*$/.exec(($("gr_v").value||"").replace(/，/g,""));
-    if(!mt){ toast("請輸入數字"); return; }
-    if(sum && mt[2]!=null){ toast("累加只能輸入一個數字"); return; }
-    const e={ d:$("gr_d").value||ymd(new Date()), v:Number(mt[1]) }; if(mt[2]!=null) e.v2=Number(mt[2]);
+    const e={ d:$("gr_d").value||ymd(new Date()) };
+    if(fl){
+      const keys=["v","v2","v3"];
+      for(let k=0;k<fl.length;k++){
+        const n=num($("gr_f"+k));
+        if(n===null){ if(k<2){ toast("請填「"+fl[k].name+"」"); return; } continue; }
+        if(isNaN(n)){ toast("「"+fl[k].name+"」請輸入數字"); return; }
+        e[keys[k]]=n;
+      }
+    } else {
+      const n=num($("gr_v"));
+      if(n===null || isNaN(n)){ toast("請輸入數字"); return; }
+      e.v=n;
+    }
     const mi=multi?Number($("gr_who").value):0;
     const members=g.members.map((x,i)=> i===mi ? Object.assign({},x,{log:_mlog(x).concat([e]).sort(_dsort)}) : x);
     saveGoalPatch(id, numberPatch(g,members));
     closeSheet(); toast("已記錄");
   }, null, "儲存");
-  const vi=$("gr_v"); if(vi){ vi.focus(); if(vi.select) vi.select(); }
+  const vi=$("gr_v")||$("gr_f0"); if(vi){ vi.focus(); if(vi.select) vi.select(); }
 }
 function openGoalDetail(id){
   const raw=state.goals[id]; if(!raw) return;
@@ -3562,7 +3488,10 @@ function openGoalDetail(id){
   const multi=_gMulti(g), unit=esc(g.unit||"");
   let h="";
   const svg=goalChartSvg(g,160,true); if(svg) h+='<div class="gchart">'+svg+'</div>';
+  const fl=_gFields(g);
   if(multi) h+='<div class="glegend">'+g.members.map((m,i)=>'<span><i class="gdot" style="background:'+GC[i%GC.length]+'"></i>'+esc(m.name)+'</span>').join("")+'</div>';
+  if(fl) h+= multi ? '<div class="glegend"><span>'+esc(fl.map(f=>f.name).join("／"))+'（線由深到淺）</span></div>'
+                   : '<div class="glegend">'+fl.map((f,k)=>'<span><i class="gdot" style="background:'+GC[k%GC.length]+'"></i>'+esc(f.name)+'</span>').join("")+'</div>';
   const rows=[]; g.members.forEach((m,mi)=>_mlog(m).forEach((e,ei)=>rows.push({mi,ei,e,name:m.name})));
   rows.sort((a,b)=>a.e.d<b.e.d?1:a.e.d>b.e.d?-1:(b.ei-a.ei));
   h+= rows.length
@@ -3617,6 +3546,54 @@ function deleteGoal(id, title){
 /* ---- 新增／編輯表單 ---- */
 let goalMilestones=[];   // 編輯時暫存清單項目
 let goalMembers=[];      // 編輯時暫存成員（含記錄）
+let goalFields=[];       // 編輯時暫存「一次記多個數字」的項目（空＝只記一個數字）
+const GOAL_PRESETS={
+  weight:{title:"體重",kind:"last",unit:"公斤",cat:"health",fields:[]},
+  bp:{title:"血壓",kind:"last",unit:"mmHg",cat:"health",fields:["收縮","舒張"]},
+  sport:{title:"運動",kind:"sum",unit:"次",cat:"health",fields:[]},
+  save:{title:"存錢",kind:"sum",unit:"元",cat:"finance",fields:[]},
+  list:{title:"",kind:"list",unit:"",cat:null,fields:[]},
+  custom:{title:"",kind:"last",unit:"",cat:null,fields:[]}
+};
+const GOAL_PRESET_BTNS=[["weight","⚖️","體重"],["bp","🩺","血壓"],["sport","🏃","運動"],["save","💰","存錢"],["list","📝","清單"],["custom","✏️","自訂"]];
+function setGoalUnit(u){
+  const sel=$("g_unit_sel"); if(!sel) return;
+  if(u && !Array.from(sel.options).some(o=>o.value===u)){ const opt=document.createElement("option"); opt.value=u; opt.textContent=u; sel.insertBefore(opt, sel.options[sel.options.length-1]); }
+  sel.value=u||""; $("g_unit").value=u||"";
+}
+function syncNumUI(){
+  const kind=$("g_type").value, list=kind==="list", multi=$("g_multi").checked;
+  if(kind!=="last" && goalFields.length) goalFields=[];
+  const fm=goalFields.length>=2;
+  $("g_numbox").style.display=list?"none":"";
+  $("g_msbox").style.display=list?"":"none";
+  $("g_multibox").style.display=list?"none":"";
+  $("g_fieldsbox").style.display=fm?"":"none";
+  $("g_tofields").style.display=(kind==="last"&&!fm)?"":"none";
+  $("g_single").style.display=(multi||fm)?"none":"";
+  if(fm) renderFieldEditor();
+  renderMemEditor();
+}
+function renderFieldEditor(){
+  const box=$("g_fieldlist"); if(!box) return;
+  box.innerHTML=goalFields.map((f,i)=>'<div class="mem-edit"><input data-fn="'+i+'" autocomplete="off" value="'+esc(f.name)+'" placeholder="項目名稱（例：'+(["收縮","舒張","心跳"][i]||"項目")+'）" style="flex:1.2"><input data-ft="'+i+'" type="number" step="any" value="'+(f.target!=null?f.target:"")+'" placeholder="目標值" style="flex:1"><button type="button" class="ms-del" data-fdel="'+i+'">✕</button></div>').join("");
+  box.querySelectorAll("[data-fn]").forEach(inp=>inp.addEventListener("input",function(){ goalFields[Number(this.getAttribute("data-fn"))].name=this.value; }));
+  box.querySelectorAll("[data-ft]").forEach(inp=>inp.addEventListener("input",function(){ goalFields[Number(this.getAttribute("data-ft"))].target=this.value; }));
+  box.querySelectorAll("[data-fdel]").forEach(b=>b.addEventListener("click",function(){
+    goalFields.splice(Number(this.getAttribute("data-fdel")),1);
+    if(goalFields.length<2) goalFields=[];       // 剩一項 → 回到只記一個數字
+    syncNumUI();
+  }));
+}
+function applyGoalPreset(k){
+  const p=GOAL_PRESETS[k]; if(!p) return;
+  $("g_title").value=p.title; $("g_type").value=p.kind; setGoalUnit(p.unit);
+  if(p.cat) setIconPick("g_category", p.cat);
+  goalFields=p.fields.map(n=>({name:n,target:""}));
+  document.querySelectorAll("[data-pre]").forEach(b=>b.classList.toggle("on", b.getAttribute("data-pre")===k));
+  syncNumUI();
+  if(!p.title) $("g_title").focus();
+}
 function _unitSelect(cur){
   const list=["公斤","次","元","天","小時"];
   if(cur && list.indexOf(cur)<0) list.push(cur);
@@ -3632,10 +3609,12 @@ function openGoalForm(goal){
   const cat=g.category||"life"; const yr=g.year||new Date().getFullYear();
   goalMilestones=(g.milestones||[]).map(m=>({text:m.text,done:!!m.done,date:m.date||""}));
   goalMembers=(g.members&&g.members.length)?g.members.map(m=>Object.assign({},m,{log:(m.log||[]).slice()})):[{name:"",log:[]}];
+  goalFields=(Array.isArray(g.fields)&&g.fields.length>=2&&g.mode==='last')?g.fields.map(f=>({name:f.name||"",target:f.target!=null?f.target:""})):[];
   const multi=goalMembers.length>1 || !!(goalMembers[0]&&goalMembers[0].name);
   const t0=goalMembers[0]&&goalMembers[0].target!=null?goalMembers[0].target:"";
   const moreOpen=multi||!!g.note;
   const html=
+    (isEdit?'':'<div class="field"><label>常用目標</label><div class="gpre">'+GOAL_PRESET_BTNS.map(x=>'<button type="button" data-pre="'+x[0]+'">'+x[1]+' '+x[2]+'</button>').join("")+'</div></div>')+
     '<div class="field"><label>目標名稱</label><input id="g_title" autocomplete="off" value="'+esc(g.title||"")+'" placeholder="例如：減重、運動、血壓"></div>'+
     '<div class="two">'+
       '<div class="field"><label>年度</label><input id="g_year" type="number" value="'+yr+'"></div>'+
@@ -3651,6 +3630,8 @@ function openGoalForm(goal){
         '<div class="field" id="g_single"'+(multi?' style="display:none"':'')+'><label>目標值</label><input id="g_target" type="number" step="any" value="'+t0+'"></div>'+
         '<div class="field"><label>單位</label>'+_unitSelect(g.unit||"")+'</div>'+
       '</div>'+
+      '<div id="g_fieldsbox" style="display:none"><div class="label-row"><label>每次記錄的項目與目標值</label><span class="manage-link" id="g_addfield">＋ 再加一項</span></div><div id="g_fieldlist"></div></div>'+
+      '<div id="g_tofields" style="display:none;margin:-2px 0 10px"><span class="manage-link" id="g_tofields_btn">＋ 一次記多個數字（例如血壓：收縮、舒張）</span></div>'+
     '</div>'+
     '<div id="g_msbox"'+(kind==="list"?"":' style="display:none"')+'>'+
       '<div class="label-row"><label>清單項目</label><span class="manage-link" id="g_addms">＋ 加一項</span></div>'+
@@ -3681,12 +3662,10 @@ function openGoalForm(goal){
       } else { this.value=$("g_unit").value||""; }
     } else { $("g_unit").value=this.value; }
   });
-  $("g_type").addEventListener("change", function(){
-    const list=this.value==="list";
-    $("g_numbox").style.display=list?"none":"";
-    $("g_msbox").style.display=list?"":"none";
-    $("g_multibox").style.display=list?"none":"";
-  });
+  $("g_type").addEventListener("change", syncNumUI);
+  document.querySelectorAll("[data-pre]").forEach(b=>b.addEventListener("click", function(){ applyGoalPreset(this.getAttribute("data-pre")); }));
+  $("g_tofields_btn").addEventListener("click", function(){ goalFields=[{name:"",target:""},{name:"",target:""}]; syncNumUI(); });
+  $("g_addfield").addEventListener("click", function(){ if(goalFields.length>=3){ toast("最多 3 項"); return; } goalFields.push({name:"",target:""}); syncNumUI(); });
   $("g_moretoggle").addEventListener("click", function(){
     const bx=$("g_more"), on=bx.style.display==="none";
     bx.style.display=on?"":"none"; this.textContent=on?"收起 ▴":"更多選項 ▾";
@@ -3697,17 +3676,17 @@ function openGoalForm(goal){
       if(!goalMembers[0].name) goalMembers[0].name="我";
       goalMembers[0].target=$("g_target").value;
       if(goalMembers.length<2) goalMembers.push({name:"",log:[]});
-      $("g_single").style.display="none"; $("g_membersbox").style.display="";
-      renderMemEditor();
+      $("g_membersbox").style.display="";
     } else {
       $("g_target").value=goalMembers[0].target!=null?goalMembers[0].target:"";
-      $("g_single").style.display=""; $("g_membersbox").style.display="none";
+      $("g_membersbox").style.display="none";
     }
+    syncNumUI();
   });
   $("g_addmem").addEventListener("click", function(){ goalMembers.push({name:"",log:[]}); renderMemEditor(); });
   $("g_addms").addEventListener("click", function(){ goalMilestones.push({text:"",done:false,date:""}); renderMsEditor(); });
-  renderMemEditor();
   renderMsEditor();
+  syncNumUI();
 }
 function renderMsEditor(){
   const box=$("g_mslist"); if(!box) return;
@@ -3718,7 +3697,7 @@ function renderMsEditor(){
 }
 function renderMemEditor(){
   const box=$("g_memlist"); if(!box) return;
-  box.innerHTML=goalMembers.map((m,i)=>'<div class="mem-edit"><input data-mn="'+i+'" autocomplete="off" value="'+esc(m.name)+'" placeholder="名字" style="flex:1.2"><input data-mt="'+i+'" type="number" step="any" value="'+(m.target!=null?m.target:"")+'" placeholder="目標值" style="flex:1"><button type="button" class="ms-del" data-mdel="'+i+'">✕</button></div>').join("");
+  box.innerHTML=goalMembers.map((m,i)=>'<div class="mem-edit"><input data-mn="'+i+'" autocomplete="off" value="'+esc(m.name)+'" placeholder="名字" style="flex:1.2">'+(goalFields.length>=2?'':'<input data-mt="'+i+'" type="number" step="any" value="'+(m.target!=null?m.target:"")+'" placeholder="目標值" style="flex:1">')+'<button type="button" class="ms-del" data-mdel="'+i+'">✕</button></div>').join("");
   box.querySelectorAll("[data-mn]").forEach(inp=>inp.addEventListener("input",function(){ goalMembers[Number(this.getAttribute("data-mn"))].name=this.value; }));
   box.querySelectorAll("[data-mt]").forEach(inp=>inp.addEventListener("input",function(){ goalMembers[Number(this.getAttribute("data-mt"))].target=this.value; }));
   box.querySelectorAll("[data-mdel]").forEach(b=>b.addEventListener("click",function(){ if(goalMembers.length<=1) return; goalMembers.splice(Number(this.getAttribute("data-mdel")),1); renderMemEditor(); }));
@@ -3736,17 +3715,24 @@ function saveGoal(id, prev){
   if(kind==="list"){
     const ms=goalMilestones.filter(m=>(m.text||"").trim()).map(m=>({text:m.text.trim(),done:!!m.done,date:m.date||null}));
     if(!ms.length){ toast("請至少新增一個項目"); return; }
-    Object.assign(data,{ type:"milestone", milestones:ms, mode:null, members:null, unit:null });
+    Object.assign(data,{ type:"milestone", milestones:ms, mode:null, members:null, unit:null, fields:null });
   } else {
     const multi=$("g_multi").checked;
+    const fm=(kind==="last" && goalFields.length>=2);
+    let fields=null;
+    if(fm){
+      fields=goalFields.filter(f=>(f.name||"").trim()).map(f=>{ const o={name:f.name.trim()}; if(f.target!=="" && f.target!=null && !isNaN(Number(f.target))) o.target=Number(f.target); return o; });
+      if(fields.length<2){ toast("請填兩個以上的項目名稱"); return; }
+    }
     let mem;
     if(multi){
-      mem=goalMembers.filter(m=>(m.name||"").trim()).map(m=>Object.assign({},m,{name:m.name.trim()}));
+      mem=goalMembers.filter(m=>(m.name||"").trim()).map(m=>Object.assign({},m,{name:m.name.trim()},fm?{target:""}:{}));
       if(!mem.length){ toast("請輸入成員名字"); return; }
     } else {
-      mem=[Object.assign({},goalMembers[0]||{log:[]},{name:"",target:$("g_target").value.trim()})];
+      mem=[Object.assign({},goalMembers[0]||{log:[]},{name:"",target:fm?"":$("g_target").value.trim()})];
     }
-    Object.assign(data,{ type:"number", mode:kind, members:mem.map(_cleanMember), unit:($("g_unit").value||"").trim()||null, milestones:null });
+    if(!fm) mem.forEach(m=>{ if(m.log) m.log=m.log.map(e=>({d:e.d,v:e.v})); });   // 單一數字：丟掉多餘的第二、三項
+    Object.assign(data,{ type:"number", mode:kind, members:mem.map(_cleanMember), fields:fields, unit:($("g_unit").value||"").trim()||null, milestones:null });
   }
   ["current","start","dir","step","target","freqLog","perWeek","done","progress"].forEach(k=>{ data[k]=null; });
   if(data.type==="milestone"){ data.done=null; }
@@ -5414,7 +5400,7 @@ upgradeSheet.init({
     ['急迫標記、倒數提醒', false, true],
     ['採購清單', false, true],
     ['庫存管理', false, true],
-    ['採購 × 庫存自動連動', false, true],
+    ['食材過期、家電保固提醒', false, true],
     ['多人共同目標', false, true],
     ['家事分工指派', false, true],
     ['同帳號裝置數', '1 台', '3 台']
