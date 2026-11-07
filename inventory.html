@@ -70,7 +70,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
 .row2{display:flex;gap:10px}.row2>.field{flex:1;min-width:0}
 .seg{display:flex;gap:6px}
-.seg button{flex:1;border:1.5px solid var(--border);background:#fff;border-radius:var(--radius-sm);padding:10px 4px;font-size:14px;color:var(--ink2);min-height:44px}
+.seg{flex-wrap:wrap}.seg button{flex:1 0 30%;border:1.5px solid var(--border);background:#fff;border-radius:var(--radius-sm);padding:10px 4px;font-size:14px;color:var(--ink2);min-height:44px}
 .seg button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
 .quick{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .quick button{border:1px solid var(--border);background:var(--surface2);border-radius:16px;padding:5px 12px;font-size:12.5px;color:var(--ink2);min-height:32px}
@@ -134,10 +134,10 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-var APP_VER="v2.0", BUILD_ID="1009-45";
+var APP_VER="v2.0", BUILD_ID="1009-47";
 var ADMIN_EMAIL="mp65p@hotmail.com";
 var CAL_URL='https://handyassist-system.github.io/My-Schedule/';
-var KIND={food:{n:'食材',i:'🥬'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
+var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
 var DEFAULT_LOCS=['客廳','廚房','臥室','浴室','陽台','儲藏室'];
 var DEFAULT_CFG={foodDays:3,warrantyDays:30};
 var firebaseConfig={
@@ -249,7 +249,7 @@ function convertOld(old){
   var out=[], locSet=[];
   (old.items||[]).forEach(function(o){
     if(!o||!o.name) return;
-    var kind=o.is3c?'appliance':(FOOD_CATS.indexOf(o.cat)>=0?'food':'other');
+    var kind=o.is3c?'appliance':(FOOD_CATS.indexOf(o.cat)>=0?'food':(o.cat==='medical'?'med':(['daily','personal','home'].indexOf(o.cat)>=0?'daily':'other')));
     var loc=o.location&&o.location!=='未分類'?o.location:'';
     if(loc&&locSet.indexOf(loc)<0) locSet.push(loc);
     out.push(clean({id:uid(),name:o.name,kind:kind,loc:loc,expiry:kind==='appliance'?'':(o.expiry||''),
@@ -349,11 +349,13 @@ function kindFields(kind,it){
       +'<div class="row2"><div class="field"><label>金額</label><input id="fPrice" type="number" inputmode="numeric" value="'+esc(it.price||'')+'" placeholder="選填"></div>'
       +'<div class="field"><label>購買通路</label><input id="fStore" value="'+esc(it.store||'')+'" placeholder="選填"></div></div>';
   }
-  if(kind==='food'){
+  if(kind==='food'||kind==='med'){
+    var qs=kind==='med'?[[30,'1個月後'],[90,'3個月後'],[180,'半年後'],[365,'1年後']]:[[3,'3天後'],[7,'1週後'],[14,'2週後'],[30,'1個月後'],[90,'3個月後']];
     return '<div class="field"><label>有效日期</label><input id="fExp" type="date" value="'+esc(it.expiry||'')+'">'
-      +'<div class="quick"><button type="button" data-q="3">3天後</button><button type="button" data-q="7">1週後</button><button type="button" data-q="14">2週後</button><button type="button" data-q="30">1個月後</button><button type="button" data-q="90">3個月後</button></div>'
+      +'<div class="quick">'+qs.map(function(q){return '<button type="button" data-q="'+q[0]+'">'+q[1]+'</button>';}).join('')+'</div>'
       +'<div class="hint">有填才會在快到期時提醒</div></div>';
   }
+  if(kind==='daily') return '';
   return '<div class="field"><label>有效日期（選填）</label><input id="fExp" type="date" value="'+esc(it.expiry||'')+'"></div>';
 }
 function updateWEnd(){
@@ -416,7 +418,7 @@ function saveForm(again){
     var y=parseFloat($('fWy').value)||0; it.warrantyYears=y||null;
     it.warrantyEnd=(y&&it.buyDate)?addMonths(it.buyDate,Math.round(y*12)):'';
     it.price=parseInt($('fPrice').value)||null; it.store=($('fStore').value||'').trim();
-  } else { it.expiry=$('fExp').value||''; }
+  } else if($('fExp')){ it.expiry=$('fExp').value||''; }
   setLastLoc(loc);
   writeItem(it);
   if(again){ editId=null; sheetKind=it.kind; _draft={name:'',loc:loc,note:''}; openForm(null,true); toast('已新增「'+name+'」'); }
