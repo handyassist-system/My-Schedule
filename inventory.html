@@ -84,6 +84,9 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 .setrow span{flex:1}
 .mini{border:1px solid var(--border);background:var(--surface2);border-radius:8px;min-width:38px;min-height:38px;font-size:14px;color:var(--ink2)}
 .setttl{font-size:13px;font-weight:700;color:var(--ink2);margin:18px 0 6px}
+.toast.act{pointer-events:auto}
+.toast .tundo{margin-left:12px;border:none;background:none;color:#ffd08a;font-weight:700;font-size:13.5px;padding:2px 4px;cursor:pointer}
+.usedbtn.x{padding:5px 9px;color:var(--ink2)}
 .toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:rgba(45,50,56,.94);color:#fff;border-radius:999px;padding:11px 18px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:400;max-width:90%}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .ro{display:none;background:var(--amber-light);color:#8A6112;padding:10px 14px;font-size:13px;align-items:center;gap:10px}
@@ -139,7 +142,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-var APP_VER="v2.0", BUILD_ID="1009-61";
+var APP_VER="v2.0", BUILD_ID="1009-63";
 var ADMIN_EMAIL="mp65p@hotmail.com";
 var CAL_URL='https://handyassist-system.github.io/My-Schedule/';
 var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},kitchen:{n:'廚房用品',i:'🍳'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
@@ -176,7 +179,8 @@ function addMonths(s,m){var d=toDate(s),day=d.getDate();d.setDate(1);d.setMonth(
 function emailKey(e){return String(e||"").toLowerCase().replace(/[.#$\[\]]/g,"_");}
 function uid(){return 's'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 var _tt;
-function toast(msg,ms){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show');},ms||1800);}
+function toast(msg,ms){var t=$('toast');t.classList.remove('act');t.textContent=msg;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show');},ms||1800);}
+function toastUndo(msg,fn){var t=$('toast');t.textContent=msg;var b=document.createElement('button');b.type='button';b.className='tundo';b.textContent='復原';b.onclick=function(){clearTimeout(_tt);t.classList.remove('show','act');fn();};t.appendChild(b);t.classList.add('show','act');clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove('show','act');},5000);}
 function failMsg(act,err){
   var code=String((err&&(err.code||err.message))||"");
   if((typeof navigator!=="undefined"&&navigator.onLine===false)||/unavailable|network|timeout|deadline|offline/i.test(code)) return act+"失敗，請檢查網路連線";
@@ -363,7 +367,7 @@ function card(it){
   return '<button class="card'+(s&&s.st!=='ok'?' '+s.st:'')+'" data-id="'+esc(it.id)+'">'
     +'<span class="ico">'+(KIND[it.kind]||KIND.other).i+'</span>'
     +'<span class="cbody"><div class="cname">'+esc(it.name)+'</div><div class="csub">'+esc(sub.join('・')||(KIND[it.kind]||KIND.other).n)+'</div></span>'
-    +(it.need?'<span class="tag need">🛒 待買</span><span class="usedbtn pri" data-bought="'+esc(it.id)+'">買到了</span><span class="usedbtn" data-used="'+esc(it.id)+'">取消</span>'
+    +(it.need?'<span class="usedbtn pri" data-bought="'+esc(it.id)+'">買到了</span><span class="usedbtn x" data-used="'+esc(it.id)+'" title="不買了">✕</span>'
       :(s?'<span class="tag '+s.st+'">'+s.label+'</span>':'')+(CONSUMABLE[it.kind]?'<span class="usedbtn" data-used="'+esc(it.id)+'">用完了</span>':''))
     +'</button>';
 }
@@ -447,7 +451,7 @@ function openForm(it,keep){
   bindSheet();
   $('bCancel').onclick=closeSheet; $('bSave').onclick=function(){saveForm(false);};
   if($('bAgain')) $('bAgain').onclick=function(){saveForm(true);};
-  if($('bDel')) $('bDel').onclick=function(){ var n=(it&&it.name)||''; askConfirm('刪除「'+esc(n)+'」？','刪除後無法復原。',function(){ removeItem(it.id); closeSheet(); toast('已刪除'); },'刪除'); };
+  if($('bDel')) $('bDel').onclick=function(){ var n=(it&&it.name)||''; var snap=Object.assign({},it); removeItem(it.id); closeSheet(); toastUndo('已刪除「'+n+'」',function(){ writeItem(snap); toast('已復原「'+n+'」',1800); }); };
   if(!isEdit) setTimeout(function(){ try{$('fName').focus();}catch(e){} },80);
 }
 function saveForm(again){
@@ -466,6 +470,8 @@ function saveForm(again){
     it.price=parseInt($('fPrice').value)||null; it.store=($('fStore').value||'').trim();
   } else if($('fExp')){ it.expiry=$('fExp').value||''; }
   setLastLoc(loc);
+  // 存完要看得到：目前的類別／位置／搜尋如果會把這筆藏起來，就放寬
+  if(!old){ if(curKind && curKind!==it.kind) curKind=it.kind; if(curLoc && curLoc!==(it.loc||'__none__') && curLoc!==it.loc) curLoc=''; if(($('q').value||'').trim() && String(it.name).toLowerCase().indexOf($('q').value.trim().toLowerCase())<0) $('q').value=''; }
   writeItem(it);
   if(again){ editId=null; sheetKind=it.kind; _draft={name:'',loc:loc,note:''}; openForm(null,true); toast('已新增「'+name+'」'); }
   else { closeSheet(); toast(old?'已儲存':'已新增「'+name+'」'); }
@@ -567,7 +573,7 @@ function enter(email){
 })();
 
 /* ───────── 事件 ───────── */
-$('addBtn').onclick=function(){ sheetKind=sheetKind||'food'; openForm(null); };
+$('addBtn').onclick=function(){ sheetKind=curKind||'food'; openForm(null); };   // 新增預設跟著目前看的類別，沒選就食材
 $('goSet').onclick=openSettings;
 $('goCal').onclick=function(){ location.href=CAL_URL; };
 $('q').addEventListener('input',render);

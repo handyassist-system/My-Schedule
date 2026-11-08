@@ -827,7 +827,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-64";
+const BUILD_ID = "1009-65";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -2805,7 +2805,7 @@ function updateShopBadge(){
   let n=0; curEntries().forEach(([id,r])=>{ if(r && r.category==="shopping" && !isDone(r) && (r.ordered || _shopDue(r))) n++; });
   try{ n+=_stockNeedList().length; }catch(e){}
   const old=nb.querySelector(".nbadge"); if(old) old.remove();
-  if(n>0){ const sp=document.createElement("span"); sp.className="nbadge"; sp.textContent=String(n); sp.title="待到貨／該買 "+n+" 件"; nb.appendChild(sp); }
+  if(n>0){ const sp=document.createElement("span"); sp.className="nbadge"; sp.textContent=String(n); sp.title="待到貨／待買 "+n+" 件"; nb.appendChild(sp); }
 }
 function _lastSub(){ try{ var v=localStorage.getItem("shopLastSub"); return (v && SUBCAT_LABEL[v])?v:"food"; }catch(e){ return "food"; } }
 function _shopDue(r){ return !!(r && r.dateStart && r.dateStart<=ymd(new Date())); }
@@ -2820,7 +2820,7 @@ function shopCardEl(r){
           '<div class="row1">'+(r.urgent?'<span class="urg-badge">❗️</span>':'')+'<span class="name">'+esc(r.title)+'</span></div>'+
           '<div class="meta"><span class="qty">數量 '+esc(r.qty||1)+'</span>'+
             (r.amount!=null&&r.amount!==""?' <span>💰 '+esc(r.amount)+'</span>':'')+
-            (r.dateStart?(_shopDue(r)?' <span style="color:#e08a00;font-weight:600">🔔 該買了</span>':' <span>📅 '+esc(mdWk(r.dateStart))+'</span>'):'')+
+            (r.dateStart?(_shopDue(r)?' <span style="color:#e08a00;font-weight:600">🔔 待買</span>':' <span>📅 '+esc(mdWk(r.dateStart))+'</span>'):'')+
             (hasRepeat(r)?' <span>'+repeatText(r.repeat)+'</span>':'')+
           '</div>'+
           (r.note?'<div class="note">'+esc(r.note)+'</div>':'')+
