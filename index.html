@@ -820,7 +820,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-57";
+const BUILD_ID = "1009-58";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1754,8 +1754,12 @@ function stockNeedCardEl(r){
   card.innerHTML='<button class="check" data-check title="買到了"></button>'+
     '<div class="body"><div class="row1"><span class="name">'+esc(r.title)+'</span></div>'+
     '<div class="meta"><span>📦 庫存用完了</span>'+(k[1]?' <span>'+k[2]+' '+esc(k[1])+'</span>':'')+'</div></div>'+
-    '<div class="acts"><button class="icon-btn" data-del title="取消待買">✕</button></div>';
+    '<div class="acts"><button class="icon-btn" data-edit title="編輯（下單、價格…）">✏️</button><button class="icon-btn" data-del title="取消待買">✕</button></div>';
   card.querySelector("[data-check]").addEventListener("click", function(){ openStockBuy(r._stk); });
+  card.querySelector("[data-edit]").addEventListener("click", function(){      // 編輯＝轉成一筆正式採購（可設已下單、到貨日、價格），買到後一樣會恢復庫存
+    if(!canAdvanced()){ showUpgrade("採購清單"); return; }
+    openRecordForm({ category:"shopping", title:r.title, subcategory:r.subcategory, stk:r.kind, qty:1 }, {}, true);
+  });
   card.querySelector("[data-del]").addEventListener("click", function(){ cancelStockNeed(r._stk, r.title); });
   return card;
 }
