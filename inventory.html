@@ -139,11 +139,13 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-var APP_VER="v2.0", BUILD_ID="1009-58";
+var APP_VER="v2.0", BUILD_ID="1009-61";
 var ADMIN_EMAIL="mp65p@hotmail.com";
 var CAL_URL='https://handyassist-system.github.io/My-Schedule/';
 var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},kitchen:{n:'廚房用品',i:'🍳'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
 var DEFAULT_LOCS=['廚房','冰箱','冷凍庫','客廳','臥室','浴室','儲藏室'];
+var KIND_LOCS={food:['冰箱','冷凍庫','廚房','儲藏室'],med:['客廳','臥室','浴室','廚房','儲藏室'],daily:['浴室','儲藏室','客廳','臥室','廚房'],kitchen:['廚房','儲藏室'],appliance:['客廳','廚房','臥室','浴室','儲藏室'],other:DEFAULT_LOCS};
+var OLD_DEFAULT_LOCS=['客廳','廚房','臥室','浴室','陽台','儲藏室'];   // 舊版預設：存在雲端的這幾個不算自訂
 var DEFAULT_CFG={foodDays:3,warrantyDays:30};
 var firebaseConfig={
   apiKey:"AIzaSyBGfQ1oKOrt723tJ3w7LIwDLSh0nGwRF30",
@@ -158,7 +160,7 @@ var db=null, FB_READY=false;
 try{ if(typeof firebase!=='undefined'){ firebase.initializeApp(firebaseConfig); db=firebase.database(); FB_READY=true; } }catch(e){ FB_READY=false; }
 
 var userEmail=null, items=[], locs=null, cfg=Object.assign({},DEFAULT_CFG);
-var READONLY=false, curLoc='', curKind='', editId=null, sheetKind='food', _ovlMode='';
+var READONLY=false, curLoc='', curKind='food', editId=null, sheetKind='food', _ovlMode='';
 var _listening=false;
 
 /* ───────── 工具 ───────── */
@@ -213,7 +215,8 @@ function saveCache(){ try{ localStorage.setItem(cacheKey(),JSON.stringify({items
 function loadCache(){
   try{ var c=JSON.parse(localStorage.getItem(cacheKey())||'null'); if(c){ items=c.items||[]; locs=c.locs||null; cfg=Object.assign({},DEFAULT_CFG,c.cfg||{}); } }catch(e){}
 }
-function getLocs(){ return (locs&&locs.length)?locs:DEFAULT_LOCS; }
+function customLocs(){ return (locs||[]).filter(function(l){ return l && DEFAULT_LOCS.indexOf(l)<0 && OLD_DEFAULT_LOCS.indexOf(l)<0; }); }
+function getLocs(kind){ var f=(kind&&KIND_LOCS[kind])?KIND_LOCS[kind]:[]; var all=f.concat(DEFAULT_LOCS.filter(function(l){return f.indexOf(l)<0;})); return all.concat(customLocs().filter(function(l){return all.indexOf(l)<0;})); }   // 全部位置都能選；類別只決定誰排前面
 function clean(o){var r={};Object.keys(o).forEach(function(k){var v=o[k];if(v===undefined||v===null||v==='')return;r[k]=v;});return r;}
 function listen(){
   if(!db||_listening) return; _listening=true;
@@ -273,7 +276,7 @@ function migrateOnce(done){
       function apply(old){
         var r=old?convertOld(old):{items:[],locs:[]};
         var updates={}; r.items.forEach(function(x){var id=x.id;delete x.id;updates['stock/'+id]=x;});
-        if(r.locs.length){ var all=DEFAULT_LOCS.slice(); r.locs.forEach(function(l){if(all.indexOf(l)<0)all.push(l);}); updates['stockLocs']=all; }
+        if(r.locs.length){ var all=[]; r.locs.forEach(function(l){ if(DEFAULT_LOCS.indexOf(l)<0&&OLD_DEFAULT_LOCS.indexOf(l)<0&&all.indexOf(l)<0)all.push(l);}); if(all.length) updates['stockLocs']=all; }
         updates['stockMigrated']=true;
         db.ref(base()).update(updates).then(function(){ if(r.items.length) toast('已轉換 '+r.items.length+' 項舊資料',3000); done(); }).catch(function(){ done(); });
       }
@@ -299,13 +302,16 @@ function render(){
   var chips='<button class="chip'+(curKind===''?' on':'')+'" data-kind="">全部</button>';
   Object.keys(KIND).forEach(function(k){ chips+='<button class="chip'+(curKind===k?' on':'')+'" data-kind="'+k+'">'+KIND[k].n+'</button>'; });
   $('kindChips').innerHTML=chips;
-  var L=getLocs().slice(); if(curLoc&&curLoc!=='__none__'&&L.indexOf(curLoc)<0) L.push(curLoc);
-  var hasNone=items.some(function(it){return !it.loc;});
+  var used={}; items.forEach(function(it){ if(it.loc && (!curKind || it.kind===curKind)) used[it.loc]=1; });      // 篩選只列「實際有物品」的位置
+  var L=getLocs().filter(function(l){return used[l];}); Object.keys(used).forEach(function(l){ if(L.indexOf(l)<0) L.push(l); });
+  if(curLoc&&curLoc!=='__none__'&&!used[curLoc]) curLoc='';
+  var hasNone=items.some(function(it){return !it.loc && (!curKind || it.kind===curKind);});
   $('locSel').innerHTML='<option value="">📍 全部位置</option>'+L.map(function(l){return '<option value="'+esc(l)+'"'+(curLoc===l?' selected':'')+'>'+esc(l)+'</option>';}).join('')+(hasNone?'<option value="__none__"'+(curLoc==='__none__'?' selected':'')+'>（不指定）</option>':'');
   // 篩選
   var kw=($('q').value||'').trim().toLowerCase();
+  var kw0=kw;
   var arr=items.filter(function(it){
-    if(curKind && it.kind!==curKind) return false;
+    if(curKind && !kw0 && it.kind!==curKind) return false;      // 搜尋時跨類別找，才不會因為停在「食材」而搜不到家電
     if(curLoc==='__none__'){ if(it.loc) return false; } else if(curLoc && it.loc!==curLoc) return false;
     if(kw){ var hay=((it.name||'')+' '+(it.loc||'')+' '+(it.model||'')+' '+(it.note||'')+' '+(it.store||'')).toLowerCase(); if(hay.indexOf(kw)<0) return false; }
     return true;
@@ -367,8 +373,8 @@ function lastLoc(){ try{return localStorage.getItem('stock_lastLoc')||'';}catch(
 function setLastLoc(v){ try{localStorage.setItem('stock_lastLoc',v);}catch(e){} }
 function openSheet(title,body,footer,mode){ $('shT').textContent=title; $('shB').innerHTML=body; $('shF').innerHTML=footer; $('ovl').classList.add('open'); _ovlMode=mode||''; }
 function closeSheet(){ $('ovl').classList.remove('open'); editId=null; _ovlMode=''; }
-function locOptions(sel){
-  var L=getLocs().slice(); if(sel&&L.indexOf(sel)<0) L.push(sel);
+function locOptions(sel,kind){
+  var L=getLocs(kind).slice(); if(sel&&L.indexOf(sel)<0) L.push(sel);
   return '<option value="">（不指定）</option>'+L.map(function(l){return '<option'+(l===sel?' selected':'')+' value="'+esc(l)+'">'+esc(l)+'</option>';}).join('')+'<option value="__new__">＋ 新增位置…</option>';
 }
 function kindFields(kind,it){
@@ -406,8 +412,8 @@ function bindSheet(){
   b.querySelectorAll('[data-q]').forEach(function(x){ x.onclick=function(){ $('fExp').value=addDays(today(),+x.dataset.q); }; });
   var ls=$('fLoc'); if(ls) ls.onchange=function(){
     if(ls.value==='__new__'){
-      var n=(prompt('新位置名稱')||'').trim(); var L=getLocs().slice();
-      if(n){ if(L.indexOf(n)<0){ L.push(n); saveLocs(L); } ls.innerHTML=locOptions(n); } else ls.value='';
+      var n=(prompt('新位置名稱')||'').trim(); var L=customLocs();
+      if(n){ if(getLocs().indexOf(n)<0){ L.push(n); saveLocs(L); } ls.innerHTML=locOptions(n,sheetKind); } else ls.value='';
     }
   };
   ['fBuy','fWy'].forEach(function(id){ var e=$(id); if(e){ e.onchange=updateWEnd; e.oninput=updateWEnd; } });
@@ -416,6 +422,8 @@ function bindSheet(){
 var _draft={};
 function rebuildFields(){
   _draft={name:($('fName')||{}).value||'',loc:($('fLoc')||{}).value||'',note:($('fNote')||{}).value||''};
+  var _it0=editId?items.find(function(x){return x.id===editId;}):null;
+  if(_draft.loc && getLocs(sheetKind).indexOf(_draft.loc)<0 && !(_it0&&_it0.loc===_draft.loc)) _draft.loc='';   // 換類別時，不屬於新類別的位置清掉
   var it=editId?items.find(function(x){return x.id===editId;}):null;
   openForm(it, true);
 }
@@ -426,10 +434,11 @@ function openForm(it,keep){
   var d=keep?_draft:(it||{});
   var name=d.name!==undefined?d.name:(it?it.name:''), loc=d.loc!==undefined?d.loc:(it?it.loc:lastLoc()), note=d.note!==undefined?d.note:(it?it.note:'');
   if(!isEdit&&!keep&&loc===undefined) loc=lastLoc();
+  if(!isEdit && loc && getLocs(sheetKind).indexOf(loc)<0) loc='';
   var body='<div class="field"><div class="seg">'
     +Object.keys(KIND).map(function(k){return '<button type="button" data-k="'+k+'" class="'+(sheetKind===k?'on':'')+'">'+KIND[k].i+' '+KIND[k].n+'</button>';}).join('')+'</div></div>'
     +'<div class="field"><label>名稱</label><input id="fName" value="'+esc(name||'')+'" placeholder="例：牛奶、冰箱、延長線"></div>'
-    +'<div class="field"><label>放在哪裡</label><select id="fLoc">'+locOptions(loc||'')+'</select></div>'
+    +'<div class="field"><label>放在哪裡</label><select id="fLoc">'+locOptions(loc||'',sheetKind)+'</select></div>'
     +kindFields(sheetKind,it&&it.kind===sheetKind?it:{})
     +'<div class="field"><label>備註（選填）</label><textarea id="fNote" rows="2" style="resize:none" placeholder="例：序號、維修紀錄">'+esc(note||'')+'</textarea></div>';
   var f=(isEdit?'<button class="btn dg" id="bDel">刪除</button>':'')+'<button class="btn gh" id="bCancel">取消</button>'
@@ -464,10 +473,10 @@ function saveForm(again){
 
 /* ───────── 設定 ───────── */
 function openSettings(){
-  var L=getLocs();
-  var body='<div class="setttl">📍 位置</div>'
+  var L=customLocs();
+  var body='<div class="setttl">📍 自訂位置</div>'
+    +(L.length?'':'<div class="hint">內建位置不夠用時，可在這裡新增</div>')
     +L.map(function(l,i){return '<div class="setrow"><span>'+esc(l)+'</span>'
-      +'<button class="mini" data-up="'+i+'"'+(i===0?' disabled':'')+'>↑</button>'
       +'<button class="mini" data-rn="'+i+'">✎</button>'
       +'<button class="mini" data-dl="'+i+'">✕</button></div>';}).join('')
     +'<button class="btn gh" id="locAdd" style="margin-top:8px;width:100%">＋ 新增位置</button>'
@@ -480,18 +489,17 @@ function openSettings(){
     +'<label class="btn gh" style="flex:1;text-align:center;margin:0;line-height:24px">⬆️ 匯入<input id="bkIn" type="file" accept="application/json,.json" style="display:none"></label></div>';
   openSheet('設定',body,'<button class="btn pri" id="setOk">完成</button>','settings');
   var b=$('shB');
-  b.querySelectorAll('[data-up]').forEach(function(x){x.onclick=function(){ if(locked())return; var i=+x.dataset.up,a=getLocs().slice(); var t=a[i];a[i]=a[i-1];a[i-1]=t; saveLocs(a); openSettings(); };});
   b.querySelectorAll('[data-rn]').forEach(function(x){x.onclick=function(){
-    if(locked())return; var i=+x.dataset.rn,a=getLocs().slice(),old=a[i]; var n=(prompt('位置名稱',old)||'').trim();
-    if(!n||n===old) return; if(a.indexOf(n)>=0){toast('已有這個位置');return;}
+    if(locked())return; var i=+x.dataset.rn,a=customLocs(),old=a[i]; var n=(prompt('位置名稱',old)||'').trim();
+    if(!n||n===old) return; if(getLocs().indexOf(n)>=0){toast('已有這個位置');return;}
     a[i]=n; items.filter(function(it){return it.loc===old;}).forEach(function(it){ it.loc=n; if(db) db.ref(base()+'stock/'+it.id+'/loc').set(n); });
     if(curLoc===old) curLoc=n; saveLocs(a); openSettings(); };});
   b.querySelectorAll('[data-dl]').forEach(function(x){x.onclick=function(){
-    if(locked())return; var i=+x.dataset.dl,a=getLocs().slice(),nm=a[i]; var cnt=items.filter(function(it){return it.loc===nm;}).length;
+    if(locked())return; var i=+x.dataset.dl,a=customLocs(),nm=a[i]; var cnt=items.filter(function(it){return it.loc===nm;}).length;
     askConfirm('刪除位置「'+esc(nm)+'」？',cnt?('裡面的 '+cnt+' 項物品不會被刪除，位置會變成「不指定」。'):'這個位置沒有物品。',function(){
       items.filter(function(it){return it.loc===nm;}).forEach(function(it){ it.loc=''; if(db) db.ref(base()+'stock/'+it.id+'/loc').remove(); });
       a.splice(i,1); if(curLoc===nm) curLoc=''; saveLocs(a); openSettings(); },'刪除'); };});
-  $('locAdd').onclick=function(){ if(locked())return; var n=(prompt('新位置名稱')||'').trim(); var a=getLocs().slice(); if(!n)return; if(a.indexOf(n)>=0){toast('已有這個位置');return;} a.push(n); saveLocs(a); openSettings(); };
+  $('locAdd').onclick=function(){ if(locked())return; var n=(prompt('新位置名稱')||'').trim(); var a=customLocs(); if(!n)return; if(getLocs().indexOf(n)>=0){toast('已有這個位置');return;} a.push(n); saveLocs(a); openSettings(); };
   $('setOk').onclick=function(){
     if(!READONLY){ var f=parseInt($('cFood').value), w=parseInt($('cWar').value);
       if(!isNaN(f)&&f>=0) cfg.foodDays=f; if(!isNaN(w)&&w>=0) cfg.warrantyDays=w; saveCfg(); }
@@ -506,7 +514,7 @@ function openSettings(){
     r.onload=function(){ try{
       var d=JSON.parse(r.result); if(!d||!Array.isArray(d.items)) throw 0;
       d.items.forEach(function(x){ if(x&&x.name){ x.id=x.id||uid(); writeItem(x); } });
-      if(Array.isArray(d.locs)&&d.locs.length){ var a=getLocs().slice(); d.locs.forEach(function(l){if(a.indexOf(l)<0)a.push(l);}); saveLocs(a); }
+      if(Array.isArray(d.locs)&&d.locs.length){ var a=customLocs(); d.locs.forEach(function(l){ if(getLocs().indexOf(l)<0&&a.indexOf(l)<0)a.push(l); }); saveLocs(a); }
       toast('已匯入 '+d.items.length+' 項'); closeSheet();
     }catch(e){ toast('這不是備份檔'); } };
     r.readAsText(this.files[0]);
