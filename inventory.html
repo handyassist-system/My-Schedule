@@ -51,6 +51,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 .tag.expired{background:var(--warn-light);color:var(--warn)}
 .tag.soon{background:var(--amber-light);color:var(--amber)}
 .tag.need{background:#fde8d4;color:#b45309}
+.usedbtn.pri{background:var(--accent,#c9743a);color:#fff;border-color:transparent}
 .usedbtn{flex:0 0 auto;font-size:12px;font-weight:700;border-radius:999px;padding:5px 11px;border:1px solid var(--line,#ddd);background:var(--surface2);color:var(--ink2)}
 .tag.ok{background:var(--accent-light);color:var(--accent)}
 .empty{text-align:center;padding:48px 20px;color:var(--ink2);font-weight:600}
@@ -138,7 +139,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-var APP_VER="v2.0", BUILD_ID="1009-57";
+var APP_VER="v2.0", BUILD_ID="1009-58";
 var ADMIN_EMAIL="mp65p@hotmail.com";
 var CAL_URL='https://handyassist-system.github.io/My-Schedule/';
 var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},kitchen:{n:'廚房用品',i:'🍳'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
@@ -329,6 +330,19 @@ function render(){
   $('list').innerHTML=html;
 }
 var CONSUMABLE={food:1,med:1,daily:1};
+function boughtNeed(id){
+  if(locked()) return;
+  var it=items.find(function(x){return x.id===id;}); if(!it||!it.need) return;
+  function done(exp){
+    var n=Object.assign({},it); delete n.need; delete n.needAt; delete n.needOnly; n.buyDate=today();
+    if(it.kind==='food'||it.kind==='med'){ if(exp) n.expiry=exp; else delete n.expiry; }
+    writeItem(n); toast('✅ 已買到「'+it.name+'」'+(n.expiry?'，有效到 '+n.expiry:''),2400);
+  }
+  if(it.kind!=='food'&&it.kind!=='med'){ done(''); return; }
+  openSheet('買到「'+it.name+'」了','<div class="field"><label>有效日期（選填）</label><input id="bExp" type="date"></div>',
+    '<button class="btn gh" id="bxCancel">取消</button><button class="btn pri" id="bxOk">完成</button>');
+  $('bxCancel').onclick=closeSheet; $('bxOk').onclick=function(){ var v=$('bExp').value||''; closeSheet(); done(v); };
+}
 function toggleNeed(id){
   if(locked()) return;
   var it=items.find(function(x){return x.id===id;}); if(!it) return;
@@ -343,7 +357,7 @@ function card(it){
   return '<button class="card'+(s&&s.st!=='ok'?' '+s.st:'')+'" data-id="'+esc(it.id)+'">'
     +'<span class="ico">'+(KIND[it.kind]||KIND.other).i+'</span>'
     +'<span class="cbody"><div class="cname">'+esc(it.name)+'</div><div class="csub">'+esc(sub.join('・')||(KIND[it.kind]||KIND.other).n)+'</div></span>'
-    +(it.need?'<span class="tag need">🛒 待買</span><span class="usedbtn" data-used="'+esc(it.id)+'">取消</span>'
+    +(it.need?'<span class="tag need">🛒 待買</span><span class="usedbtn pri" data-bought="'+esc(it.id)+'">買到了</span><span class="usedbtn" data-used="'+esc(it.id)+'">取消</span>'
       :(s?'<span class="tag '+s.st+'">'+s.label+'</span>':'')+(CONSUMABLE[it.kind]?'<span class="usedbtn" data-used="'+esc(it.id)+'">用完了</span>':''))
     +'</button>';
 }
@@ -551,7 +565,7 @@ $('goCal').onclick=function(){ location.href=CAL_URL; };
 $('q').addEventListener('input',render);
 $('kindChips').addEventListener('click',function(e){ var b=e.target.closest('[data-kind]'); if(!b) return; curKind=b.dataset.kind; render(); });
 $('locSel').addEventListener('change',function(){ curLoc=this.value; render(); });
-$('list').addEventListener('click',function(e){ var u=e.target.closest('[data-used]'); if(u){ e.stopPropagation(); toggleNeed(u.dataset.used); return; } var c=e.target.closest('[data-id]'); if(!c) return; var it=items.find(function(x){return x.id===c.dataset.id;}); if(it) openForm(it); });
+$('list').addEventListener('click',function(e){ var bo=e.target.closest('[data-bought]'); if(bo){ e.stopPropagation(); boughtNeed(bo.dataset.bought); return; } var u=e.target.closest('[data-used]'); if(u){ e.stopPropagation(); toggleNeed(u.dataset.used); return; } var c=e.target.closest('[data-id]'); if(!c) return; var it=items.find(function(x){return x.id===c.dataset.id;}); if(it) openForm(it); });
 $('ovl').addEventListener('click',function(e){ if(e.target===$('ovl')) closeSheet(); });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeSheet(); });
 

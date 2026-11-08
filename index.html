@@ -827,7 +827,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-62";
+const BUILD_ID = "1009-64";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1568,7 +1568,7 @@ function maybeNotifyToday(force){
     }catch(e){}
   }
   var all=_todayTimedEvents();                                     // 今天未完成(含逾期/無時間)
-  var AL=(isFirstToday||force)?_attnLists():{exp:[],soon:[],arrive:[]};   // 要注意的事：只在今天第一次提醒
+  var AL={exp:[],soon:[],arrive:[]};   // 通知只提醒當日行程；過期／到貨／待買進畫面看上方標籤
   var extra=[];
   if(AL.exp.length) extra.push('已過期：'+_attnNames(AL.exp));
   if(AL.soon.length) extra.push('快到期：'+_attnNames(AL.soon));
@@ -1709,18 +1709,27 @@ function _stockAlertList(){
   return out;
 }
 function _stockNames(a){ const n=a.slice(0,3).map(function(x){ return x.name+"（"+x.label+"）"; }).join("、"); return n+(a.length>3?" 等 "+a.length+" 項":""); }
-const ATTN_KINDS=[["exp","已過期","#FDECEC","#B03030"],["soon","快到期","#FDF3E3","#8A6112"],["arrive","待到貨","#E8F1FB","#245A91"]];
-function _attnLists(){
+const ATTN_KINDS=[["exp","已過期","#FDECEC","#B03030"],["soon","快到期","#FDF3E3","#8A6112"],["arrive","待到貨","#E8F1FB","#245A91"],["buy","待買","#E6F4EC","#2B7048"]];
+function _attnLists(forNotify){      // forNotify：通知只帶「要馬上處理」的（不含待買、未到貨日的待到貨）
   const st=_stockAlertList();
-  const L={ exp:[], soon:[], arrive:[] };
+  const L={ exp:[], soon:[], arrive:[], buy:[] };
   st.forEach(function(x){ const it={name:x.name,label:x.label,go:"stock"}; if(x.n<0 && !x.ap) L.exp.push(it); else L.soon.push(it); });
   const today=ymd(new Date());
   try{ curValues().forEach(function(r){
-    if(r && r.category==="shopping" && !isDone(r) && r.ordered && r.eta && r.eta<=today){
+    if(!(r && r.category==="shopping" && !isDone(r) && r.ordered)) return;
+    if(r.eta){
       const d=Math.round((new Date(today+"T00:00:00")-new Date(r.eta+"T00:00:00"))/86400000);
-      L.arrive.push({name:r.title||"商品", label:d===0?"今天到":"已過 "+d+" 天", go:"shop"});
-    }
+      if(d<0){ if(!forNotify) L.arrive.push({name:r.title||"商品", label:(-d)+" 天後到", go:"shop", _o:d}); return; }
+      L.arrive.push({name:r.title||"商品", label:d===0?"今天到":"已過 "+d+" 天", go:"shop", _o:-d});
+    } else if(!forNotify) L.arrive.push({name:r.title||"商品", label:"已下單", go:"shop", _o:-999});
   }); }catch(e){}
+  L.arrive.sort(function(a,b){ return b._o-a._o; });
+  if(!forNotify){
+    const seen={};
+    _dueShop().map(function(r){ return {name:r.title||"商品", label:"", go:"shop"}; })
+      .concat(_stockNeedList().map(function(r){ return {name:r.title, label:"庫存", go:"shop"}; }))
+      .forEach(function(x){ const k=_nmKey(x.name); if(!seen[k]){ seen[k]=1; L.buy.push(x); } });
+  }
   return L;
 }
 function _attnNames(a){ const n=a.slice(0,3).map(function(x){ return x.name+(x.label?"（"+x.label+"）":""); }).join("、"); return n+(a.length>3?" 等 "+a.length+" 項":""); }
