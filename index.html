@@ -382,7 +382,14 @@
   .gdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
   .gbig{font-size:22px;font-weight:800}
   .gu{font-size:13px;color:var(--muted)}
-  .stock-banner{margin:0 0 10px;padding:10px 13px;border-radius:12px;background:#FDF3E3;color:#8A6112;font-size:13.5px;line-height:1.6;cursor:pointer}
+  .stock-banner{margin:0 0 10px;font-size:13.5px;line-height:1.5}
+  .attn-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .attn-chip{border:none;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer}
+  .attn-chip.on{box-shadow:0 0 0 2px currentColor inset}
+  .attn-list{margin-top:6px;background:var(--card,#fff);border-radius:12px;padding:2px 12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .attn-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.06);cursor:pointer}
+  .attn-row:last-child{border-bottom:none}
+  .attn-row span:last-child{color:var(--muted,#888);flex:0 0 auto}
   .gfields{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px}
   .gpre{display:flex;flex-wrap:wrap;gap:6px}
   .gpre button{border:1.5px solid var(--line);background:var(--surface);color:var(--sub);border-radius:18px;padding:6px 12px;font-size:13px;min-height:34px}
@@ -820,7 +827,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-58";
+const BUILD_ID = "1009-62";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1561,9 +1568,12 @@ function maybeNotifyToday(force){
     }catch(e){}
   }
   var all=_todayTimedEvents();                                     // 今天未完成(含逾期/無時間)
-  var shop=(isFirstToday||force)?_dueShop():[];                    // 該買的待購：只在今天第一次提醒
-  var stk=(isFirstToday||force)?_stockAlertList():[];              // 庫存快到期：只在今天第一次提醒
-  if(!all.length && !shop.length && !stk.length){ if(force) toast('今天沒有未完成的行程'); return; }
+  var AL=(isFirstToday||force)?_attnLists():{exp:[],soon:[],arrive:[]};   // 要注意的事：只在今天第一次提醒
+  var extra=[];
+  if(AL.exp.length) extra.push('已過期：'+_attnNames(AL.exp));
+  if(AL.soon.length) extra.push('快到期：'+_attnNames(AL.soon));
+  if(AL.arrive.length) extra.push('到貨：'+_attnNames(AL.arrive));
+  if(!all.length && !extra.length){ if(force) toast('今天沒有未完成的行程'); return; }
   var nowHM=String(new Date().getHours()).padStart(2,"0")+":"+String(new Date().getMinutes()).padStart(2,"0");
   var upcoming=all.filter(function(r){ return r.start && r.start>=nowHM; });   // 還沒到時間的
   var title, body;
@@ -1571,13 +1581,10 @@ function maybeNotifyToday(force){
     if(all.length){
       var first=upcoming[0]||all[0];
       title = (first.start? '⏰ '+first.start+' ':'📅 ')+(first.title||'行程');
-      body  = '今天有 '+all.length+' 筆行程'+(shop.length?'；該買：'+_shopNames(shop):'')+(stk.length?'；快到期：'+_stockNames(stk):'');
-    } else if(shop.length){
-      title = '🛒 該買：'+_shopNames(shop);
-      body  = '待購 '+shop.length+' 項'+(stk.length?'；快到期：'+_stockNames(stk):'');
+      body  = '今天有 '+all.length+' 筆行程'+(extra.length?'；'+extra.join('；'):'');
     } else {
-      title = '⚠️ 快到期：'+_stockNames(stk);
-      body  = '庫存有 '+stk.length+' 項快到期';
+      title = extra.length===1 ? '⚠️ '+extra[0] : '⚠️ 今天要注意 '+extra.length+' 類';
+      body  = extra.join('；');
     }
   } else {                                                          // 之後 → 只提未完成
     if(!upcoming.length){ if(force) toast('今天沒有即將到來的行程'); return; }
@@ -1693,7 +1700,7 @@ function _stockInfo(it){
   const n = Math.round((_ymdToDate(d) - _ymdToDate(ymd(new Date())))/86400000);
   if(n>thr || (ap && n < -thr)) return null;
   const label = n<0 ? (ap?"保固已過":"過期"+(-n)+"天") : n===0 ? (ap?"保固今天到期":"今天到期") : (ap?"保固剩"+n+"天":"剩"+n+"天");
-  return { name:it.name||"", n:n, label:label };
+  return { name:it.name||"", n:n, label:label, ap:ap };
 }
 function _stockAlertList(){
   const out=[];
@@ -1702,15 +1709,42 @@ function _stockAlertList(){
   return out;
 }
 function _stockNames(a){ const n=a.slice(0,3).map(function(x){ return x.name+"（"+x.label+"）"; }).join("、"); return n+(a.length>3?" 等 "+a.length+" 項":""); }
+const ATTN_KINDS=[["exp","已過期","#FDECEC","#B03030"],["soon","快到期","#FDF3E3","#8A6112"],["arrive","待到貨","#E8F1FB","#245A91"]];
+function _attnLists(){
+  const st=_stockAlertList();
+  const L={ exp:[], soon:[], arrive:[] };
+  st.forEach(function(x){ const it={name:x.name,label:x.label,go:"stock"}; if(x.n<0 && !x.ap) L.exp.push(it); else L.soon.push(it); });
+  const today=ymd(new Date());
+  try{ curValues().forEach(function(r){
+    if(r && r.category==="shopping" && !isDone(r) && r.ordered && r.eta && r.eta<=today){
+      const d=Math.round((new Date(today+"T00:00:00")-new Date(r.eta+"T00:00:00"))/86400000);
+      L.arrive.push({name:r.title||"商品", label:d===0?"今天到":"已過 "+d+" 天", go:"shop"});
+    }
+  }); }catch(e){}
+  return L;
+}
+function _attnNames(a){ const n=a.slice(0,3).map(function(x){ return x.name+(x.label?"（"+x.label+"）":""); }).join("、"); return n+(a.length>3?" 等 "+a.length+" 項":""); }
 function renderStockBanner(){
-  const a=_stockAlertList();
+  const L=_attnLists();
+  const open=window.__attnOpen||"";
+  let chips="", list="";
+  ATTN_KINDS.forEach(function(k){
+    const a=L[k[0]]; if(!a.length) return;
+    chips+='<button type="button" class="attn-chip'+(open===k[0]?" on":"")+'" data-attn="'+k[0]+'" style="background:'+k[2]+';color:'+k[3]+'">'+k[1]+' '+a.length+'</button>';
+    if(open===k[0]) list='<div class="attn-list">'+a.map(function(x){ return '<div class="attn-row" data-go="'+x.go+'"><span>'+esc(x.name)+'</span><span>'+esc(x.label)+' ›</span></div>'; }).join("")+'</div>';
+  });
   document.querySelectorAll(".stock-banner").forEach(function(el){
-    if(!a.length){ el.style.display="none"; el.innerHTML=""; return; }
+    if(!chips){ el.style.display="none"; el.innerHTML=""; return; }
     el.style.display="";
-    el.innerHTML='⚠️ <b>庫存快到期 '+a.length+' 項</b>：'+esc(_stockNames(a))+' <span style="color:var(--muted)">›</span>';
+    el.innerHTML='<div class="attn-chips">'+chips+'</div>'+list;
   });
 }
-document.querySelectorAll(".stock-banner").forEach(function(el){ el.addEventListener("click", function(){ location.href="./inventory.html"; }); });
+document.querySelectorAll(".stock-banner").forEach(function(el){ el.addEventListener("click", function(e){
+  const c=e.target.closest("[data-attn]");
+  if(c){ window.__attnOpen = (window.__attnOpen===c.dataset.attn) ? "" : c.dataset.attn; renderStockBanner(); return; }
+  const r=e.target.closest("[data-go]");
+  if(r){ if(r.dataset.go==="stock") location.href="./inventory.html"; else switchTab("shop"); }
+}); });
 // 舊的庫存交換暫存（採購帶入、完成回傳）已不再使用：清掉一次
 function dropOldInvLink(){
   try{ ["inv_done_callbacks","inv_update_ack","inv_pending_purchase"].forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
@@ -1732,7 +1766,7 @@ function _stockNeedList(){          // 要顯示在待購清單的庫存待買�
   return out;
 }
 function restockNeed(id, rec, expiry, fromRecord){      // 買到了：清掉待買、更新有效日期（可不填）
-  const upd={ need:null, needAt:null, buyDate:ymd(new Date()) };
+  const upd={ need:null, needAt:null, needOnly:null, buyDate:ymd(new Date()) };
   upd.expiry = (rec.kind==="food"||rec.kind==="med") ? (expiry||null) : (rec.expiry||null);
   if(rec.kind==="food"||rec.kind==="med") upd.expiry = expiry||null; else delete upd.expiry;
   toast("✅ 已買到「"+(rec.name||"")+"」"+(upd.expiry?"，有效到 "+upd.expiry:""),2400);
@@ -1740,7 +1774,8 @@ function restockNeed(id, rec, expiry, fromRecord){      // 買到了：清掉待
 }
 function cancelStockNeed(id, name){
   toast("已取消「"+name+"」的待買",2200);
-  uref("stock/"+id).update({ need:null, needAt:null }).catch(function(e){ console.error(e); toast(failMsg("取消", e)); });
+  const _r=(state.stock||{})[id];
+  (_r && _r.needOnly ? uref("stock/"+id).remove() : uref("stock/"+id).update({ need:null, needAt:null })).catch(function(e){ console.error(e); toast(failMsg("取消", e)); });
 }
 function openStockBuy(id){
   const rec=(state.stock||{})[id]; if(!rec) return;
@@ -1753,7 +1788,7 @@ function stockNeedCardEl(r){
   const k=(STK_KINDS.filter(function(x){return x[0]===r.kind;})[0]||["","",""]);
   card.innerHTML='<button class="check" data-check title="買到了"></button>'+
     '<div class="body"><div class="row1"><span class="name">'+esc(r.title)+'</span></div>'+
-    '<div class="meta"><span>📦 庫存用完了</span>'+(k[1]?' <span>'+k[2]+' '+esc(k[1])+'</span>':'')+'</div></div>'+
+    '<div class="meta"><span>📦 庫存待買</span>'+(k[1]?' <span>'+k[2]+' '+esc(k[1])+'</span>':'')+'</div></div>'+
     '<div class="acts"><button class="icon-btn" data-edit title="編輯（下單、價格…）">✏️</button><button class="icon-btn" data-del title="取消待買">✕</button></div>';
   card.querySelector("[data-check]").addEventListener("click", function(){ openStockBuy(r._stk); });
   card.querySelector("[data-edit]").addEventListener("click", function(){      // 編輯＝轉成一筆正式採購（可設已下單、到貨日、價格），買到後一樣會恢復庫存
@@ -2002,6 +2037,7 @@ function openCalManager(){
   // 四支 App 共通
   html+='<div class="set-list">'
     + row('backupBtn','💾','資料備份')
+    + row('dupBuyBtn','🧹','整理重複採購')
     + (_standalone ? '' : row('installFromSettings','📲','安裝到手機桌面'))
     + row('shareAppBtn','🔗','分享這個 App')
     + '</div>'
@@ -2026,6 +2062,7 @@ function openCalManager(){
     + '<div class="set-foot">生活管家 ' + APP_VER + (state.isAdmin ? " · "+BUILD_ID : "") + '</div>';
 
   openSettingsPage(html);
+  if($("dupBuyBtn")) $("dupBuyBtn").addEventListener("click", function(){ cleanDuplicatePurchases(); });
   var _cfs=$("calFromSettings");
   if(_cfs) _cfs.addEventListener("click", function(){ openSetSub("📅 我的行事曆", window.__calSubHtml); });
   var _nb=$("notifyBtn");
@@ -2505,11 +2542,11 @@ function buildOverviewRows(){
   return out;
 }
 
-function _purchaseDupKey(r){ return (r.title||'')+'|'+(r.qty||'')+'|'+(r.doneDate||r.dateStart||''); }
+function _purchaseDupKey(r){ return String(r.title||'').trim().toLowerCase()+'|'+(r.qty||1)+'|'+(r.dateStart||'')+'|'+String(r.note||'').trim(); }
 function findDuplicatePurchases(){
   var groups={};
   Object.entries(state.records).forEach(function(pair){
-    var r=pair[1]; if(!r || r.category!=='shopping') return;
+    var r=pair[1]; if(!r || r.category!=='shopping' || isDone(r)) return;      // 已完成的歷史不動
     var k=_purchaseDupKey(r); (groups[k]=groups[k]||[]).push({id:pair[0], r:r});
   });
   var toDel=[];
@@ -2522,13 +2559,15 @@ function findDuplicatePurchases(){
 }
 function cleanDuplicatePurchases(){
   var ids=findDuplicatePurchases();
-  if(!ids.length){ toast('沒有發現重複的採購'); return; }
-  openConfirm('清除重複採購', '發現 <b>'+ids.length+'</b> 筆重複，各保留一筆、刪除多餘。', function(){
+  if(!ids.length){ toast('沒有重複的採購'); return; }
+  var list=ids.slice(0,8).map(function(id){ var r=state.records[id]||{}; return '・'+esc(r.title||'')+(r.qty>1?' ×'+esc(r.qty):'')+(r.dateStart?'（'+esc(mdWk(r.dateStart))+'）':''); }).join('<br>');
+  if(ids.length>8) list+='<br>…共 '+ids.length+' 筆';
+  openConfirm('整理重複採購', '以下 <b>'+ids.length+'</b> 筆跟別筆完全一樣（名稱、數量、日期、備註），會刪掉這幾筆、各留一筆：<br><br>'+list, function(){
     ids.forEach(function(id){ if(LOCAL_MODE){ delete state.records[id]; } else { uref('records/'+id).remove(); } });
     if(LOCAL_MODE) lsSaveRecords();
-    toast('已清除 '+ids.length+' 筆重複');
+    toast('已刪除 '+ids.length+' 筆重複');
     if(typeof renderAll==='function') renderAll();
-  }, '清除');
+  }, '刪除');
 }
 // 花費合計：把有填「金額」的記事加總（沒有任何金額就不顯示）。
 // 期間＝總覽目前選的年／月／日（預設當月）；日期以「行程日期，沒有就用完成日」為準；
@@ -2594,6 +2633,8 @@ function renderOverview(){
     if(k!=="log"){                            // 純紀錄不分未完成/已完成，一律顯示
       if(statusF==="pending" && k==="done") return false;
       if(statusF==="done" && k!=="done") return false;
+    } else if(statusF==="pending"){           // 「未完成」裡的純紀錄：只留今天和以後（已過去的去「全部」看）
+      const rgL=recRange(r); if(rgL && rgL[1]<today) return false;
     }
     return true;
   });
@@ -2614,12 +2655,31 @@ function renderOverview(){
 
   const order = statusF==="done" ? ["done","log"] : (statusF==="pending" ? ["scheduled","todo","log"] : ["scheduled","todo","done","log"]);
   let total=order.reduce((n,k)=>n+buckets[k].length,0);
-  var _dupN=findDuplicatePurchases().length;
-  var _dupBtn=_dupN>0 ? '<button onclick="cleanDuplicatePurchases()" style="width:100%;margin-bottom:8px;padding:9px;border:none;border-radius:8px;background:#E377C2;color:#fff;font-size:14px;font-weight:600">🧹 清除重複採購（'+_dupN+' 筆）</button>' : '';
-  const hint = _dupBtn + (searching ? "" : ovSpendHtml()) + (searching ? '<div class="ov-hint">🔍 搜尋「'+esc(($("ovSearch")||{}).value.trim())+'」　'+total+' 筆</div>' : '') + (todo ? '<div class="ov-hint">📋 當月未完成 ＋ 逾期（用上方年／月／日可查其他期間）</div>' : '');
+  const hint = (searching ? "" : ovSpendHtml()) + (searching ? '<div class="ov-hint">🔍 搜尋「'+esc(($("ovSearch")||{}).value.trim())+'」　'+total+' 筆</div>' : '') + (todo ? '<div class="ov-hint">📋 當月未完成 ＋ 逾期（用上方年／月／日可查其他期間）</div>' : '');
   if(total===0){ wrap.innerHTML=hint+'<div class="empty-state">'+(todo?'<span class="eico">🎉</span>目前沒有當月或逾期未完成的事':'<span class="eico">🔍</span>沒有符合的記事')+'</div>'; return; }
 
   wrap.innerHTML=hint;
+  if(statusF==="pending" && !searching){
+    // 未完成：依時間分區（逾期／本月／之後／沒有日期），卡片仍保留類型圖示
+    const sec={over:[],month:[],later:[],nodate:[]};
+    ["scheduled","todo","log"].forEach(function(k){ buckets[k].forEach(function(r){
+      const rg=recRange(r);
+      if(!rg) sec.nodate.push(r);
+      else if(rg[1]<today) sec.over.push(r);
+      else if(rg[0]<=today || inCurrentMonth(rg[0])) sec.month.push(r);
+      else sec.later.push(r);
+    }); });
+    [["over","⏰ 逾期"],["month","📅 本月"],["later","🔜 之後"],["nodate","🎒 沒有日期"]].forEach(function(x){
+      const items=sec[x[0]]; if(!items.length) return;
+      items.sort(cmp);
+      const head=document.createElement("div"); head.className="ov-section-head";
+      if(x[0]==="over") head.style.color="#d64545";
+      head.innerHTML=x[1]+'<span class="gcount">'+items.length+'</span>';
+      wrap.appendChild(head);
+      items.forEach(function(r){ wrap.appendChild(overviewCard(r, recKind(r))); });
+    });
+    return;
+  }
   order.forEach(k=>{
     const items=buckets[k];
     if(items.length===0) return;
@@ -3371,6 +3431,11 @@ function normalizeGoal(g0){
     g.members=[{name:"",target:(Number(g.perWeek)||1)*52,log:(g.freqLog||[]).map(d=>({d,v:1}))}];
     return g;
   }
+  if(g.type==="number" && g.mode==="sum" && g.unit==="元"){      // 舊的存錢：每次存多少 → 現在總共多少（數字加總，不變）
+    g.mode="last"; g.preset=g.preset||"save";
+    g.members=(g.members||[{name:""}]).map(m=>{ let run=0; const log=_mlog(m).map(e=>{ run+=Number(e.v)||0; return {d:e.d,v:run}; }); return Object.assign({},m,{start:0,log}); });
+    return g;
+  }
   if(g.type==="number" && !g.mode){
     g.mode="last";
     const src=(g.members&&g.members.length)?g.members:[{name:"",target:g.target,current:g.current,start:g.start}];
@@ -3413,8 +3478,10 @@ function goalProgress(g){
   return { complete: st.length>0 && st.every(s=>s.complete) };
 }
 function numberPatch(g, members){
-  return { type:"number", mode:g.mode, members:members.map(_cleanMember),
+  const pt={ type:"number", mode:g.mode, members:members.map(_cleanMember),
     current:null, start:null, dir:null, step:null, target:null, freqLog:null, perWeek:null, done:null };
+  if(g.preset) pt.preset=g.preset;
+  return pt;
 }
 
 /* ---- 圖：量測＝折線（每人一條，兩個數值時第二條淡色）；累加＝最近 8 週長條 ---- */
@@ -3442,6 +3509,19 @@ function goalChartSvg(g, h, big){
         if(sum>0) s+='<text x="'+(x+w/2)+'" y="'+(y-3).toFixed(1)+'" text-anchor="middle">'+fmtNum(sum)+'</text>';
         const d=new Date(t); s+='<text x="'+(x+w/2)+'" y="'+(h-2)+'" text-anchor="middle">'+(d.getMonth()+1)+'/'+d.getDate()+'</text>';
       }
+    });
+    return s+'</svg>';
+  }
+  if(g.preset==="save" && g.mode==="last" && mem.length===1 && !_gFields(g)){        // 存錢：每次更新一根（現在總共多少），越疊越高
+    const lg=_mlog(mem[0]).slice(-8); if(!lg.length) return "";
+    const tg=(mem[0].target!=null&&mem[0].target!==""&&!isNaN(Number(mem[0].target)))?Number(mem[0].target):null;
+    const mx=Math.max(1,tg||0,...lg.map(e=>Number(e.v)||0))*1.1;
+    const T=big?12:0, B=big?12:0, ph=h-2*P-T-B, N=Math.max(lg.length,4), bw=(W-2*P)/N;
+    let s='<svg viewBox="0 0 '+W+' '+h+'" width="100%" class="gchart-svg">';
+    if(tg!=null){ const y=(h-P-B-tg/mx*ph).toFixed(1); s+='<line x1="'+P+'" x2="'+(W-P)+'" y1="'+y+'" y2="'+y+'" stroke="#3E9B8E" stroke-width="1.5" stroke-dasharray="4 3" opacity=".7"/>'; if(big) s+='<text x="'+(W-P)+'" y="'+(Number(y)-3)+'" text-anchor="end">目標</text>'; }
+    lg.forEach((e,j)=>{ const v=Math.max(0,Number(e.v)||0), bh=v/mx*ph, x=P+j*bw+4, w=bw-8, y=h-P-B-bh;
+      s+='<rect x="'+x+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+bh.toFixed(1)+'" rx="3" fill="'+GC[0]+'" opacity="'+(j===lg.length-1?1:.55)+'"/>';
+      if(big){ s+='<text x="'+(x+w/2)+'" y="'+(y-3).toFixed(1)+'" text-anchor="middle">'+fmtNum(v)+'</text><text x="'+(x+w/2)+'" y="'+(h-2)+'" text-anchor="middle">'+_gmd(e.d)+'</text>'; }
     });
     return s+'</svg>';
   }
@@ -3553,7 +3633,7 @@ function goalCard(g){
     if(svg && fl && !multi) h+='<div class="glegend">'+fl.map((f,k)=>'<span><i class="gdot" style="background:'+GC[k%GC.length]+'"></i>'+esc(f.name)+'</span>').join("")+'</div>';
   }
   h+='<div class="acts">';
-  h+=(g.type==="number")?'<button class="icon-btn" data-rec>＋記錄</button>':'<button class="icon-btn" data-extend>＋ 加項目</button>';
+  h+=(g.type==="number")?'<button class="icon-btn" data-rec>＋更新</button>':'<button class="icon-btn" data-extend>＋ 加項目</button>';
   h+='<button class="icon-btn" data-edit>✏️</button></div></div>';
   card.innerHTML=h;
   card.querySelector("[data-edit]").addEventListener("click", ()=>openGoalForm(g));
@@ -3565,40 +3645,66 @@ function goalCard(g){
 }
 
 /* ---- 記錄／明細 ---- */
-function openGoalRecord(id){
+function openGoalRecord(id, edit){          // 更新數值：新增和修改共用同一個畫面（edit={mi,ei}＝修改那一筆，多一個刪除）
   if(!requireAuth()) return;
   const raw=state.goals[id]; if(!raw) return;
   const g=normalizeGoal(raw); if(g.type!=="number") return;
   const sum=g.mode==="sum", multi=_gMulti(g), fl=_gFields(g), u=g.unit?'（'+esc(g.unit)+'）':'';
-  const dateF='<div class="field"><label>日期</label><input id="gr_d" type="date" value="'+ymd(new Date())+'"></div>';
-  const html=(multi?'<div class="field"><label>誰</label><select id="gr_who">'+g.members.map((m,i)=>'<option value="'+i+'">'+esc(m.name)+'</option>').join("")+'</select></div>':'')+
+  const PP=GOAL_PRESETS[g.preset]||null;
+  const mi0=edit?edit.mi:0;
+  const ent=edit?(_mlog(g.members[mi0]||{})[edit.ei]||null):null;
+  const lg0=_mlog(g.members[mi0]||{}), lastE=lg0.length?lg0[lg0.length-1]:null;
+  const KEYS=["v","v2","v3"];
+  const pre=k=>{ const key=KEYS[k]; if(ent && ent[key]!=null) return ent[key]; if(!edit && !sum && lastE && lastE[key]!=null) return lastE[key]; return ""; };
+  const lab=(PP&&PP.rec)||(sum?"數量":"數值");
+  const dateF='<div class="field"><label>日期</label><input id="gr_d" type="date" value="'+esc(ent?ent.d:ymd(new Date()))+'"></div>';
+  const html=(multi?'<div class="field"><label>誰</label><select id="gr_who"'+(edit?' disabled':'')+'>'+g.members.map((m,i)=>'<option value="'+i+'"'+(i===mi0?' selected':'')+'>'+esc(m.name)+'</option>').join("")+'</select></div>':'')+
     (fl
-      ? '<div class="gfields">'+fl.map((f,k)=>'<div class="field"><label>'+esc(f.name)+(k===0?u:'')+'</label><input id="gr_f'+k+'" inputmode="decimal" autocomplete="off"></div>').join("")+'</div>'+dateF
-      : '<div class="two"><div class="field"><label>'+(sum?"數量":"數值")+u+'</label><input id="gr_v" inputmode="decimal" autocomplete="off" value="'+(sum?"1":"")+'"'+(sum?'':' placeholder="例如 68.5"')+'></div>'+dateF+'</div>');
+      ? '<div class="gfields">'+fl.map((f,k)=>'<div class="field"><label>'+esc(f.name)+(k===0?u:'')+'</label><input id="gr_f'+k+'" inputmode="decimal" autocomplete="off" value="'+esc(pre(k))+'"></div>').join("")+'</div>'+dateF
+      : '<div class="field"><label>'+esc(lab)+u+'</label><input id="gr_v" inputmode="decimal" autocomplete="off" style="font-size:18px" value="'+esc(sum&&!edit?"1":pre(0))+'"></div>'+dateF);
   const num=(el)=>{ const t=((el&&el.value)||"").replace(/[,，\s]/g,""); if(t==="") return null; const n=Number(t); return isNaN(n)?NaN:n; };
-  openSheet("記錄："+g.title, html, function(){
-    const e={ d:$("gr_d").value||ymd(new Date()) };
+  const reopen=()=>{ if(edit) setTimeout(()=>openGoalDetail(id),30); };
+  openSheet((edit?"修改記錄：":"更新：")+g.title, html, function(){
+    const e={ d:$("gr_d").value||ymd(new Date()) }, vals=[];
     if(fl){
-      const keys=["v","v2","v3"];
       for(let k=0;k<fl.length;k++){
         const n=num($("gr_f"+k));
         if(n===null){ if(k<2){ toast("請填「"+fl[k].name+"」"); return; } continue; }
         if(isNaN(n)){ toast("「"+fl[k].name+"」請輸入數字"); return; }
-        e[keys[k]]=n;
+        e[KEYS[k]]=n; vals[k]=n;
       }
     } else {
       const n=num($("gr_v"));
       if(n===null || isNaN(n)){ toast("請輸入數字"); return; }
-      e.v=n;
+      e.v=n; vals[0]=n;
     }
-    const mi=multi?Number($("gr_who").value):0;
-    const members=g.members.map((x,i)=> i===mi ? Object.assign({},x,{log:_mlog(x).concat([e]).sort(_dsort)}) : x);
-    saveGoalPatch(id, numberPatch(g,members));
-    closeSheet(); toast("已記錄");
-  }, null, "儲存");
+    const warns=[];
+    if(PP && PP.range) vals.forEach((n,k)=>{ const r=PP.range[k]; if(r && n!=null && (n<r[0]||n>r[1])) warns.push("「"+(fl?fl[k].name:PP.title)+"」填了 "+fmtNum(n)+"，看起來怪怪的"); });
+    if(g.preset==="save" && lastE && (!edit) && e.v<lastE.v) warns.push("比上次少了 "+fmtNum(lastE.v-e.v)+" 元");
+    const doSave=()=>{
+      const mi=multi?Number($("gr_who").value):0;
+      const members=g.members.map((x,i)=>{
+        if(i!==mi) return x;
+        const lg=_mlog(x);
+        if(edit) lg[edit.ei]=e; else lg.push(e);
+        return Object.assign({},x,{log:lg.sort(_dsort)});
+      });
+      saveGoalPatch(id, numberPatch(g,members));
+      closeSheet(); toast(edit?"已修改":"已更新："+g.title+" "+fmtV(e)+(g.unit?" "+g.unit:"")); reopen();
+    };
+    if(warns.length && window.confirmDialog){
+      window.confirmDialog({ title:"確認一下", message:warns.join("；")+"。要儲存嗎？", okText:"儲存", accent:"#3E9B8E" }).then(ok=>{ if(ok) doSave(); });
+    } else doSave();
+  }, edit?function(){
+    openConfirm("刪除這筆記錄", "確定刪除 <b>"+_gmd(ent?ent.d:"")+"　"+(ent?fmtV(ent):"")+"</b> 嗎？", function(){
+      const members=g.members.map((x,i)=>{ if(i!==mi0) return x; const lg=_mlog(x); lg.splice(edit.ei,1); return Object.assign({},x,{log:lg}); });
+      saveGoalPatch(id, numberPatch(g,members));
+      closeSheet(); toast("已刪除"); reopen();
+    }, "刪除");
+  }:null, "儲存");
   const vi=$("gr_v")||$("gr_f0"); if(vi){ vi.focus(); if(vi.select) vi.select(); }
 }
-function openGoalDetail(id){
+function openGoalDetail(id){                // 詳情：只負責看（圖表＋歷史）；點歷史那一筆＝修改
   const raw=state.goals[id]; if(!raw) return;
   const g=normalizeGoal(raw); if(g.type!=="number") return;
   const multi=_gMulti(g), unit=esc(g.unit||"");
@@ -3611,16 +3717,16 @@ function openGoalDetail(id){
   const rows=[]; g.members.forEach((m,mi)=>_mlog(m).forEach((e,ei)=>rows.push({mi,ei,e,name:m.name})));
   rows.sort((a,b)=>a.e.d<b.e.d?1:a.e.d>b.e.d?-1:(b.ei-a.ei));
   h+= rows.length
-    ? '<div class="ghist">'+rows.map(r=>'<div class="ghist-row"><span>'+_gmd(r.e.d)+(multi?'　'+esc(r.name):'')+'</span><span><b>'+fmtV(r.e)+'</b> <span class="gu">'+unit+'</span><button type="button" class="gdel" data-gdel="'+r.mi+':'+r.ei+'">✕</button></span></div>').join("")+'</div>'
+    ? '<div class="ghist">'+rows.map(r=>'<div class="ghist-row" data-gedit="'+r.mi+':'+r.ei+'" style="cursor:pointer"><span>'+_gmd(r.e.d)+(multi?'　'+esc(r.name):'')+'</span><span><b>'+fmtV(r.e)+'</b> <span class="gu">'+unit+'</span> <span style="color:var(--faint,#aaa)">›</span></span></div>').join("")+'</div>'
     : '<div class="gnone">還沒有記錄</div>';
+  h+='<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="btn-primary" id="gd_upd" style="flex:1">更新數值</button><button type="button" class="btn-ghost" id="gd_set" style="width:52px" aria-label="目標設定">⚙️</button></div>';
   openSheet(g.title, h, null, null, "關閉");
-  document.querySelectorAll("[data-gdel]").forEach(b=>b.addEventListener("click", function(){
-    const [mi,ei]=this.getAttribute("data-gdel").split(":").map(Number);
-    if(!confirm("刪除這筆記錄？")) return;
-    const members=g.members.map((m,i)=>{ if(i!==mi) return m; const lg=_mlog(m); lg.splice(ei,1); return Object.assign({},m,{log:lg}); });
-    saveGoalPatch(id, numberPatch(g,members));
-    openGoalDetail(id);
+  document.querySelectorAll("[data-gedit]").forEach(r=>r.addEventListener("click", function(){
+    const [mi,ei]=this.getAttribute("data-gedit").split(":").map(Number);
+    closeSheet(); openGoalRecord(id,{mi,ei});
   }));
+  $("gd_upd").addEventListener("click", function(){ closeSheet(); openGoalRecord(id); });
+  $("gd_set").addEventListener("click", function(){ closeSheet(); openGoalForm(Object.assign({id},g)); });
 }
 
 /* ---- 清單 ---- */
@@ -3664,14 +3770,20 @@ let goalMilestones=[];   // 編輯時暫存清單項目
 let goalMembers=[];      // 編輯時暫存成員（含記錄）
 let goalFields=[];       // 編輯時暫存「一次記多個數字」的項目（空＝只記一個數字）
 const GOAL_PRESETS={
-  weight:{title:"體重",kind:"last",unit:"公斤",cat:"health",fields:[]},
-  bp:{title:"血壓",kind:"last",unit:"mmHg",cat:"health",fields:["收縮","舒張"]},
-  sport:{title:"運動",kind:"sum",unit:"次",cat:"health",fields:[]},
-  save:{title:"存錢",kind:"sum",unit:"元",cat:"finance",fields:[]},
+  weight:{title:"體重",kind:"last",unit:"公斤",cat:"health",fields:[],lock:1,range:[[20,300]],rec:"現在的體重"},
+  bp:{title:"血壓",kind:"last",unit:"mmHg",cat:"health",fields:["收縮","舒張"],lock:1,range:[[60,260],[30,160]],rec:"現在的血壓"},
+  bs:{title:"血糖",kind:"last",unit:"mg/dL",cat:"health",fields:[],lock:1,range:[[30,600]],rec:"現在的血糖"},
+  waist:{title:"腰圍",kind:"last",unit:"公分",cat:"health",fields:[],lock:1,range:[[30,200]],rec:"現在的腰圍"},
+  sport:{title:"運動",kind:"sum",unit:"次",cat:"health",fields:[],lock:1,rec:"這次做了幾次"},
+  save:{title:"存錢",kind:"last",unit:"元",cat:"finance",fields:[],lock:1,rec:"現在總共存了多少"},
+  debt:{title:"還債",kind:"last",unit:"元",cat:"finance",fields:[],lock:1,target0:1,rec:"現在還剩多少"},
+  read:{title:"閱讀",kind:"sum",unit:"本",cat:null,fields:[],lock:1,rec:"這次讀了幾本"},
   list:{title:"",kind:"list",unit:"",cat:null,fields:[]},
   custom:{title:"",kind:"last",unit:"",cat:null,fields:[]}
 };
-const GOAL_PRESET_BTNS=[["weight","⚖️","體重"],["bp","🩺","血壓"],["sport","🏃","運動"],["save","💰","存錢"],["list","📝","清單"],["custom","✏️","自訂"]];
+const GOAL_PRESET_BTNS=[["weight","⚖️","體重"],["bp","🩺","血壓"],["bs","🩸","血糖"],["waist","📏","腰圍"],["sport","🏃","運動"],["save","💰","存錢"],["debt","💳","還債"],["read","📖","閱讀"],["list","📝","清單"],["custom","✏️","自訂"]];
+let goalPreset=null;
+function _goalLocked(){ const p=GOAL_PRESETS[goalPreset]; return !!(p&&p.lock); }
 function setGoalUnit(u){
   const sel=$("g_unit_sel"); if(!sel) return;
   if(u && !Array.from(sel.options).some(o=>o.value===u)){ const opt=document.createElement("option"); opt.value=u; opt.textContent=u; sel.insertBefore(opt, sel.options[sel.options.length-1]); }
@@ -3689,10 +3801,20 @@ function syncNumUI(){
   $("g_single").style.display=(multi||fm)?"none":"";
   if(fm) renderFieldEditor();
   renderMemEditor();
+  lockUI();
+}
+function lockUI(){          // 內建目標：名稱、單位、記錄項目鎖定，只留目標值可以填
+  const on=_goalLocked(), P=GOAL_PRESETS[goalPreset];
+  const t=$("g_title"); if(t){ t.readOnly=on; t.style.background=on?"var(--surface-1,#f1f1f1)":""; }
+  ["g_typebox","g_unitbox"].forEach(function(i){ const e=$(i); if(e) e.style.display=on?"none":""; });
+  const n=$("g_unitnote"); if(n) n.textContent=(on&&P&&P.unit)?"（"+P.unit+"）":"";
+  const af=$("g_addfield"); if(af) af.style.display=on?"none":"";
+  if(on){ const tf=$("g_tofields"); if(tf) tf.style.display="none"; }
 }
 function renderFieldEditor(){
   const box=$("g_fieldlist"); if(!box) return;
-  box.innerHTML=goalFields.map((f,i)=>'<div class="mem-edit"><input data-fn="'+i+'" autocomplete="off" value="'+esc(f.name)+'" placeholder="項目名稱（例：'+(["收縮","舒張","心跳"][i]||"項目")+'）" style="flex:1.2"><input data-ft="'+i+'" type="number" step="any" value="'+(f.target!=null?f.target:"")+'" placeholder="目標值" style="flex:1"><button type="button" class="ms-del" data-fdel="'+i+'">✕</button></div>').join("");
+  const lk=_goalLocked();
+  box.innerHTML=goalFields.map((f,i)=>'<div class="mem-edit"><input data-fn="'+i+'" autocomplete="off" value="'+esc(f.name)+'"'+(lk?' readonly style="flex:1.2;background:var(--surface-1,#f1f1f1)"':' placeholder="項目名稱（例：'+(["收縮","舒張","心跳"][i]||"項目")+'）" style="flex:1.2"')+'><input data-ft="'+i+'" type="number" step="any" value="'+(f.target!=null?f.target:"")+'" placeholder="目標值" style="flex:1">'+(lk?'':'<button type="button" class="ms-del" data-fdel="'+i+'">✕</button>')+'</div>').join("");
   box.querySelectorAll("[data-fn]").forEach(inp=>inp.addEventListener("input",function(){ goalFields[Number(this.getAttribute("data-fn"))].name=this.value; }));
   box.querySelectorAll("[data-ft]").forEach(inp=>inp.addEventListener("input",function(){ goalFields[Number(this.getAttribute("data-ft"))].target=this.value; }));
   box.querySelectorAll("[data-fdel]").forEach(b=>b.addEventListener("click",function(){
@@ -3703,7 +3825,9 @@ function renderFieldEditor(){
 }
 function applyGoalPreset(k){
   const p=GOAL_PRESETS[k]; if(!p) return;
+  goalPreset=k;
   $("g_title").value=p.title; $("g_type").value=p.kind; setGoalUnit(p.unit);
+  if($("g_target")) $("g_target").value=p.target0?"0":"";
   if(p.cat) setIconPick("g_category", p.cat);
   goalFields=p.fields.map(n=>({name:n,target:""}));
   document.querySelectorAll("[data-pre]").forEach(b=>b.classList.toggle("on", b.getAttribute("data-pre")===k));
@@ -3721,6 +3845,7 @@ function _unitSelect(cur){
 function openGoalForm(goal){
   if(!canAdvanced()){ showUpgrade(goal?"編輯目標":"新增目標"); return; }
   const isEdit=!!goal; const g=goal?normalizeGoal(goal):{};
+  goalPreset=isEdit?(g.preset||null):null;
   const kind=g.type==="milestone"?"list":(g.mode||"last");
   const cat=g.category||"life"; const yr=g.year||new Date().getFullYear();
   goalMilestones=(g.milestones||[]).map(m=>({text:m.text,done:!!m.done,date:m.date||""}));
@@ -3734,17 +3859,17 @@ function openGoalForm(goal){
     '<div class="field"><label>目標名稱</label><input id="g_title" autocomplete="off" value="'+esc(g.title||"")+'" placeholder="例如：減重、運動、血壓"></div>'+
     '<div class="two">'+
       '<div class="field"><label>年度</label><input id="g_year" type="number" value="'+yr+'"></div>'+
-      '<div class="field"><label>類型</label><select id="g_type">'+
-        '<option value="last"'+(kind==="last"?" selected":"")+'>量測（體重）</option>'+
-        '<option value="sum"'+(kind==="sum"?" selected":"")+'>累加（次數）</option>'+
+      '<div class="field" id="g_typebox"><label>記錄方式</label><select id="g_type">'+
+        '<option value="last"'+(kind==="last"?" selected":"")+'>填現在的數字（體重、存款）</option>'+
+        '<option value="sum"'+(kind==="sum"?" selected":"")+'>每次加總（運動次數）</option>'+
         '<option value="list"'+(kind==="list"?" selected":"")+'>清單（步驟）</option>'+
       '</select></div>'+
     '</div>'+
     '<div class="field"><label>分類</label>'+iconPicker("g_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
     '<div id="g_numbox"'+(kind==="list"?' style="display:none"':'')+'>'+
       '<div class="two">'+
-        '<div class="field" id="g_single"'+(multi?' style="display:none"':'')+'><label>目標值</label><input id="g_target" type="number" step="any" value="'+t0+'"></div>'+
-        '<div class="field"><label>單位</label>'+_unitSelect(g.unit||"")+'</div>'+
+        '<div class="field" id="g_single"'+(multi?' style="display:none"':'')+'><label>目標值<span id="g_unitnote" style="color:var(--faint,#999)"></span></label><input id="g_target" type="number" step="any" value="'+t0+'"></div>'+
+        '<div class="field" id="g_unitbox"><label>單位</label>'+_unitSelect(g.unit||"")+'</div>'+
       '</div>'+
       '<div id="g_fieldsbox" style="display:none"><div class="label-row"><label>每次記錄的項目與目標值</label><span class="manage-link" id="g_addfield">＋ 再加一項</span></div><div id="g_fieldlist"></div></div>'+
       '<div id="g_tofields" style="display:none;margin:-2px 0 10px"><span class="manage-link" id="g_tofields_btn">＋ 一次記多個數字（例如血壓：收縮、舒張）</span></div>'+
@@ -3831,7 +3956,7 @@ function saveGoal(id, prev){
   if(kind==="list"){
     const ms=goalMilestones.filter(m=>(m.text||"").trim()).map(m=>({text:m.text.trim(),done:!!m.done,date:m.date||null}));
     if(!ms.length){ toast("請至少新增一個項目"); return; }
-    Object.assign(data,{ type:"milestone", milestones:ms, mode:null, members:null, unit:null, fields:null });
+    Object.assign(data,{ type:"milestone", milestones:ms, mode:null, members:null, unit:null, fields:null, preset:null });
   } else {
     const multi=$("g_multi").checked;
     const fm=(kind==="last" && goalFields.length>=2);
@@ -3848,7 +3973,8 @@ function saveGoal(id, prev){
       mem=[Object.assign({},goalMembers[0]||{log:[]},{name:"",target:fm?"":$("g_target").value.trim()})];
     }
     if(!fm) mem.forEach(m=>{ if(m.log) m.log=m.log.map(e=>({d:e.d,v:e.v})); });   // 單一數字：丟掉多餘的第二、三項
-    Object.assign(data,{ type:"number", mode:kind, members:mem.map(_cleanMember), fields:fields, unit:($("g_unit").value||"").trim()||null, milestones:null });
+    if(goalPreset==="save") mem.forEach(m=>{ m.start=0; });            // 存錢從 0 算起
+    Object.assign(data,{ type:"number", mode:kind, members:mem.map(_cleanMember), fields:fields, unit:($("g_unit").value||"").trim()||null, milestones:null, preset:_goalLocked()?goalPreset:null });
   }
   ["current","start","dir","step","target","freqLog","perWeek","done","progress"].forEach(k=>{ data[k]=null; });
   if(data.type==="milestone"){ data.done=null; }
