@@ -271,6 +271,14 @@
     z-index:9999;box-shadow:var(--shadow);opacity:0;transition:opacity .2s;pointer-events:none;
   }
   .toast.show{opacity:1}
+  .toast.act{pointer-events:auto}
+  .toast .tact{margin-left:12px;border:none;background:none;color:#ffd08a;font-weight:700;font-size:14px;padding:2px 4px;cursor:pointer;font-family:inherit}
+  .gsum{font-size:14px;line-height:1.6;margin:0 0 8px;color:var(--ink,#333)}
+  .gsum b{font-size:15px}
+  .ghint{font-size:12px;color:var(--faint,#999);margin:8px 0 2px}
+  .glast{font-size:13px;color:var(--sub,#666);margin:-4px 0 10px}
+  .glast .lk{color:#3E9B8E;font-weight:600;margin-left:8px;cursor:pointer}
+  .sheet .grdel{float:right;margin-top:-34px;border:none;background:#fde8e8 !important;color:#c0392b !important;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
 
   /* ---- 第一批：假日 / 急迫 / 倒數 / 開關 ---- */
   .cell.holiday .num{color:#EF4444;font-weight:700}
@@ -827,7 +835,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-65";
+const BUILD_ID = "1009-67";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -912,7 +920,8 @@ function _msDate(ds, done){
   return '<span class="msd'+(red?' msd-red':' msd-faint')+'">'+base+tail+'</span>';
 }
 function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
-function toast(msg, ms){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"), ms||1800); }
+function toast(msg, ms){ const t=$("toast"); t.classList.remove("act"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"), ms||1800); }
+function toastAct(msg, label, fn){ const t=$("toast"); t.textContent=msg; const b=document.createElement("button"); b.type="button"; b.className="tact"; b.textContent=label; b.onclick=function(){ clearTimeout(t._t); t.classList.remove("show","act"); fn(); }; t.appendChild(b); t.classList.add("show","act"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show","act"), 5000); }
 // 失敗訊息：依原因自動套用三種模板之一
 function failMsg(act, err){
   var code = String((err && (err.code || err.message)) || "");
@@ -2569,7 +2578,7 @@ function findDuplicatePurchases(){
 function cleanDuplicatePurchases(){
   var ids=findDuplicatePurchases();
   if(!ids.length){ toast('沒有重複的採購'); return; }
-  var list=ids.slice(0,8).map(function(id){ var r=state.records[id]||{}; return '・'+esc(r.title||'')+(r.qty>1?' ×'+esc(r.qty):'')+(r.dateStart?'（'+esc(mdWk(r.dateStart))+'）':''); }).join('<br>');
+  var list=ids.slice(0,8).map(function(id){ var r=state.records[id]||{}; return '・'+esc(r.title||'')+(r.qty>1?' ×'+esc(r.qty):'')+(r.dateStart?'（'+mdWk(r.dateStart)+'）':''); }).join('<br>');
   if(ids.length>8) list+='<br>…共 '+ids.length+' 筆';
   openConfirm('整理重複採購', '以下 <b>'+ids.length+'</b> 筆跟別筆完全一樣（名稱、數量、日期、備註），會刪掉這幾筆、各留一筆：<br><br>'+list, function(){
     ids.forEach(function(id){ if(LOCAL_MODE){ delete state.records[id]; } else { uref('records/'+id).remove(); } });
@@ -2820,7 +2829,7 @@ function shopCardEl(r){
           '<div class="row1">'+(r.urgent?'<span class="urg-badge">❗️</span>':'')+'<span class="name">'+esc(r.title)+'</span></div>'+
           '<div class="meta"><span class="qty">數量 '+esc(r.qty||1)+'</span>'+
             (r.amount!=null&&r.amount!==""?' <span>💰 '+esc(r.amount)+'</span>':'')+
-            (r.dateStart?(_shopDue(r)?' <span style="color:#e08a00;font-weight:600">🔔 待買</span>':' <span>📅 '+esc(mdWk(r.dateStart))+'</span>'):'')+
+            (r.dateStart?(_shopDue(r)?' <span style="color:#e08a00;font-weight:600">🔔 待買</span>':' <span>📅 '+mdWk(r.dateStart)+'</span>'):'')+
             (hasRepeat(r)?' <span>'+repeatText(r.repeat)+'</span>':'')+
           '</div>'+
           (r.note?'<div class="note">'+esc(r.note)+'</div>':'')+
@@ -2862,9 +2871,9 @@ function renderShop(){
     ordered.forEach(r=>{
       let etaTxt;
       if(!r.eta) etaTxt='<span>🚚 未填到貨日</span>';
-      else if(r.eta<todayS){ const d=Math.round((new Date(todayS+"T00:00:00")-new Date(r.eta+"T00:00:00"))/86400000); etaTxt='<span style="color:#d64545;font-weight:600">🚚 預計 '+esc(mdWk(r.eta))+'，已過 '+d+' 天</span>'; }
+      else if(r.eta<todayS){ const d=Math.round((new Date(todayS+"T00:00:00")-new Date(r.eta+"T00:00:00"))/86400000); etaTxt='<span style="color:#d64545;font-weight:600">🚚 預計 '+mdWk(r.eta)+'，已過 '+d+' 天</span>'; }
       else if(r.eta===todayS) etaTxt='<span style="color:#e08a00;font-weight:600">🚚 預計今天到</span>';
-      else etaTxt='<span>🚚 預計 '+esc(mdWk(r.eta))+' 到</span>';
+      else etaTxt='<span>🚚 預計 '+mdWk(r.eta)+' 到</span>';
       const card=document.createElement("div");
       card.className="card item"+(r.urgent?" urgent-card":"");
       card.innerHTML=
@@ -3493,6 +3502,27 @@ function numberPatch(g, members){
   return pt;
 }
 
+function goalSummaryText(g){
+  if(g.type!=="number" || (g.members||[]).length!==1 || _gFields(g)) return "";
+  const m=g.members[0], lg=_mlog(m); if(!lg.length) return "";
+  const u=g.unit?' '+esc(g.unit):'';
+  const tg=(m.target!=null&&m.target!==""&&!isNaN(Number(m.target)))?Number(m.target):null;
+  if(g.mode==="sum"){
+    const tot=lg.reduce((a,e)=>a+(Number(e.v)||0),0);
+    const first=_ymdToDate(lg[0].d), now=new Date(); now.setHours(0,0,0,0);
+    const wks=Math.max(1,Math.round((now-first)/604800000));
+    let t='今年共 <b>'+fmtNum(tot)+'</b>'+u+(tg!=null?'，目標 '+fmtNum(tg)+'（'+Math.round(tot/tg*100)+'%）':'');
+    if(wks>=4){ const avg=tot/wks; t+='<br>平均每週 '+(Math.round(avg*10)/10)+u+(tg!=null?'，照這個速度全年約 '+fmtNum(Math.round(avg*52))+u:''); }
+    return t;
+  }
+  const cur=Number(lg[lg.length-1].v);
+  const st=(m.start!=null&&m.start!=="")?Number(m.start):Number(lg[0].v);
+  if(g.preset==="save") return '現在 <b>'+fmtNum(cur)+'</b>'+u+(tg!=null?'，目標 '+fmtNum(tg)+'（'+Math.round(cur/tg*100)+'%）':'');
+  let t=(st!==cur?fmtNum(st)+' → ':'')+'<b>'+fmtNum(cur)+'</b>'+u;
+  if(tg!=null){ const diff=Math.abs(tg-cur); t+='，目標 '+fmtNum(tg)+(diff>0?'（還差 '+fmtNum(Math.round(diff*100)/100)+'）':'（達成）'); }
+  return t;
+}
+
 /* ---- 圖：量測＝折線（每人一條，兩個數值時第二條淡色）；累加＝最近 8 週長條 ---- */
 function goalChartSvg(g, h, big){
   if(g.type!=="number") return "";
@@ -3516,7 +3546,7 @@ function goalChartSvg(g, h, big){
         s+='<rect x="'+x+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+bh.toFixed(1)+'" rx="3" fill="'+GC[i%GC.length]+'"/>'; });
       if(big){
         if(sum>0) s+='<text x="'+(x+w/2)+'" y="'+(y-3).toFixed(1)+'" text-anchor="middle">'+fmtNum(sum)+'</text>';
-        const d=new Date(t); s+='<text x="'+(x+w/2)+'" y="'+(h-2)+'" text-anchor="middle">'+(d.getMonth()+1)+'/'+d.getDate()+'</text>';
+        const d=new Date(t); s+='<text x="'+(x+w/2)+'" y="'+(h-2)+'" text-anchor="middle">'+(j===N-1?'本週':(d.getMonth()+1)+'/'+d.getDate())+'</text>';
       }
     });
     return s+'</svg>';
@@ -3552,7 +3582,7 @@ function goalChartSvg(g, h, big){
   const X=t=>(t1===t0)?(L+W)/2:(P+L+(t-t0)/(t1-t0)*(W-2*P-L));
   const Y=v=>h-P-(v-lo)/(hi-lo)*(h-2*P);
   let s='<svg viewBox="0 0 '+W+' '+h+'" width="100%" class="gchart-svg">';
-  tl.forEach(x=>{ const y=Y(x.v).toFixed(1); s+='<line x1="'+(P+L)+'" x2="'+(W-P)+'" y1="'+y+'" y2="'+y+'" stroke="'+x.c+'" stroke-width="1.5" stroke-dasharray="4 3" opacity=".55"/>'; });
+  tl.forEach(x=>{ const y=Y(x.v).toFixed(1); s+='<line x1="'+(P+L)+'" x2="'+(W-P)+'" y1="'+y+'" y2="'+y+'" stroke="'+x.c+'" stroke-width="1.5" stroke-dasharray="4 3" opacity=".55"/>'; if(big) s+='<text x="'+(W-P)+'" y="'+(Number(y)-3)+'" text-anchor="end">目標 '+fmtNum(x.v)+'</text>'; });
   mem.forEach((m,i)=>{
     const mp=pts.filter(p=>p.i===i);
     KEYS.forEach((k,ki)=>{
@@ -3564,6 +3594,7 @@ function goalChartSvg(g, h, big){
   });
   if(big){
     s+='<text x="2" y="'+(Y(dhi)+3).toFixed(1)+'">'+fmtNum(dhi)+'</text><text x="2" y="'+(Y(dlo)+3).toFixed(1)+'">'+fmtNum(dlo)+'</text>';
+    if(mem.length===1){ const lp=pts.filter(p=>p.v!=null).slice(-1)[0]; if(lp){ s+='<text x="'+(X(lp.t)).toFixed(1)+'" y="'+(Y(lp.v)-7).toFixed(1)+'" text-anchor="end" font-weight="700">'+fmtNum(lp.v)+'</text>'; } }
     const d0=new Date(t0), d1=new Date(t1);
     s+='<text x="'+(P+L)+'" y="'+(h-1)+'">'+(d0.getMonth()+1)+'/'+d0.getDate()+'</text>';
     if(t1!==t0) s+='<text x="'+(W-P)+'" y="'+(h-1)+'" text-anchor="end">'+(d1.getMonth()+1)+'/'+d1.getDate()+'</text>';
@@ -3667,7 +3698,9 @@ function openGoalRecord(id, edit){          // 更新數值：新增和修改共
   const pre=k=>{ const key=KEYS[k]; if(ent && ent[key]!=null) return ent[key]; if(!edit && !sum && lastE && lastE[key]!=null) return lastE[key]; return ""; };
   const lab=(PP&&PP.rec)||(sum?"數量":"數值");
   const dateF='<div class="field"><label>日期</label><input id="gr_d" type="date" value="'+esc(ent?ent.d:ymd(new Date()))+'"></div>';
-  const html=(multi?'<div class="field"><label>誰</label><select id="gr_who"'+(edit?' disabled':'')+'>'+g.members.map((m,i)=>'<option value="'+i+'"'+(i===mi0?' selected':'')+'>'+esc(m.name)+'</option>').join("")+'</select></div>':'')+
+  const lastLine=(!edit && !multi && lastE)?'<div class="glast">上次：'+_gmd(lastE.d)+'　'+fmtV(lastE)+(g.unit?' '+esc(g.unit):'')+'<span class="lk" id="gr_last">修改</span></div>':'';
+  const delTop=edit?'<button type="button" class="grdel" id="gr_del">🗑 刪除</button>':'';
+  const html=delTop+lastLine+(multi?'<div class="field"><label>誰</label><select id="gr_who"'+(edit?' disabled':'')+'>'+g.members.map((m,i)=>'<option value="'+i+'"'+(i===mi0?' selected':'')+'>'+esc(m.name)+'</option>').join("")+'</select></div>':'')+
     (fl
       ? '<div class="gfields">'+fl.map((f,k)=>'<div class="field"><label>'+esc(f.name)+(k===0?u:'')+'</label><input id="gr_f'+k+'" inputmode="decimal" autocomplete="off" value="'+esc(pre(k))+'"></div>').join("")+'</div>'+dateF
       : '<div class="field"><label>'+esc(lab)+u+'</label><input id="gr_v" inputmode="decimal" autocomplete="off" style="font-size:18px" value="'+esc(sum&&!edit?"1":pre(0))+'"></div>'+dateF);
@@ -3699,25 +3732,32 @@ function openGoalRecord(id, edit){          // 更新數值：新增和修改共
         return Object.assign({},x,{log:lg.sort(_dsort)});
       });
       saveGoalPatch(id, numberPatch(g,members));
-      closeSheet(); toast(edit?"已修改":"已更新："+g.title+" "+fmtV(e)+(g.unit?" "+g.unit:"")); reopen();
+      closeSheet(); reopen();
+      if(edit) toast("已修改");
+      else { const _ei=_mlog(members[mi]).findIndex(x=>x.d===e.d && fmtV(x)===fmtV(e)); toastAct("已更新："+g.title+" "+fmtV(e)+(g.unit?" "+g.unit:""), "修改", function(){ openGoalRecord(id,{mi, ei:_ei<0?_mlog(members[mi]).length-1:_ei}); }); }
     };
     if(warns.length && window.confirmDialog){
       window.confirmDialog({ title:"確認一下", message:warns.join("；")+"。要儲存嗎？", okText:"儲存", accent:"#3E9B8E" }).then(ok=>{ if(ok) doSave(); });
     } else doSave();
-  }, edit?function(){
-    openConfirm("刪除這筆記錄", "確定刪除 <b>"+_gmd(ent?ent.d:"")+"　"+(ent?fmtV(ent):"")+"</b> 嗎？", function(){
-      const members=g.members.map((x,i)=>{ if(i!==mi0) return x; const lg=_mlog(x); lg.splice(edit.ei,1); return Object.assign({},x,{log:lg}); });
-      saveGoalPatch(id, numberPatch(g,members));
-      closeSheet(); toast("已刪除"); reopen();
-    }, "刪除");
-  }:null, "儲存");
-  const vi=$("gr_v")||$("gr_f0"); if(vi){ vi.focus(); if(vi.select) vi.select(); }
+  }, null, "儲存");
+  if($("gr_del")) $("gr_del").addEventListener("click", function(){
+    // 直接刪，不再多問一次；5 秒內可以按「復原」
+    const before=g.members;
+    const members=g.members.map((x,i)=>{ if(i!==mi0) return x; const lg=_mlog(x); lg.splice(edit.ei,1); return Object.assign({},x,{log:lg}); });
+    saveGoalPatch(id, numberPatch(g,members));
+    closeSheet(); reopen();
+    toastAct("已刪除 "+_gmd(ent?ent.d:"")+"　"+(ent?fmtV(ent):"")+(g.unit?" "+g.unit:""), "復原", function(){ saveGoalPatch(id, numberPatch(g,before)); toast("已復原"); reopen(); });
+  });
+  if($("gr_last")) $("gr_last").addEventListener("click", function(){ closeSheet(); openGoalRecord(id,{mi:mi0, ei:lg0.length-1}); });
+  const vi=$("gr_v")||$("gr_f0"); if(vi && !edit){ vi.focus(); if(vi.select) vi.select(); }      // 修改時不自動跳鍵盤，才看得到上面的刪除
 }
 function openGoalDetail(id){                // 詳情：只負責看（圖表＋歷史）；點歷史那一筆＝修改
   const raw=state.goals[id]; if(!raw) return;
   const g=normalizeGoal(raw); if(g.type!=="number") return;
   const multi=_gMulti(g), unit=esc(g.unit||"");
   let h="";
+  const _sm=goalSummaryText(g); if(_sm) h+='<div class="gsum">'+_sm+'</div>';
+  if(g.mode==="sum") h+='<div class="glegend"><span>每週次數（最近 8 週）</span></div>';
   const svg=goalChartSvg(g,160,true); if(svg) h+='<div class="gchart">'+svg+'</div>';
   const fl=_gFields(g);
   if(multi) h+='<div class="glegend">'+g.members.map((m,i)=>'<span><i class="gdot" style="background:'+GC[i%GC.length]+'"></i>'+esc(m.name)+'</span>').join("")+'</div>';
@@ -3726,7 +3766,7 @@ function openGoalDetail(id){                // 詳情：只負責看（圖表＋
   const rows=[]; g.members.forEach((m,mi)=>_mlog(m).forEach((e,ei)=>rows.push({mi,ei,e,name:m.name})));
   rows.sort((a,b)=>a.e.d<b.e.d?1:a.e.d>b.e.d?-1:(b.ei-a.ei));
   h+= rows.length
-    ? '<div class="ghist">'+rows.map(r=>'<div class="ghist-row" data-gedit="'+r.mi+':'+r.ei+'" style="cursor:pointer"><span>'+_gmd(r.e.d)+(multi?'　'+esc(r.name):'')+'</span><span><b>'+fmtV(r.e)+'</b> <span class="gu">'+unit+'</span> <span style="color:var(--faint,#aaa)">›</span></span></div>').join("")+'</div>'
+    ? '<div class="ghint">點一筆可修改或刪除</div><div class="ghist">'+rows.map(r=>'<div class="ghist-row" data-gedit="'+r.mi+':'+r.ei+'" style="cursor:pointer"><span>'+_gmd(r.e.d)+(multi?'　'+esc(r.name):'')+'</span><span><b>'+fmtV(r.e)+'</b> <span class="gu">'+unit+'</span> <span style="color:var(--faint,#aaa)">›</span></span></div>').join("")+'</div>'
     : '<div class="gnone">還沒有記錄</div>';
   h+='<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="btn-primary" id="gd_upd" style="flex:1">更新數值</button><button type="button" class="btn-ghost" id="gd_set" style="width:52px" aria-label="目標設定">⚙️</button></div>';
   openSheet(g.title, h, null, null, "關閉");
