@@ -835,7 +835,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-67";
+const BUILD_ID = "1009-68";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -3635,6 +3635,19 @@ function renderGoals(){
   }
 }
 function _ordOf(g){ return g.order!=null?Number(g.order):(g.createdAt||0); }
+function goalCardNote(g,m,s){          // 卡片上取代小圖的一句話：只給會看趨勢的目標
+  if(g.preset==="save"||g.preset==="debt") return "";
+  const u=g.unit?" "+esc(g.unit):"";
+  if(g.mode==="sum"){
+    const n0=new Date(); n0.setHours(0,0,0,0); n0.setDate(n0.getDate()-((n0.getDay()+6)%7));
+    const t0=n0.getTime(); let wk=0;
+    (s.log||[]).forEach(e=>{ if(_ymdToDate(e.d).getTime()>=t0) wk+=Number(e.v)||0; });
+    return "本週 "+fmtNum(wk)+u;
+  }
+  const lg=s.log||[]; if(lg.length<2) return "";
+  const d=Math.round((Number(lg[lg.length-1].v)-Number(lg[lg.length-2].v))*100)/100;
+  return d===0?"和上次相同":"比上次"+(d<0?"少 ":"多 ")+fmtNum(Math.abs(d))+u;
+}
 function goalCard(g){
   const card=document.createElement("div");
   card.className="card goal-card"+(g.type==="number"?" gclick":"");
@@ -3661,6 +3674,7 @@ function goalCard(g){
       const curTxt=s.last?(g.mode==="sum"?fmtNum(s.cur):fmtV(s.last)):"—";
       const sub=[];
       if(s.tgt!=null){ if(s.complete) sub.push("🎉 已達標"); else if(s.cur!=null) sub.push("還差 "+fmtNum(Math.abs(s.tgt-s.cur))+unit); }
+      const _nt=(!multi&&!fl)?goalCardNote(g,m,s):""; if(_nt) sub.push(_nt);
       if(s.last) sub.push("最近 "+_gwhen(s.last.d));
       h+='<div class="gmem"><div class="gmem-hd">'+(multi?'<i class="gdot" style="background:'+GC[i%GC.length]+'"></i>'+esc(m.name)+'　':'')+
         (fl?'<span class="gu">'+esc(fl.map(f=>f.name).join("/"))+'　</span>':'')+'<b class="gbig">'+curTxt+'</b> <span class="gu">'+unit+(fl?(fl.some(f=>f.target!=null)?' 目標 '+fl.map(f=>f.target!=null?fmtNum(f.target):"–").join("/"):''):(s.tgt!=null?' / '+fmtNum(s.tgt):''))+'</span></div>';
@@ -3669,8 +3683,6 @@ function goalCard(g){
       h+='</div>';
     });
     h+='</div>';
-    const svg=goalChartSvg(g,70,false); if(svg) h+='<div class="gchart">'+svg+'</div>';
-    if(svg && fl && !multi) h+='<div class="glegend">'+fl.map((f,k)=>'<span><i class="gdot" style="background:'+GC[k%GC.length]+'"></i>'+esc(f.name)+'</span>').join("")+'</div>';
   }
   h+='<div class="acts">';
   h+=(g.type==="number")?'<button class="icon-btn" data-rec>＋更新</button>':'<button class="icon-btn" data-extend>＋ 加項目</button>';
@@ -3758,7 +3770,7 @@ function openGoalDetail(id){                // 詳情：只負責看（圖表＋
   let h="";
   const _sm=goalSummaryText(g); if(_sm) h+='<div class="gsum">'+_sm+'</div>';
   if(g.mode==="sum") h+='<div class="glegend"><span>每週次數（最近 8 週）</span></div>';
-  const svg=goalChartSvg(g,160,true); if(svg) h+='<div class="gchart">'+svg+'</div>';
+  const svg=(g.preset==="debt")?"":goalChartSvg(g,160,true); if(svg) h+='<div class="gchart">'+svg+'</div>';
   const fl=_gFields(g);
   if(multi) h+='<div class="glegend">'+g.members.map((m,i)=>'<span><i class="gdot" style="background:'+GC[i%GC.length]+'"></i>'+esc(m.name)+'</span>').join("")+'</div>';
   if(fl) h+= multi ? '<div class="glegend"><span>'+esc(fl.map(f=>f.name).join("／"))+'（線由深到淺）</span></div>'
