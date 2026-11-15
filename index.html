@@ -835,7 +835,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-68";
+const BUILD_ID = "1009-70";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -3683,6 +3683,7 @@ function goalCard(g){
       h+='</div>';
     });
     h+='</div>';
+    if(fl){ const _sv=goalChartSvg(g,84,false); if(_sv) h+='<div class="gchart">'+_sv+'</div><div class="glegend">'+fl.map((f,k)=>'<span><i class="gdot" style="background:'+GC[k%GC.length]+'"></i>'+esc(f.name)+'</span>').join("")+'</div>'; }   // 血壓：兩條線一起看，卡片上也要有圖
   }
   h+='<div class="acts">';
   h+=(g.type==="number")?'<button class="icon-btn" data-rec>＋更新</button>':'<button class="icon-btn" data-extend>＋ 加項目</button>';
@@ -3709,7 +3710,7 @@ function openGoalRecord(id, edit){          // 更新數值：新增和修改共
   const KEYS=["v","v2","v3"];
   const pre=k=>{ const key=KEYS[k]; if(ent && ent[key]!=null) return ent[key]; if(!edit && !sum && lastE && lastE[key]!=null) return lastE[key]; return ""; };
   const lab=(PP&&PP.rec)||(sum?"數量":"數值");
-  const dateF='<div class="field"><label>日期</label><input id="gr_d" type="date" value="'+esc(ent?ent.d:ymd(new Date()))+'"></div>';
+  const dateF='<div class="field"><label>日期</label><input id="gr_d" type="date" max="'+ymd(new Date())+'" value="'+esc(ent?ent.d:ymd(new Date()))+'"></div>';
   const lastLine=(!edit && !multi && lastE)?'<div class="glast">上次：'+_gmd(lastE.d)+'　'+fmtV(lastE)+(g.unit?' '+esc(g.unit):'')+'<span class="lk" id="gr_last">修改</span></div>':'';
   const delTop=edit?'<button type="button" class="grdel" id="gr_del">🗑 刪除</button>':'';
   const html=delTop+lastLine+(multi?'<div class="field"><label>誰</label><select id="gr_who"'+(edit?' disabled':'')+'>'+g.members.map((m,i)=>'<option value="'+i+'"'+(i===mi0?' selected':'')+'>'+esc(m.name)+'</option>').join("")+'</select></div>':'')+
@@ -3720,6 +3721,7 @@ function openGoalRecord(id, edit){          // 更新數值：新增和修改共
   const reopen=()=>{ if(edit) setTimeout(()=>openGoalDetail(id),30); };
   openSheet((edit?"修改記錄：":"更新：")+g.title, html, function(){
     const e={ d:$("gr_d").value||ymd(new Date()) }, vals=[];
+    if(e.d>ymd(new Date())){ toast("日期不能是未來，請選今天或之前"); return; }
     if(fl){
       for(let k=0;k<fl.length;k++){
         const n=num($("gr_f"+k));
