@@ -405,6 +405,12 @@
   .attn-row:last-child{border-bottom:none}
   .attn-row span:last-child{color:var(--muted,#888);flex:0 0 auto}
   .gfields{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px}
+  .g-namerow{display:flex;gap:8px;align-items:stretch}
+  .g-namerow input{flex:1;min-width:0}
+  .g-prebtn{flex:none;border:1.5px solid var(--line);background:var(--surface);color:var(--sub);border-radius:10px;padding:0 12px;font-size:13px;font-weight:600;white-space:nowrap}
+  .g-prewrap{position:relative}
+  .g-premenu{position:absolute;right:0;top:calc(100% + 2px);z-index:20;width:100%;max-width:340px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .g-premenu button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:9px 10px;font-size:14px;text-align:left;min-height:40px}
   .gpre{display:flex;flex-wrap:wrap;gap:6px}
   .gpre button{border:1.5px solid var(--line);background:var(--surface);color:var(--sub);border-radius:18px;padding:6px 12px;font-size:13px;min-height:34px}
   .gpre button.on{border-color:var(--primary);color:var(--primary);font-weight:700;background:var(--bg)}
@@ -837,7 +843,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-74";
+const BUILD_ID = "1009-75";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -3945,8 +3951,10 @@ function openGoalForm(goal){
   const t0=goalMembers[0]&&goalMembers[0].target!=null?goalMembers[0].target:"";
   const moreOpen=multi||!!g.note;
   const html=
-    (isEdit?'':'<div class="field"><label>常用目標</label><div class="gpre">'+GOAL_PRESET_BTNS.map(x=>'<button type="button" data-pre="'+x[0]+'">'+x[1]+' '+x[2]+'</button>').join("")+'</div></div>')+
-    '<div class="field"><label>目標名稱</label><input id="g_title" autocomplete="off" value="'+esc(g.title||"")+'" placeholder="例如：減重、運動、血壓"></div>'+
+    '<div class="field"><label>分類</label>'+iconPicker("g_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
+    '<div class="field g-prewrap"><label>目標名稱</label><div class="g-namerow"><input id="g_title" autocomplete="off" value="'+esc(g.title||"")+'" placeholder="例如：減重、運動、血壓">'+
+      (isEdit?'':'<button type="button" class="g-prebtn" id="g_prebtn">常用 ▾</button>')+'</div>'+
+      (isEdit?'':'<div class="g-premenu" id="g_premenu" style="display:none">'+GOAL_PRESET_BTNS.map(x=>'<button type="button" data-pre="'+x[0]+'">'+x[1]+' '+x[2]+'</button>').join("")+'</div>')+'</div>'+
     '<div class="two">'+
       '<div class="field"><label>年度</label><input id="g_year" type="number" value="'+yr+'"></div>'+
       '<div class="field" id="g_typebox"><label>記錄方式</label><select id="g_type">'+
@@ -3956,7 +3964,6 @@ function openGoalForm(goal){
       '</select></div>'+
     '</div>'+
     '<div class="field"><label>達標日（選填）</label><input id="g_tdate" type="date" value="'+esc(g.targetDate||"")+'"></div>'+
-    '<div class="field"><label>分類</label>'+iconPicker("g_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
     '<div id="g_numbox"'+(kind==="list"?' style="display:none"':'')+'>'+
       '<div class="two">'+
         '<div class="field" id="g_single"'+(multi?' style="display:none"':'')+'><label>目標值<span id="g_unitnote" style="color:var(--faint,#999)"></span></label><input id="g_target" type="number" step="any" value="'+t0+'"></div>'+
@@ -3996,7 +4003,11 @@ function openGoalForm(goal){
     } else { $("g_unit").value=this.value; }
   });
   $("g_type").addEventListener("change", syncNumUI);
-  document.querySelectorAll("[data-pre]").forEach(b=>b.addEventListener("click", function(){ applyGoalPreset(this.getAttribute("data-pre")); }));
+  document.querySelectorAll("[data-pre]").forEach(b=>b.addEventListener("click", function(){ applyGoalPreset(this.getAttribute("data-pre")); const m=$("g_premenu"); if(m) m.style.display="none"; }));
+  if($("g_prebtn")) $("g_prebtn").addEventListener("click", function(e){ e.stopPropagation(); const m=$("g_premenu"); if(m) m.style.display=(m.style.display==="none")?"":"none"; });
+  if(window._gMenuClose) $("sheet").removeEventListener("click", window._gMenuClose);
+  window._gMenuClose=function(e){ const m=$("g_premenu"); if(m && m.style.display!=="none" && !e.target.closest("#g_premenu,#g_prebtn")) m.style.display="none"; };
+  $("sheet").addEventListener("click", window._gMenuClose);
   $("g_tofields_btn").addEventListener("click", function(){ goalFields=[{name:"",target:""},{name:"",target:""}]; syncNumUI(); });
   $("g_addfield").addEventListener("click", function(){ if(goalFields.length>=3){ toast("最多 3 項"); return; } goalFields.push({name:"",target:""}); syncNumUI(); });
   $("g_moretoggle").addEventListener("click", function(){
