@@ -40,6 +40,10 @@ header{position:sticky;top:0;z-index:40;background:var(--bg);padding:calc(10px +
 main{max-width:560px;margin:0 auto;padding:6px 14px}
 .sec{font-size:12.5px;font-weight:700;color:var(--ink2);margin:14px 2px 6px}
 .sec.alert{color:var(--warn)}
+.grp{display:flex;align-items:center;gap:6px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--border);padding:12px 2px 6px;margin:6px 0 8px;font:inherit;font-size:13.5px;font-weight:700;color:var(--ink2);cursor:pointer}
+.grp .n{font-weight:500;color:var(--ink3)}
+.grp .ar{width:14px;color:var(--ink3);font-size:11px}
+.empty .addnew{display:inline-block;margin-top:14px;padding:10px 18px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .card{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);border-left:4px solid transparent;width:100%;text-align:left;border-top:none;border-right:none;border-bottom:none;color:inherit}
 .card.expired{border-left-color:var(--warn)}
 .card.soon{border-left-color:var(--amber)}
@@ -142,7 +146,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-var APP_VER="v2.0", BUILD_ID="1009-63";
+var APP_VER="v2.0", BUILD_ID="1009-65";
 var ADMIN_EMAIL="mp65p@hotmail.com";
 var CAL_URL='https://handyassist-system.github.io/My-Schedule/';
 var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},kitchen:{n:'廚房用品',i:'🍳'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
@@ -304,7 +308,8 @@ function render(){
   if($('appWrap').style.display==='none') return;
   // 位置按鈕
   var chips='<button class="chip'+(curKind===''?' on':'')+'" data-kind="">全部</button>';
-  Object.keys(KIND).forEach(function(k){ chips+='<button class="chip'+(curKind===k?' on':'')+'" data-kind="'+k+'">'+KIND[k].n+'</button>'; });
+  var hasKind={}; items.forEach(function(it){ hasKind[it.kind]=1; });
+  Object.keys(KIND).forEach(function(k){ if(!hasKind[k] && curKind!==k && items.length) return; chips+='<button class="chip'+(curKind===k?' on':'')+'" data-kind="'+k+'">'+KIND[k].n+'</button>'; });          // 只列有東西的類別
   $('kindChips').innerHTML=chips;
   var used={}; items.forEach(function(it){ if(it.loc && (!curKind || it.kind===curKind)) used[it.loc]=1; });      // 篩選只列「實際有物品」的位置
   var L=getLocs().filter(function(l){return used[l];}); Object.keys(used).forEach(function(l){ if(L.indexOf(l)<0) L.push(l); });
@@ -331,24 +336,35 @@ function render(){
   if(!items.length){
     html='<div class="empty"><b>📦</b>還沒有物品<span>按右上「＋ 新增」開始記</span></div>';
   } else if(!arr.length && !needs.length){
-    html='<div class="empty"><b>🔍</b>找不到符合的物品</div>';
+    var qv=($('q').value||'').trim();
+    html='<div class="empty"><b>🔍</b>找不到符合的物品'+(qv?'<button class="addnew" data-addname="'+esc(qv)+'">＋ 新增「'+esc(qv)+'」</button>':'')+'</div>';
   } else {
-    if(needs.length) html+='<div class="sec">🛒 待買（'+needs.length+'）</div>'+needs.map(card).join('');
-    if(alerts.length) html+='<div class="sec alert">⚠️ 快到期（'+alerts.length+'）</div>'+alerts.map(card).join('');
-    if(rest.length) html+=(alerts.length?'<div class="sec">全部（'+rest.length+'）</div>':'')+rest.map(card).join('');
+    if(needs.length) html+='<div class="sec">🛒 待買（'+needs.length+'）</div>'+needs.map(function(it){return card(it);}).join('');
+    if(alerts.length) html+='<div class="sec alert">⚠️ 快到期（'+alerts.length+'）</div>'+alerts.map(function(it){return card(it);}).join('');
+    var grouped=(curKind===''||curKind==='food') && !curLoc && !kw;      // 食材／全部：依位置分組，一眼看到「冰箱裡有什麼」
+    if(rest.length && grouped){
+      var g={}, order=getLocs(curKind||undefined).filter(function(l){return rest.some(function(it){return it.loc===l;});});
+      rest.forEach(function(it){ var k=it.loc||''; (g[k]=g[k]||[]).push(it); if(k && order.indexOf(k)<0) order.push(k); });
+      if(g['']) order.push('');
+      order.forEach(function(k){
+        var open=!grpCollapsed[k];
+        html+='<button class="grp" data-grp="'+esc(k)+'"><span class="ar">'+(open?'▼':'▶')+'</span>'+esc(k||'未指定位置')+' <span class="n">'+g[k].length+'</span></button>'+(open?g[k].map(function(it){return card(it,true);}).join(''):'');
+      });
+    } else if(rest.length) html+=(alerts.length?'<div class="sec">全部（'+rest.length+'）</div>':'')+rest.map(function(it){return card(it);}).join('');
   }
   $('list').innerHTML=html;
 }
 var CONSUMABLE={food:1,med:1,daily:1};
+var grpCollapsed={};
 function boughtNeed(id){
   if(locked()) return;
   var it=items.find(function(x){return x.id===id;}); if(!it||!it.need) return;
   function done(exp){
     var n=Object.assign({},it); delete n.need; delete n.needAt; delete n.needOnly; n.buyDate=today();
-    if(it.kind==='food'||it.kind==='med'){ if(exp) n.expiry=exp; else delete n.expiry; }
+    if(it.kind!=='appliance'){ if(exp) n.expiry=exp; else delete n.expiry; }          // 新買的：舊期限作廢，填了才有新的
     writeItem(n); toast('✅ 已買到「'+it.name+'」'+(n.expiry?'，有效到 '+n.expiry:''),2400);
   }
-  if(it.kind!=='food'&&it.kind!=='med'){ done(''); return; }
+  if(it.kind!=='food'&&it.kind!=='med'&&!it.expiry){ done(''); return; }          // 食材、藥品，或原本有填期限的才問
   openSheet('買到「'+it.name+'」了','<div class="field"><label>有效日期（選填）</label><input id="bExp" type="date"></div>',
     '<button class="btn gh" id="bxCancel">取消</button><button class="btn pri" id="bxOk">完成</button>');
   $('bxCancel').onclick=closeSheet; $('bxOk').onclick=function(){ var v=$('bExp').value||''; closeSheet(); done(v); };
@@ -359,9 +375,10 @@ function toggleNeed(id){
   if(it.need){ if(it.needOnly){ removeItem(id); toast('已取消「'+it.name+'」的待買',2200); return; } delete it.need; delete it.needAt; writeItem(it); toast('已取消「'+it.name+'」的待買',2200); }
   else { it.need=true; it.needAt=Date.now(); writeItem(it); toast('🛒 「'+it.name+'」已加入待買',2600); }
 }
-function card(it){
+function card(it,hideLoc){
   var s=statusOf(it), sub=[];
-  if(it.loc) sub.push(it.loc);
+  if(it.loc && !hideLoc) sub.push(it.loc);
+  var dd=it.need?'':dateOf(it); if(dd){ var p=String(dd).split('-'); if(p.length===3) sub.push((it.kind==='appliance'?'保固到 ':'有效到 ')+(+p[1])+'/'+(+p[2])); }
   if(it.kind==='appliance'&&it.model) sub.push(it.model);
   else if(it.note) sub.push(it.note);
   return '<button class="card'+(s&&s.st!=='ok'?' '+s.st:'')+'" data-id="'+esc(it.id)+'">'
@@ -579,7 +596,7 @@ $('goCal').onclick=function(){ location.href=CAL_URL; };
 $('q').addEventListener('input',render);
 $('kindChips').addEventListener('click',function(e){ var b=e.target.closest('[data-kind]'); if(!b) return; curKind=b.dataset.kind; render(); });
 $('locSel').addEventListener('change',function(){ curLoc=this.value; render(); });
-$('list').addEventListener('click',function(e){ var bo=e.target.closest('[data-bought]'); if(bo){ e.stopPropagation(); boughtNeed(bo.dataset.bought); return; } var u=e.target.closest('[data-used]'); if(u){ e.stopPropagation(); toggleNeed(u.dataset.used); return; } var c=e.target.closest('[data-id]'); if(!c) return; var it=items.find(function(x){return x.id===c.dataset.id;}); if(it) openForm(it); });
+$('list').addEventListener('click',function(e){ var gp=e.target.closest('[data-grp]'); if(gp){ var gk=gp.dataset.grp; grpCollapsed[gk]=!grpCollapsed[gk]; render(); return; } var an=e.target.closest('[data-addname]'); if(an){ if(locked()) return; sheetKind=curKind||'food'; _draft={name:an.dataset.addname}; openForm(null,true); return; } var bo=e.target.closest('[data-bought]'); if(bo){ e.stopPropagation(); boughtNeed(bo.dataset.bought); return; } var u=e.target.closest('[data-used]'); if(u){ e.stopPropagation(); toggleNeed(u.dataset.used); return; } var c=e.target.closest('[data-id]'); if(!c) return; var it=items.find(function(x){return x.id===c.dataset.id;}); if(it) openForm(it); });
 $('ovl').addEventListener('click',function(e){ if(e.target===$('ovl')) closeSheet(); });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeSheet(); });
 

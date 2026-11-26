@@ -195,6 +195,12 @@
   .card .row1{display:flex;align-items:center;gap:8px}
   .card .name{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .card .time{font-size:12px;color:var(--muted);margin-top:2px}
+  .card.tap-more{cursor:pointer}
+  .card.tap-more.open .name{white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word}
+  .card.tap-more.open{flex-wrap:wrap}
+  .card.tap-more.open .row1{flex-wrap:wrap;align-items:flex-start}
+  .card.tap-more.open .row1 .name{flex:1 1 100%}
+  .card.tap-more.open .acts{flex:1 1 100%;justify-content:flex-end}
   .card .note{font-size:12px;color:var(--faint);margin-top:4px;white-space:pre-wrap;word-break:break-word}
   .pill{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;flex:none}
   .pill.work{background:#EAF1FE;color:#5B8DEF}
@@ -417,8 +423,11 @@
   .msd-red{color:#dc2626;font-weight:700}
   .msd-faint{color:var(--faint)}
   .ms-done{text-decoration:line-through;color:var(--faint)}
+  .ms-add{display:flex;align-items:center;gap:6px;margin:8px 0 2px}
+  .ms-add input{flex:1;min-width:0;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:var(--surface);color:var(--ink)}
   .ms-edit{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-  .ms-edit input{flex:1}
+  .ms-edit input{flex:1;min-width:0;padding:10px 11px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:var(--surface);color:var(--ink)}
+  .ms-edit input[type=date]{flex:none;width:128px}
   .ms-del{flex:none;width:30px;height:30px;border-radius:8px;background:#FDE8E8;color:#DC2626;font-size:14px}
 
   /* 多行事曆 */
@@ -680,28 +689,21 @@
       <div id="stockBanner" class="stock-banner" style="display:none"></div>
       <div class="filters">
         <div class="filter-row">
-          <span class="filter-label">期間</span>
-          <select id="ovYear"></select>
-          <select id="ovMonth"></select>
-          <select id="ovDay" style="display:none"></select>
-        </div>
-        <div class="filter-row">
-          <input id="ovSearch" type="search" autocomplete="off" placeholder="🔍 搜尋做過什麼（全部期間）" style="flex:1;min-width:0;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:14px">
-        </div>
-        <div class="filter-row">
           <select id="ovStatus" style="flex:1;min-width:0">
             <option value="pending">未完成</option>
             <option value="done">已完成與紀錄</option>
             <option value="all">全部</option>
           </select>
-          <select id="ovKind" style="display:none"><option value="all">全部類型</option></select>
-          <button type="button" id="ovMoreBtn" class="btn-ghost" style="flex:none;padding:8px 12px;font-size:13px">更多篩選 ▾</button>
-          <button type="button" id="ovQuickBtn" class="add-btn" style="flex:none">＋ 記一筆</button>
+          <select id="ovYear" style="flex:1;min-width:0"></select>
+          <select id="ovMonth" style="flex:1;min-width:0;display:none"></select>
+          <select id="ovDay" style="display:none"></select>
         </div>
-        <div class="filter-row" id="ovMoreBox" style="display:none">
-          <select id="ovCategory" style="flex:1;min-width:0"><option value="all">全部分類</option></select>
-          <select id="ovAssignee" style="flex:1;min-width:0"><option value="all">全部負責人</option></select>
+        <div class="filter-row">
+          <input id="ovSearch" type="search" autocomplete="off" placeholder="🔍 搜尋（全部期間）" style="flex:1;min-width:0;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:14px">
+          <select id="ovAssignee" style="flex:none;width:112px;display:none"><option value="all">全部負責人</option></select>
         </div>
+        <select id="ovKind" style="display:none"><option value="all">全部類型</option></select>
+        <select id="ovCategory" style="display:none"><option value="all">全部分類</option></select>
       </div>
       <div id="ovList"></div>
     </section>
@@ -835,7 +837,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-70";
+const BUILD_ID = "1009-74";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -844,12 +846,14 @@ function renderVerTag(){
   }catch(e){}
 }
 renderVerTag();
-const SUBCAT_ORDER = ["food","daily","clothing","travelgear","electronics","other"];
-const SUBCAT_LABEL = { food:"食材", daily:"生活用品", clothing:"衣物", travelgear:"旅遊備品", electronics:"3C家電", other:"其他" };
+const SUBCAT_ORDER = ["food","med","daily","kitchen","appliance","other"];      // 待購類別＝庫存類別（同一套 6 項）
+const SUBCAT_LABEL = { food:"食材", med:"藥品", daily:"生活用品", kitchen:"廚房用品", appliance:"家電", other:"其他" };
+const SUBCAT_LEGACY = { clothing:"other", travelgear:"other", electronics:"appliance" };        // 舊版類別 → 現在的類別
+function subKey(s){ s=SUBCAT_LEGACY[s]||s; return SUBCAT_LABEL[s]?s:"other"; }
 const CAT_ICON = { life:"🏠", work:"💼", health:"🩺", travel:"✈️", study:"📚", shopping:"🛒", finance:"💰", activity:"🎉", side:"💡", other:"📦" };
-const SUBCAT_ICON = { food:"🥦", daily:"🧴", clothing:"👕", travelgear:"🧳", electronics:"🔌", other:"📦" };
+const SUBCAT_ICON = { food:"🥬", med:"💊", daily:"🧴", kitchen:"🍳", appliance:"🔌", other:"📦" };
 function catIcon(c){ return CAT_ICON[c] || "📦"; }
-function subcatIcon(s){ return SUBCAT_ICON[s] || "📦"; }
+function subcatIcon(s){ return SUBCAT_ICON[subKey(s)] || "📦"; }
 
 /* 三態：排程 / 待辦 / 完成 */
 const KIND_LABEL = { scheduled:"行程", todo:"百寶袋", done:"完成", log:"純紀錄" };
@@ -1566,6 +1570,15 @@ function _slotNow(){                       // 時段：早(0-12)/午(12-18)/晚(
   var h=new Date().getHours();
   return h<12 ? "am" : (h<18 ? "pm" : "night");
 }
+function _goalDueToday(){          // 今天是達標日、還沒達成的目標
+  var t=ymd(new Date()), out=[];
+  Object.keys(state.goals||{}).forEach(function(id){
+    var g=state.goals[id]; if(!g||g.targetDate!==t) return;
+    var dn=false; try{ dn=!!goalProgress(normalizeGoal(Object.assign({id:id},g))).complete; }catch(e){}
+    if(!dn) out.push(g.title||"目標");
+  });
+  return out;
+}
 function maybeNotifyToday(force){
   if(!notifyOn()) return;
   var t=ymd(new Date()), slot=_slotNow(), key=t+"_"+slot;
@@ -1579,6 +1592,7 @@ function maybeNotifyToday(force){
   var all=_todayTimedEvents();                                     // 今天未完成(含逾期/無時間)
   var AL={exp:[],soon:[],arrive:[]};   // 通知只提醒當日行程；過期／到貨／待買進畫面看上方標籤
   var extra=[];
+  var _gd=_goalDueToday(); if(_gd.length) extra.push('達標日：'+_gd.join('、'));
   if(AL.exp.length) extra.push('已過期：'+_attnNames(AL.exp));
   if(AL.soon.length) extra.push('快到期：'+_attnNames(AL.soon));
   if(AL.arrive.length) extra.push('到貨：'+_attnNames(AL.arrive));
@@ -1770,7 +1784,7 @@ function dropOldInvLink(){
 // 採購完成 → 寫進共用庫存（users/<key>/stock），欄位與庫存管理一致
 const STK_KINDS=[["food","食材","🥬"],["med","藥品","💊"],["daily","生活用品","🧴"],["kitchen","廚房用品","🍳"],["appliance","家電","🔌"],["other","其他","📦"]];
 /* ===== 庫存管理「用完了」→ 待購清單 ===== */
-const STK_TO_SUB={food:"food",med:"other",daily:"daily",kitchen:"other",appliance:"electronics",other:"other"};
+const STK_TO_SUB={food:"food",med:"med",daily:"daily",kitchen:"kitchen",appliance:"appliance",other:"other"};
 function _nmKey(n){ return String(n||"").trim().toLowerCase(); }
 function _needRec(name){            // 庫存裡同名、標了待買的那一筆 → [id, rec]
   const k=_nmKey(name), st=state.stock||{}; let hit=null;
@@ -1785,8 +1799,7 @@ function _stockNeedList(){          // 要顯示在待購清單的庫存待買�
 }
 function restockNeed(id, rec, expiry, fromRecord){      // 買到了：清掉待買、更新有效日期（可不填）
   const upd={ need:null, needAt:null, needOnly:null, buyDate:ymd(new Date()) };
-  upd.expiry = (rec.kind==="food"||rec.kind==="med") ? (expiry||null) : (rec.expiry||null);
-  if(rec.kind==="food"||rec.kind==="med") upd.expiry = expiry||null; else delete upd.expiry;
+  if(rec.kind!=="appliance") upd.expiry = expiry||null;          // 新買的：舊的有效日期作廢，填了才有新的
   toast("✅ 已買到「"+(rec.name||"")+"」"+(upd.expiry?"，有效到 "+upd.expiry:""),2400);
   uref("stock/"+id).update(upd).catch(function(e){ console.error(e); toast("⚠️ 已買到，但庫存沒更新："+failMsg("更新", e),3500); });
 }
@@ -1797,7 +1810,7 @@ function cancelStockNeed(id, name){
 }
 function openStockBuy(id){
   const rec=(state.stock||{})[id]; if(!rec) return;
-  if(rec.kind!=="food" && rec.kind!=="med"){ restockNeed(id, rec, null); return; }
+  if(rec.kind!=="food" && rec.kind!=="med" && !rec.expiry){ restockNeed(id, rec, null); return; }     // 食材、藥品，或原本有填期限的才問
   openSheet("買到「"+(rec.name||"")+"」了", '<div class="field"><label>新的有效日期（選填）</label><input id="stk_exp" type="date"></div>',
     function(){ const v=($("stk_exp")||{}).value||""; closeSheet(); restockNeed(id, rec, v); }, null, "完成");
 }
@@ -1828,10 +1841,13 @@ function stockFromShop(r){
   window.__stkBusy=window.__stkBusy||{}; window.__stkBusy[nk]=true;           // 連點或網路慢時，同名也只加一次
   const id=uref("stock").push().key;
   const rec={ name:nm, kind:r.stk, buyDate:ymd(new Date()), created:Date.now() };
-  if((r.stk==="food"||r.stk==="med") && r.stkExp) rec.expiry=r.stkExp;
+  if(r.stk!=="appliance" && r.stkExp) rec.expiry=r.stkExp;
+  if(r.stk==="appliance" && Number(r.stkWar)>0){ rec.warrantyYears=Number(r.stkWar); const _d=new Date(); _d.setMonth(_d.getMonth()+Math.round(Number(r.stkWar)*12)); rec.warrantyEnd=ymd(_d); }
   if(r.amount!=null && !isNaN(Number(r.amount))) rec.price=Number(r.amount);
   // 先立刻顯示結果（Firebase 要等伺服器回應才算完成，網路慢時會好幾秒沒反應），失敗再改提示
-  toast("✅ 已完成「"+nm+"」，並加入庫存（"+(KIND_NAME_STK[r.stk]||"庫存")+"）",2800);
+  toastAct("✅ 已完成「"+nm+"」，並加入庫存（"+(KIND_NAME_STK[r.stk]||"庫存")+"）", "不放庫存", function(){
+    uref("stock/"+id).remove().then(function(){ toast("已移出庫存",1800); }).catch(function(e){ console.error(e); toast(failMsg("移出", e)); });
+  });
   uref("stock/"+id).set(rec).then(function(){
     setTimeout(function(){ delete window.__stkBusy[nk]; }, 1500);
   }).catch(function(e){ delete window.__stkBusy[nk]; console.error(e); toast("⚠️ 已完成，但沒加入庫存："+failMsg("加入", e),3500); });
@@ -1843,7 +1859,7 @@ function shopTitleMap(){
   curValues().forEach(function(r){
     if(r && r.category==="shopping" && r.title && r.subcategory){
       const t=r.createdAt||0;
-      if(ts[r.title]==null || t>=ts[r.title]){ m[r.title]=r.subcategory; ts[r.title]=t; }
+      if(ts[r.title]==null || t>=ts[r.title]){ m[r.title]=subKey(r.subcategory); ts[r.title]=t; }
     }
   });
   return m;
@@ -1877,7 +1893,7 @@ $("navCal").addEventListener("click", ()=>switchTab("cal"));
 $("navOverview").addEventListener("click", ()=>{ if(!canAdvanced()){ showUpgrade("總覽回顧"); return; } switchTab("overview"); });
 $("navShop").addEventListener("click", ()=>switchTab("shop"));
 $("navGoals").addEventListener("click", ()=>switchTab("goals"));
-function switchTab(t){
+function switchTab(t){ window._msAddId=null;
   $("tabCal").classList.toggle("hidden", t!=="cal");
   $("tabOverview").classList.toggle("hidden", t!=="overview");
   $("tabShop").classList.toggle("hidden", t!=="shop");
@@ -1898,7 +1914,8 @@ function resetToTodayOverview(){
   ovMode="period";
   const t=new Date();
   if($("ovStatus")) $("ovStatus").value="pending";
-  syncOvPeriodForStatus();   // 未完成＝全部期間
+  if($("ovYear")) $("ovYear").value=""; if($("ovMonth")) $("ovMonth").value=""; if($("ovDay")) $("ovDay").value="";
+  syncOvPeriodForStatus();   // 預設：未完成、全部期間
   if($("ovSearch")) $("ovSearch").value="";
   if($("ovCategory")) $("ovCategory").value="all";
   if($("ovAssignee")) $("ovAssignee").value="all";
@@ -2055,7 +2072,6 @@ function openCalManager(){
   // 四支 App 共通
   html+='<div class="set-list">'
     + row('backupBtn','💾','資料備份')
-    + row('dupBuyBtn','🧹','整理重複採購')
     + (_standalone ? '' : row('installFromSettings','📲','安裝到手機桌面'))
     + row('shareAppBtn','🔗','分享這個 App')
     + '</div>'
@@ -2080,7 +2096,6 @@ function openCalManager(){
     + '<div class="set-foot">生活管家 ' + APP_VER + (state.isAdmin ? " · "+BUILD_ID : "") + '</div>';
 
   openSettingsPage(html);
-  if($("dupBuyBtn")) $("dupBuyBtn").addEventListener("click", function(){ cleanDuplicatePurchases(); });
   var _cfs=$("calFromSettings");
   if(_cfs) _cfs.addEventListener("click", function(){ openSetSub("📅 我的行事曆", window.__calSubHtml); });
   var _nb=$("notifyBtn");
@@ -2238,6 +2253,9 @@ function goalMsForDay(dateStr){
       g.milestones.forEach((m,idx)=>{ if(m && m.date===dateStr) out.push({goalId:gid, msIdx:idx, goalTitle:g.title||"目標", text:m.text||"", done:!!m.done}); });
     }
   });
+  Object.entries(state.goals||{}).forEach(([gid,g])=>{      // 達標日：當天在行事曆放一個小標記
+    if(g && g.targetDate===dateStr){ let dn=false; try{ dn=!!goalProgress(normalizeGoal(Object.assign({id:gid},g))).complete; }catch(e){} out.push({goalId:gid, msIdx:-1, goalTitle:g.title||"目標", text:"達標日", done:dn}); }
+  });
   return out;
 }
 function dotsForDay(dateStr){
@@ -2283,6 +2301,10 @@ function renderCalendar(){
   }
 }
 
+function bindTapMore(card){          // 點一下展開完整名稱，再點收起（按鈕不算）
+  card.classList.add("tap-more");
+  card.addEventListener("click", function(e){ if(e.target.closest("button,a,input,select,.acts,.ms-marker")) return; card.classList.toggle("open"); });
+}
 function renderDayEvents(){
   const wrap=$("dayEvents");
   const _seen={};
@@ -2346,6 +2368,7 @@ function renderDayEvents(){
     if(_chk) _chk.addEventListener("click", ()=>toggleDoneOn(r.id, state.selected));
     card.querySelector("[data-edit]").addEventListener("click", ()=>openEditor(r));
     card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title, state.selected));
+    bindTapMore(card);
     wrap.appendChild(card);
   });
 }
@@ -2383,20 +2406,17 @@ function openMonthPicker(){
    ============================================================ */
 let ovMode = "period";   // 總覽預設＝回顧當月（已完成與紀錄）；todo 模式保留但不再使用
 if($("ovSearch")) $("ovSearch").addEventListener("input", ()=>renderOverview());
-if($("ovMoreBtn")) $("ovMoreBtn").addEventListener("click", ()=>{ const bx=$("ovMoreBox"); const on=bx.style.display==="none"; bx.style.display=on?"flex":"none"; $("ovMoreBtn").textContent=on?"收起篩選 ▴":"更多篩選 ▾"; });
 // 期間：年選「全部期間」時，月、日停用並忽略。
 // 未完成＝預設全部期間（不分月份）；想看某個月就自己選年、月。已完成／全部＝回顧當月。
 function updateOvPeriodEnable(){
   const y=$("ovYear").value, m=$("ovMonth").value;
+  $("ovMonth").style.display=y?"":"none";          // 選了年份才出現月份
   $("ovMonth").disabled=!y;
   $("ovDay").disabled=!y || !m;
   if(!y){ $("ovMonth").value=""; $("ovDay").value=""; }
   else if(!m){ $("ovDay").value=""; }
 }
-function syncOvPeriodForStatus(){
-  const st=$("ovStatus").value, t=new Date();
-  if(st==="pending"){ $("ovYear").value=""; $("ovMonth").value=""; $("ovDay").value=""; }
-  else if(!$("ovYear").value){ $("ovYear").value=String(t.getFullYear()); $("ovMonth").value=String(t.getMonth()+1); $("ovDay").value=""; }
+function syncOvPeriodForStatus(){        // 期間照使用者選的，不再因狀態自動換
   updateOvPeriodEnable();
 }
 ["ovStatus","ovKind","ovCategory","ovAssignee","ovYear","ovDay"].forEach(idd=>{
@@ -2412,7 +2432,9 @@ $("ovMonth").addEventListener("change", function(){
   ovMode="period"; renderOverview();
 });
 (function initOvPickers(){
-  let ys='<option value="">全部期間</option>'; for(let y=2020;y<=2035;y++) ys+='<option value="'+y+'">'+y+' 年</option>';
+  const cy=new Date().getFullYear();
+  let ys='<option value="">全部期間</option><option value="'+cy+'">今年</option><option value="'+(cy-1)+'">去年</option>';
+  for(let y=cy+1;y>=2020;y--){ if(y!==cy && y!==cy-1) ys+='<option value="'+y+'">'+y+' 年</option>'; }
   $("ovYear").innerHTML=ys;
   let ms='<option value="">整年</option>'; for(let m=1;m<=12;m++) ms+='<option value="'+m+'">'+m+' 月</option>';
   $("ovMonth").innerHTML=ms;
@@ -2447,48 +2469,13 @@ if($("dpTabPocket")) $("dpTabPocket").addEventListener("click", ()=>showCalPane(
 $("pocketAddBtn").addEventListener("click", quickAddPocket);
 $("pocketInput").addEventListener("keydown", e=>{ if(e.key==="Enter") quickAddPocket(); });
 
-/* ＋記一筆：只填名稱、金額、分類，日期預設今天，存成「純紀錄」（有日期、不用勾完成） */
-function openQuickLog(){
-  if(!requireAuth()) return;
-  const html=
-    '<div class="field"><label>做了什麼</label><input id="ql_title" autocomplete="off" placeholder="例如：午餐、看牙醫"></div>'+
-    '<div class="two">'+
-      '<div class="field"><label>金額（選填）</label><input id="ql_amount" type="number" inputmode="decimal" placeholder="0"></div>'+
-      '<div class="field"><label>日期</label><input id="ql_date" type="date" value="'+ymd(new Date())+'"></div>'+
-    '</div>'+
-    '<div class="field"><label>分類</label><select id="ql_cat">'+CAT_ORDER.map(c=>'<option value="'+c+'"'+(c===lastCat()?" selected":"")+'>'+CAT_ICON[c]+' '+CAT_LABEL[c]+'</option>').join("")+'</select></div>';
-  openSheet("記一筆", html, function(){
-    const title=($("ql_title").value||"").trim(); const date=$("ql_date").value||ymd(new Date());
-    if(!title){ toast("請輸入做了什麼"); return; }
-    const av=$("ql_amount").value;
-    setLastCat($("ql_cat").value);
-    const rec={ kind:"log", isLog:true, title, category:$("ql_cat").value||"other",
-      dateStart:date, dateEnd:"", repeatUntil:"", start:"", end:"", assignees:[], urgent:false,
-      note:"", status:"pending", createdAt:Date.now(), spawned:false, cal:state.currentCal };
-    if(av!=="" && !isNaN(Number(av))) rec.amount=Number(av);
-    if(LOCAL_MODE){ state.records[genId()]=rec; lsSaveRecords(); closeSheet(); renderAll(); toast("已記一筆"); return; }
-    const key=uref("records").push().key;
-    uref("records/"+key).update(rec).then(()=>{ closeSheet(); toast("已記一筆"); }).catch(e=>{ console.error(e); toast(failMsg("儲存", e)); });
-  }, null, "儲存");
-  var qlTouched=false;
-  if($("ql_cat")) $("ql_cat").addEventListener("change", function(){ qlTouched=true; });
-  if($("ql_title")) $("ql_title").addEventListener("input", function(){
-    const g=guessFromHistory(this.value); if(g && !qlTouched && g.cat!=="shopping") $("ql_cat").value=g.cat;
-  });
-  setTimeout(()=>{ const i=$("ql_title"); if(i) i.focus(); }, 50);
-}
-if($("ovQuickBtn")) $("ovQuickBtn").addEventListener("click", openQuickLog);
-
 function refreshOverviewFilterOptions(){
-  // 分類選單
-  const cs=$("ovCategory"); if(cs){ const cur=cs.value;
-    cs.innerHTML='<option value="all">全部分類</option>'+CAT_ORDER.map(c=>'<option value="'+c+'">'+CAT_ICON[c]+' '+CAT_LABEL[c]+'</option>').join("");
-    cs.value=cur && [...cs.options].some(o=>o.value===cur)?cur:"all";
-  }
-  // 負責人選單
-  const as=$("ovAssignee"); if(as){ const cur=as.value;
-    as.innerHTML='<option value="all">全部負責人</option>'+Object.entries(state.people).map(([id,p])=>'<option value="'+id+'">'+esc(p.name)+'</option>').join("");
+  // 負責人：兩位以上執行人才顯示
+  const as=$("ovAssignee"); if(as){ const cur=as.value, ppl=Object.entries(state.people||{});
+    as.innerHTML='<option value="all">全部負責人</option>'+ppl.map(([id,p])=>'<option value="'+id+'">'+esc(p.name)+'</option>').join("");
     as.value=cur && [...as.options].some(o=>o.value===cur)?cur:"all";
+    as.style.display=(ppl.length>=2 && canFull())?"":"none";
+    if(as.style.display==="none") as.value="all";
   }
 }
 
@@ -2560,33 +2547,6 @@ function buildOverviewRows(){
   return out;
 }
 
-function _purchaseDupKey(r){ return String(r.title||'').trim().toLowerCase()+'|'+(r.qty||1)+'|'+(r.dateStart||'')+'|'+String(r.note||'').trim(); }
-function findDuplicatePurchases(){
-  var groups={};
-  Object.entries(state.records).forEach(function(pair){
-    var r=pair[1]; if(!r || r.category!=='shopping' || isDone(r)) return;      // 已完成的歷史不動
-    var k=_purchaseDupKey(r); (groups[k]=groups[k]||[]).push({id:pair[0], r:r});
-  });
-  var toDel=[];
-  Object.keys(groups).forEach(function(k){
-    var g=groups[k]; if(g.length<2) return;
-    g.sort(function(a,b){ return (a.r.createdAt||0)-(b.r.createdAt||0); });
-    for(var i=1;i<g.length;i++) toDel.push(g[i].id);   // 保留最早一筆，其餘刪
-  });
-  return toDel;
-}
-function cleanDuplicatePurchases(){
-  var ids=findDuplicatePurchases();
-  if(!ids.length){ toast('沒有重複的採購'); return; }
-  var list=ids.slice(0,8).map(function(id){ var r=state.records[id]||{}; return '・'+esc(r.title||'')+(r.qty>1?' ×'+esc(r.qty):'')+(r.dateStart?'（'+mdWk(r.dateStart)+'）':''); }).join('<br>');
-  if(ids.length>8) list+='<br>…共 '+ids.length+' 筆';
-  openConfirm('整理重複採購', '以下 <b>'+ids.length+'</b> 筆跟別筆完全一樣（名稱、數量、日期、備註），會刪掉這幾筆、各留一筆：<br><br>'+list, function(){
-    ids.forEach(function(id){ if(LOCAL_MODE){ delete state.records[id]; } else { uref('records/'+id).remove(); } });
-    if(LOCAL_MODE) lsSaveRecords();
-    toast('已刪除 '+ids.length+' 筆重複');
-    if(typeof renderAll==='function') renderAll();
-  }, '刪除');
-}
 // 花費合計：把有填「金額」的記事加總（沒有任何金額就不顯示）。
 // 期間＝總覽目前選的年／月／日（預設當月）；日期以「行程日期，沒有就用完成日」為準；
 // 只計算到今天為止（還沒到的日期不算，永久重複的記事也不會把未來月份算進來）；
@@ -2648,6 +2608,7 @@ function renderOverview(){
       return rg[0] < today || inCurrentMonth(rg[0]);   // 逾期 或 當月
     }
     if(!overviewDateMatch(r)) return false;   // 無日期者一律顯示；有日期(含預期日)依篩選
+    if(!searching && statusF==="pending" && k==="todo" && !recRange(r)) return false;   // 沒有日期的待辦只在百寶袋看（搜尋時仍找得到）
     if(k!=="log"){                            // 純紀錄不分未完成/已完成，一律顯示
       if(statusF==="pending" && k==="done") return false;
       if(statusF==="done" && k!=="done") return false;
@@ -2741,6 +2702,7 @@ function overviewCard(r, k){
   if(_chk) _chk.addEventListener("click", ()=>toggleDoneOn(r.id, r._occ || r.dateStart || ymd(new Date())));
   card.querySelector("[data-edit]").addEventListener("click", ()=>{ const base=state.records[r.id]; openEditor(base?Object.assign({id:r.id},base):r); });
   card.querySelector("[data-del]").addEventListener("click", ()=>deleteRecord(r.id, r.title, r._occ || r.dateStart));
+  bindTapMore(card);
   return card;
 }
 
@@ -2816,7 +2778,7 @@ function updateShopBadge(){
   const old=nb.querySelector(".nbadge"); if(old) old.remove();
   if(n>0){ const sp=document.createElement("span"); sp.className="nbadge"; sp.textContent=String(n); sp.title="待到貨／待買 "+n+" 件"; nb.appendChild(sp); }
 }
-function _lastSub(){ try{ var v=localStorage.getItem("shopLastSub"); return (v && SUBCAT_LABEL[v])?v:"food"; }catch(e){ return "food"; } }
+function _lastSub(){ try{ var v=localStorage.getItem("shopLastSub"); return (v && SUBCAT_LABEL[subKey(v)])?subKey(v):"food"; }catch(e){ return "food"; } }
 function _shopDue(r){ return !!(r && r.dateStart && r.dateStart<=ymd(new Date())); }
 function _shopLater(r){ return !!(r && r.dateStart && r.dateStart>ymd(new Date())); }
 function shopCardEl(r){
@@ -2852,11 +2814,10 @@ function renderShop(){
     if(r && r.category==="shopping" && !isDone(r)){
       if(r.ordered){ ordered.push(Object.assign({id},r)); return; }
       if(_shopLater(r)){ later.push(Object.assign({id},r)); return; }
-      const sc=groups[r.subcategory]?r.subcategory:"other";
-      groups[sc].push(Object.assign({id},r));
+      groups[subKey(r.subcategory)].push(Object.assign({id},r));
     }
   });
-  _stockNeedList().forEach(function(r){ (groups[r.subcategory]||groups.other).push(r); });
+  _stockNeedList().forEach(function(r){ groups[subKey(r.subcategory)].push(r); });
   let total=ordered.length+later.length; SUBCAT_ORDER.forEach(s=>total+=groups[s].length);
   if(total===0){ wrap.innerHTML='<div class="empty-state"><span class="eico">🛒</span>目前沒有待購項目</div>'; return; }
 
@@ -3053,21 +3014,17 @@ function openRecordForm(rec, presets, asCopy){
       '<div class="field"><label>商品 <span style="color:var(--faint);font-weight:400">🕐 可選用過的</span></label>'+
         '<input id="rec_prodsearch" list="rec_prod_hist" type="text" autocomplete="off" placeholder="商品名稱" value="'+esc(r.title||"")+'">'+
         '<datalist id="rec_prod_hist">'+Object.keys(shopTitleMap()).slice(0,80).map(t=>'<option value="'+esc(t)+'">').join("")+'</datalist></div>'+
-      '<div class="field"><label>大分類</label>'+
-        '<select id="rec_subcategory">'+SUBCAT_ORDER.map(c=>'<option value="'+c+'"'+(((r.subcategory||_lastSub())===c)?" selected":"")+'>'+SUBCAT_ICON[c]+' '+SUBCAT_LABEL[c]+'</option>').join("")+'</select></div>'+
       '<div class="two">'+
+        '<div class="field"><label>類別</label>'+
+          '<select id="rec_subcategory">'+SUBCAT_ORDER.map(c=>'<option value="'+c+'"'+((subKey(r.subcategory||_lastSub())===c)?" selected":"")+'>'+SUBCAT_ICON[c]+' '+SUBCAT_LABEL[c]+'</option>').join("")+'</select></div>'+
         '<div class="field"><label>數量</label><input id="rec_qty" type="number" min="1" value="'+(r.qty||1)+'"></div>'+
-        '<div class="field"><label>價格（選填）</label><input id="rec_price" type="number" inputmode="numeric" value="'+(isShop&&r.amount!=null?r.amount:"")+'" placeholder="例如 3990"></div>'+
       '</div>'+
-      '<div class="field"><label>📦 買到後加入庫存</label>'+
-        '<select id="rec_stk"><option value="">不入庫</option>'+STK_KINDS.map(k=>'<option value="'+k[0]+'"'+(r.stk===k[0]?" selected":"")+'>'+k[2]+' '+k[1]+'</option>').join("")+'</select></div>'+
-      '<div class="field" id="rec_stkexpbox"'+((r.stk==="food"||r.stk==="med")?"":' style="display:none"')+'><label>有效期限（選填）</label><input id="rec_stkexp" type="date" value="'+esc(r.stkExp||"")+'"></div>'+
       '<div class="toggle-row" id="rec_orderedbox"><span>🚚 已下單，等待到貨</span><label class="switch"><input type="checkbox" id="rec_ordered"'+(r.ordered?" checked":"")+'><span class="slider"></span></label></div>'+
       '<div class="field" id="rec_etabox"'+(r.ordered?"":' style="display:none"')+'><label>預計到貨日（選填）</label><input id="rec_eta" type="date" value="'+esc(r.eta||"")+'"></div>'+
     '</div>'+
 
     // ── 何時：開始 / 結束 / 時間 收在同一塊 ──
-    '<div class="whenbox" id="rec_whenbox">'+
+    '<span id="rec_whenanchor"></span><div class="whenbox" id="rec_whenbox">'+
       '<div class="whenbox-title">何時</div>'+
       '<div class="field" id="rec_repeatbox" style="margin-bottom:10px"><label>重複</label>'+
         '<div class="two">'+
@@ -3079,7 +3036,7 @@ function openRecordForm(rec, presets, asCopy){
         '<div id="rec_rephint" style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5"></div>'+
       '</div>'+
       '<div class="two">'+
-        '<div class="field"><label>開始</label><input id="rec_dateStart" type="date" value="'+(ds||"")+'"></div>'+
+        '<div class="field"><label id="rec_startlabel">開始</label><input id="rec_dateStart" type="date" value="'+(ds||"")+'"></div>'+
         '<div class="field" id="rec_endbox"'+(isShop?' style="display:none"':'')+'><label id="rec_endlabel">結束</label><input id="rec_dateEnd" type="date" value='+JSON.stringify(r.dateEnd||r.repeatUntil||"")+'></div>'+
       '</div>'+
       '<div id="rec_endhint" style="font-size:12px;color:var(--muted);margin:-2px 0 8px"></div>'+
@@ -3096,18 +3053,21 @@ function openRecordForm(rec, presets, asCopy){
     // ── 執行人（符合條件才放主畫面）──
     (assignOnMain ? '<div id="rec_assignslot">'+assignHtml+'</div>' : '')+
 
-    '<div class="field"><label>備註（可選）</label><textarea id="rec_note" placeholder="補充說明">'+esc(r.note||"")+'</textarea></div>'+
+    '<span id="rec_noteanchor"></span><div class="field" id="rec_notefield"><label>備註（可選）</label><textarea id="rec_note" placeholder="補充說明">'+esc(r.note||"")+'</textarea></div>'+
 
     // ── 更多選項 ──
     '<button type="button" class="more-toggle" id="rec_moretoggle">＋ 更多選項<span class="more-dot" id="rec_moredot"></span></button>'+
     '<div class="morebox" id="rec_morebox" style="display:none">'+
+      '<div id="rec_shopmore"><div class="field" id="rec_stkexpbox"><label id="rec_stkexplabel">有效期限（選填）</label>'+
+        '<input id="rec_stkexp" type="date" value="'+esc(r.stkExp||"")+'">'+
+        '<input id="rec_stkwar" type="number" min="0" step="0.5" inputmode="decimal" placeholder="保固幾年（選填）" value="'+esc(r.stkWar||"")+'" style="display:none"></div></div>'+
       '<div id="rec_amountbox"'+(isShop?' style="display:none"':'')+'><div class="field"><label>金額（選填）</label>'+
         '<input id="rec_amount" type="number" inputmode="numeric" value="'+(r.amount!=null?r.amount:"")+'" placeholder="例如 1200"></div></div>'+
       (assignOnMain ? '' : '<div id="rec_assignslot">'+assignHtml+'</div>')+
-      (!canAdvanced()
+      '<div id="rec_urgentrow">'+(!canAdvanced()
         ? '<div class="toggle-row" style="opacity:.55;cursor:pointer" onclick="showUpgrade(\'排在最上面\')"><span>❗️ 排在最上面</span><span style="font-size:18px">🔒</span></div>'
         : ('<div class="toggle-row"><span>❗️ 排在最上面</span><label class="switch"><input type="checkbox" id="rec_urgent"'+(r.urgent?" checked":"")+'><span class="slider"></span></label></div>')
-      )+
+      )+'</div>'+
     '</div>';
 
   openSheet(isShop?(isEdit?"編輯採購":"新增採購"):(isEdit?"編輯記事":"新增記事"), html,
@@ -3201,6 +3161,7 @@ function openRecordForm(rec, presets, asCopy){
       if(r.amount!=null && r.amount!=="") return true;
       if(r.urgent) return true;
       if(r.assignees && r.assignees.length) return true;
+      if(isShop && (r.dateStart||r.note||r.stkExp||r.stkWar||(r.repeat&&r.repeat.unit&&r.repeat.unit!=="none"))) return true;
       return false;
     }
     var _open=false;
@@ -3229,9 +3190,32 @@ function openRecordForm(rec, presets, asCopy){
   })();
 
   renderAssigneeChips();
+  function syncStkLabel(){        // 有效期限（家電改成保固年數；「其他」不入庫，不需要）
+    const k=($("rec_subcategory")||{}).value||"food", ap=k==="appliance";
+    const lb=$("rec_stkexplabel"), d=$("rec_stkexp"), w=$("rec_stkwar"), bx=$("rec_stkexpbox");
+    if(lb) lb.textContent=ap?"保固（年，選填）":"有效期限（選填）";
+    if(d) d.style.display=ap?"none":""; if(w) w.style.display=ap?"":"none";
+    if(bx) bx.style.display=(_shopNow && k!=="other")?"":"none";
+  }
+  let _shopNow=isShop;
+  function shopLayout(shop){      // 採購：預計買的日期、備註收進「更多選項」
+    _shopNow=shop;
+    const more=$("rec_shopmore"), when=$("rec_whenbox"), nf=$("rec_notefield"), wa=$("rec_whenanchor"), na=$("rec_noteanchor");
+    if(more && when && nf && wa && na){
+      if(shop){ more.appendChild(when); more.appendChild(nf); } else { wa.after(when); na.after(nf); }
+    }
+    const sh=function(id,on){ const el=$(id); if(el) el.style.display=on?"":"none"; };
+    sh("rec_urgentrow", !shop);
+    sh("rec_assignslot", !shop || (canFull() && Object.keys(state.people||{}).length>=2));
+    const sl=$("rec_startlabel"); if(sl) sl.textContent=shop?"預計買的日期":"開始";
+    syncStkLabel();
+  }
+  shopLayout(isShop);
+  if($("rec_subcategory")) $("rec_subcategory").addEventListener("change", syncStkLabel);
   wireIconPicker("rec_category", function(v){
     formAutoTouched.cat=true;
     const shop=v==="shopping";
+    shopLayout(shop);
     const show=function(id, on){ const el=$(id); if(el) el.style.display = on ? "" : "none"; };
     show("rec_shopbox", shop);
     show("rec_titlebox", !shop);
@@ -3250,17 +3234,14 @@ function openRecordForm(rec, presets, asCopy){
       }
     });
   }
-  if($("rec_stk")) $("rec_stk").addEventListener("change", function(){
-    const b=$("rec_stkexpbox"); if(b) b.style.display=(this.value==="food"||this.value==="med")?"":"none";
-  });
   const _ps=$("rec_prodsearch");
   if(_ps){
     const _map=shopTitleMap(); let _subTouched=false;
     if($("rec_subcategory")) $("rec_subcategory").addEventListener("change", function(){ _subTouched=true; });
     const _syncProd=function(){
       $("rec_title").value=_ps.value;              // 打什麼就是品名
-      const sub=_map[_ps.value.trim()];            // 買過的商品：自動帶上次的大分類
-      if(sub && !_subTouched && $("rec_subcategory")) $("rec_subcategory").value=sub;
+      const sub=_map[_ps.value.trim()];            // 買過的商品：自動帶上次的類別
+      if(sub && !_subTouched && $("rec_subcategory")){ $("rec_subcategory").value=sub; syncStkLabel(); }
     };
     _ps.addEventListener("input", _syncProd); _ps.addEventListener("change", _syncProd);
   }
@@ -3321,20 +3302,26 @@ function saveRecord(id, prev){
     status:    done ? "done" : "pending",
     createdAt: (prev&&prev.createdAt) ? prev.createdAt : Date.now()
   };
+  if(isShop && !id){          // 新增待購：同名、還沒買的已經有了就擋下來（取代「整理重複採購」）
+    const _k=title.trim().toLowerCase();
+    const _dup=Object.values(state.records||{}).find(x=>x && x.category==="shopping" && !isDone(x) && String(x.title||"").trim().toLowerCase()===_k);
+    if(_dup){ toast("「"+title+"」已經在待購清單了"); return; }
+  }
   if(isShop){
     data.subcategory=$("rec_subcategory").value||"other";
     try{ localStorage.setItem("shopLastSub", data.subcategory); }catch(e){}
     data.qty=Math.max(1, Number($("rec_qty").value)||1);
     data.invId = null; data.invNew = null; data.invCat = null; data.fromInv = null;   // 舊庫存連動欄位：存檔時順便清掉
     data.needStock = null;
-    data.stk = ($("rec_stk") && $("rec_stk").value) || null;
-    data.stkExp = ((data.stk==="food"||data.stk==="med") && $("rec_stkexp") && $("rec_stkexp").value) ? $("rec_stkexp").value : null;
-    const pv=$("rec_price").value;
-    data.amount = (pv!=="" && !isNaN(Number(pv))) ? Number(pv) : null;
+    data.stk = (data.subcategory && data.subcategory!=="other") ? data.subcategory : null;        // 類別決定入庫：其他＝不入庫，其餘買到自動入庫
+    data.stkExp = (data.stk && data.stk!=="appliance" && $("rec_stkexp") && $("rec_stkexp").value) ? $("rec_stkexp").value : null;
+    const _wy=Number(($("rec_stkwar")||{}).value);
+    data.stkWar = (data.stk==="appliance" && _wy>0) ? _wy : null;
+    data.amount = (prev && prev.amount!=null && prev.amount!=="") ? prev.amount : null;        // 價格欄已拿掉，舊資料保留不動
     data.ordered = ($("rec_ordered") && $("rec_ordered").checked && !done) ? true : null;   // 已下單、還沒到貨
     data.eta = (data.ordered && $("rec_eta") && $("rec_eta").value) ? $("rec_eta").value : null;
   } else {
-    data.ordered=null; data.eta=null; data.stk=null; data.stkExp=null;
+    data.ordered=null; data.eta=null; data.stk=null; data.stkExp=null; data.stkWar=null;
     data.subcategory=null; data.qty=null; data.invId=null; data.needStock=null; data.fromInv=null; data.invNew=null; data.invCat=null;
     const av=$("rec_amount").value;
     data.amount = (av!=="" && !isNaN(Number(av))) ? Number(av) : null;
@@ -3363,6 +3350,7 @@ function saveRecord(id, prev){
     if(data.ordered===null) delete merged.ordered;
     if(data.stk===null) delete merged.stk;
     if(data.stkExp===null) delete merged.stkExp;
+    if(data.stkWar===null) delete merged.stkWar;
     if(data.eta===null) delete merged.eta;
     state.records[key]=merged;
     lsSaveRecords();
@@ -3648,6 +3636,28 @@ function goalCardNote(g,m,s){          // 卡片上取代小圖的一句話：�
   const d=Math.round((Number(lg[lg.length-1].v)-Number(lg[lg.length-2].v))*100)/100;
   return d===0?"和上次相同":"比上次"+(d<0?"少 ":"多 ")+fmtNum(Math.abs(d))+u;
 }
+function goalDateLine(g){          // 達標日：剩幾天／超過幾天，數字目標再多一句每週約需多少
+  if(!g.targetDate) return "";
+  let p; try{ p=goalProgress(g); }catch(e){ p={}; }
+  if(p.complete) return "";
+  const a=_ymdToDate(g.targetDate), b=new Date(); b.setHours(0,0,0,0);
+  const d=Math.round((a-b)/86400000);
+  const when=d>0?"剩 "+d+" 天":d===0?"今天是達標日":"已超過 "+(-d)+" 天";
+  let h='<div class="goal-sub" style="margin-top:8px"><span'+(d<0?' style="color:#C0392B;font-weight:600"':'')+'>🎯 達標日 '+_gmd(g.targetDate)+'　'+when+'</span></div>';
+  if(g.type==="number" && d>=7 && !_gMulti(g) && !_gFields(g)){
+    const m=(g.members||[])[0]; if(m){
+      const s=memberStat(g,m);
+      if(s.tgt!=null && s.cur!=null){
+        const wk=d/7, u=g.unit?" "+esc(g.unit):"";
+        let t="";
+        if(g.mode==="sum"){ const rem=s.tgt-s.cur; if(rem>0) t="每週約需 "+fmtNum(Math.round(rem/wk*10)/10)+u; }
+        else { const diff=s.tgt-s.cur; if(diff!==0){ const verb=g.preset==="save"?"存":g.preset==="debt"?"還":(diff<0?"減":"增"); t="每週約需"+verb+" "+fmtNum(Math.round(Math.abs(diff)/wk*10)/10)+u; } }
+        if(t) h+='<div class="goal-sub">'+t+'</div>';
+      }
+    }
+  }
+  return h;
+}
 function goalCard(g){
   const card=document.createElement("div");
   card.className="card goal-card"+(g.type==="number"?" gclick":"");
@@ -3685,13 +3695,25 @@ function goalCard(g){
     h+='</div>';
     if(fl){ const _sv=goalChartSvg(g,84,false); if(_sv) h+='<div class="gchart">'+_sv+'</div><div class="glegend">'+fl.map((f,k)=>'<span><i class="gdot" style="background:'+GC[k%GC.length]+'"></i>'+esc(f.name)+'</span>').join("")+'</div>'; }   // 血壓：兩條線一起看，卡片上也要有圖
   }
+  { const _dn=goalDateLine(g); if(_dn) h+=_dn; }
   h+='<div class="acts">';
-  h+=(g.type==="number")?'<button class="icon-btn" data-rec>＋更新</button>':'<button class="icon-btn" data-extend>＋ 加項目</button>';
-  h+='<button class="icon-btn" data-edit>✏️</button></div></div>';
+  h+=(g.type==="number")?'<button class="icon-btn" data-rec>＋記錄</button>':'<button class="icon-btn" data-extend>＋ 加項目</button>';
+  h+='<button class="icon-btn" data-edit>設定</button></div></div>';
   card.innerHTML=h;
   card.querySelector("[data-edit]").addEventListener("click", ()=>openGoalForm(g));
   const rb=card.querySelector("[data-rec]"); if(rb) rb.addEventListener("click", ()=>openGoalRecord(g.id));
   const xb=card.querySelector("[data-extend]"); if(xb) xb.addEventListener("click", ()=>addMilestone(g.id));
+  if(g.type==="milestone" && window._msAddId===g.id){
+    const row=document.createElement("div"); row.className="ms-add";
+    row.innerHTML='<input autocomplete="off" placeholder="新增一項，按 Enter 加入"><button type="button" class="icon-btn" data-msok>加</button><button type="button" class="icon-btn" data-msx aria-label="關閉">✕</button>';
+    card.querySelector(".acts").before(row);
+    const inp=row.querySelector("input");
+    const go=function(){ const v=inp.value.trim(); if(!v){ return; } addMilestoneText(g.id, v); };
+    inp.addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); go(); } });
+    row.querySelector("[data-msok]").addEventListener("click", go);
+    row.querySelector("[data-msx]").addEventListener("click", function(){ window._msAddId=null; renderGoals(); });
+    setTimeout(function(){ try{ inp.focus(); }catch(e){} }, 30);
+  }
   if(g.type==="number") card.addEventListener("click", e=>{ if(e.target.closest(".acts")) return; openGoalDetail(g.id); });
   card.querySelectorAll("[data-ms]").forEach(cb=>cb.addEventListener("change", function(){ toggleMilestone(g.id, Number(this.getAttribute("data-ms"))); }));
   return card;
@@ -3782,7 +3804,7 @@ function openGoalDetail(id){                // 詳情：只負責看（圖表＋
   h+= rows.length
     ? '<div class="ghint">點一筆可修改或刪除</div><div class="ghist">'+rows.map(r=>'<div class="ghist-row" data-gedit="'+r.mi+':'+r.ei+'" style="cursor:pointer"><span>'+_gmd(r.e.d)+(multi?'　'+esc(r.name):'')+'</span><span><b>'+fmtV(r.e)+'</b> <span class="gu">'+unit+'</span> <span style="color:var(--faint,#aaa)">›</span></span></div>').join("")+'</div>'
     : '<div class="gnone">還沒有記錄</div>';
-  h+='<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="btn-primary" id="gd_upd" style="flex:1">更新數值</button><button type="button" class="btn-ghost" id="gd_set" style="width:52px" aria-label="目標設定">⚙️</button></div>';
+  h+='<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="btn-primary" id="gd_upd" style="flex:1">記錄</button><button type="button" class="btn-ghost" id="gd_set" style="width:72px">設定</button></div>';
   openSheet(g.title, h, null, null, "關閉");
   document.querySelectorAll("[data-gedit]").forEach(r=>r.addEventListener("click", function(){
     const [mi,ei]=this.getAttribute("data-gedit").split(":").map(Number);
@@ -3793,15 +3815,17 @@ function openGoalDetail(id){                // 詳情：只負責看（圖表＋
 }
 
 /* ---- 清單 ---- */
-function addMilestone(id){
+function addMilestoneText(id, txt){
   if(!requireAuth()) return;
   const g=state.goals[id]; if(!g) return;
+  txt=(txt||"").trim(); if(!txt) return;
   const gn=normalizeGoal(g);
-  const t=prompt("新增一個項目（要做的事）",""); if(t==null) return;
-  const txt=t.trim(); if(!txt) return;
   const ms=(gn.milestones||[]).slice(); ms.push({text:txt, done:false, date:null});
   saveGoalPatch(id, { type:"milestone", milestones:ms, done:null });
-  toast("已新增項目：「"+txt+"」");
+}
+function addMilestone(id){          // 點「＋ 加項目」→ 卡片內出現輸入框（不跳對話框），Enter 連續加
+  if(!requireAuth()) return;
+  window._msAddId=id; renderGoals();
 }
 function toggleMilestone(id, idx){
   const g=state.goals[id]; if(!g) return;
@@ -3845,7 +3869,7 @@ const GOAL_PRESETS={
   custom:{title:"",kind:"last",unit:"",cat:null,fields:[]}
 };
 const GOAL_PRESET_BTNS=[["weight","⚖️","體重"],["bp","🩺","血壓"],["bs","🩸","血糖"],["waist","📏","腰圍"],["sport","🏃","運動"],["save","💰","存錢"],["debt","💳","還債"],["read","📖","閱讀"],["list","📝","清單"],["custom","✏️","自訂"]];
-let goalPreset=null;
+let goalPreset=null, _goalEditing=false;
 function _goalLocked(){ const p=GOAL_PRESETS[goalPreset]; return !!(p&&p.lock); }
 function setGoalUnit(u){
   const sel=$("g_unit_sel"); if(!sel) return;
@@ -3862,6 +3886,9 @@ function syncNumUI(){
   $("g_fieldsbox").style.display=fm?"":"none";
   $("g_tofields").style.display=(kind==="last"&&!fm)?"":"none";
   $("g_single").style.display=(multi||fm)?"none":"";
+  const _cb=$("g_curbox"); if(_cb){ _cb.style.display=(!_goalEditing && kind==="last" && !multi && !fm)?"":"none";      // 新增數字目標：順便填現在的數字，不用再按一次記錄
+    const _P=GOAL_PRESETS[goalPreset]; const _l=$("g_curlabel"); if(_l) _l.textContent=((_P&&_P.rec)||"現在的數字")+"（選填）"; }
+  if(list) renderMsEditor();
   if(fm) renderFieldEditor();
   renderMemEditor();
   lockUI();
@@ -3908,7 +3935,7 @@ function _unitSelect(cur){
 function openGoalForm(goal){
   if(!canAdvanced()){ showUpgrade(goal?"編輯目標":"新增目標"); return; }
   const isEdit=!!goal; const g=goal?normalizeGoal(goal):{};
-  goalPreset=isEdit?(g.preset||null):null;
+  goalPreset=isEdit?(g.preset||null):null; _goalEditing=isEdit;
   const kind=g.type==="milestone"?"list":(g.mode||"last");
   const cat=g.category||"life"; const yr=g.year||new Date().getFullYear();
   goalMilestones=(g.milestones||[]).map(m=>({text:m.text,done:!!m.done,date:m.date||""}));
@@ -3928,17 +3955,19 @@ function openGoalForm(goal){
         '<option value="list"'+(kind==="list"?" selected":"")+'>清單（步驟）</option>'+
       '</select></div>'+
     '</div>'+
+    '<div class="field"><label>達標日（選填）</label><input id="g_tdate" type="date" value="'+esc(g.targetDate||"")+'"></div>'+
     '<div class="field"><label>分類</label>'+iconPicker("g_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
     '<div id="g_numbox"'+(kind==="list"?' style="display:none"':'')+'>'+
       '<div class="two">'+
         '<div class="field" id="g_single"'+(multi?' style="display:none"':'')+'><label>目標值<span id="g_unitnote" style="color:var(--faint,#999)"></span></label><input id="g_target" type="number" step="any" value="'+t0+'"></div>'+
         '<div class="field" id="g_unitbox"><label>單位</label>'+_unitSelect(g.unit||"")+'</div>'+
       '</div>'+
+      '<div class="field" id="g_curbox" style="display:none"><label id="g_curlabel">現在的數字（選填）</label><input id="g_cur" type="number" step="any" inputmode="decimal" autocomplete="off"></div>'+
       '<div id="g_fieldsbox" style="display:none"><div class="label-row"><label>每次記錄的項目與目標值</label><span class="manage-link" id="g_addfield">＋ 再加一項</span></div><div id="g_fieldlist"></div></div>'+
       '<div id="g_tofields" style="display:none;margin:-2px 0 10px"><span class="manage-link" id="g_tofields_btn">＋ 一次記多個數字（例如血壓：收縮、舒張）</span></div>'+
     '</div>'+
     '<div id="g_msbox"'+(kind==="list"?"":' style="display:none"')+'>'+
-      '<div class="label-row"><label>清單項目</label><span class="manage-link" id="g_addms">＋ 加一項</span></div>'+
+      '<div class="label-row"><label>清單項目 <span style="color:var(--faint,#999);font-weight:400">拆成小步驟，做完一項打勾一項</span></label><span class="manage-link" id="g_addms">＋ 加一項</span></div>'+
       '<div id="g_mslist"></div>'+
     '</div>'+
     '<button type="button" class="btn-ghost" id="g_moretoggle" style="width:100%;margin:2px 0 10px">'+(moreOpen?"收起 ▴":"更多選項 ▾")+'</button>'+
@@ -3988,16 +4017,33 @@ function openGoalForm(goal){
     syncNumUI();
   });
   $("g_addmem").addEventListener("click", function(){ goalMembers.push({name:"",log:[]}); renderMemEditor(); });
-  $("g_addms").addEventListener("click", function(){ goalMilestones.push({text:"",done:false,date:""}); renderMsEditor(); });
+  $("g_addms").addEventListener("click", function(){ goalMilestones.push({text:"",done:false,date:""}); renderMsEditor(goalMilestones.length-1); });
   renderMsEditor();
   syncNumUI();
 }
-function renderMsEditor(){
+function renderMsEditor(focusIdx){
   const box=$("g_mslist"); if(!box) return;
-  box.innerHTML=goalMilestones.map((m,i)=>'<div class="ms-edit"><input data-mi="'+i+'" autocomplete="off" value="'+esc(m.text)+'" placeholder="項目 '+(i+1)+'"><input type="date" data-mdate="'+i+'" value="'+(m.date||"")+'" style="flex:none;width:140px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px"><button type="button" class="ms-del" data-md="'+i+'">✕</button></div>').join("");
-  box.querySelectorAll("[data-mi]").forEach(inp=>inp.addEventListener("input", function(){ goalMilestones[Number(this.getAttribute("data-mi"))].text=this.value; }));
+  while(goalMilestones.length<3) goalMilestones.push({text:"",done:false,date:""});     // 一開始就看到 3 個空格，不會忘記填
+  box.innerHTML=goalMilestones.map((m,i)=>'<div class="ms-edit"><input data-mi="'+i+'" autocomplete="off" value="'+esc(m.text)+'" placeholder="項目 '+(i+1)+'"><input type="date" data-mdate="'+i+'" value="'+(m.date||"")+'" ><button type="button" class="ms-del" data-md="'+i+'">✕</button></div>').join("");
+  box.querySelectorAll("[data-mi]").forEach(inp=>{
+    inp.addEventListener("input", function(){
+      const i=Number(this.getAttribute("data-mi")); goalMilestones[i].text=this.value;
+      if(i===goalMilestones.length-1 && this.value.trim()){            // 最後一格開始打字 → 自動多一格
+        goalMilestones.push({text:"",done:false,date:""});
+        const v=this.value, pos=this.selectionStart; renderMsEditor(i);
+        const el=box.querySelector('[data-mi="'+i+'"]'); if(el){ el.value=v; try{ el.setSelectionRange(pos,pos); }catch(e){} }
+      }
+    });
+    inp.addEventListener("keydown", function(e){
+      if(e.key!=="Enter") return; e.preventDefault();
+      const i=Number(this.getAttribute("data-mi"));
+      if(i===goalMilestones.length-1){ goalMilestones.push({text:"",done:false,date:""}); renderMsEditor(i+1); }
+      else { const nx=box.querySelector('[data-mi="'+(i+1)+'"]'); if(nx) nx.focus(); }
+    });
+  });
   box.querySelectorAll("[data-mdate]").forEach(inp=>inp.addEventListener("change", function(){ goalMilestones[Number(this.getAttribute("data-mdate"))].date=this.value; }));
   box.querySelectorAll("[data-md]").forEach(b=>b.addEventListener("click", function(){ goalMilestones.splice(Number(this.getAttribute("data-md")),1); renderMsEditor(); }));
+  if(focusIdx!=null){ const el=box.querySelector('[data-mi="'+focusIdx+'"]'); if(el) el.focus(); }
 }
 function renderMemEditor(){
   const box=$("g_memlist"); if(!box) return;
@@ -4014,6 +4060,7 @@ function saveGoal(id, prev){
     title, year:Number($("g_year").value)||new Date().getFullYear(),
     category:$("g_category").value||"life",
     note:$("g_note").value.trim(),
+    targetDate:($("g_tdate").value||null),
     createdAt:(prev&&prev.createdAt)?prev.createdAt:Date.now()
   };
   if(kind==="list"){
@@ -4036,6 +4083,10 @@ function saveGoal(id, prev){
       mem=[Object.assign({},goalMembers[0]||{log:[]},{name:"",target:fm?"":$("g_target").value.trim()})];
     }
     if(!fm) mem.forEach(m=>{ if(m.log) m.log=m.log.map(e=>({d:e.d,v:e.v})); });   // 單一數字：丟掉多餘的第二、三項
+    if(!id && !multi && !fm && kind==="last"){          // 新增時填了現在的數字 → 直接成為第一筆記錄
+      const cv=(($("g_cur")||{}).value||"").trim();
+      if(cv!=="" && !isNaN(Number(cv))) mem[0].log=(mem[0].log||[]).concat([{d:ymd(new Date()),v:Number(cv)}]);
+    }
     if(goalPreset==="save") mem.forEach(m=>{ m.start=0; });            // 存錢從 0 算起
     Object.assign(data,{ type:"number", mode:kind, members:mem.map(_cleanMember), fields:fields, unit:($("g_unit").value||"").trim()||null, milestones:null, preset:_goalLocked()?goalPreset:null });
   }
