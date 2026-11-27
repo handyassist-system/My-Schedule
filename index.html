@@ -858,7 +858,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-76";
+const BUILD_ID = "1009-79";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -1865,6 +1865,7 @@ function stockFromShop(r){
   if(r.stk!=="appliance" && r.stkExp) rec.expiry=r.stkExp;
   if(r.stk==="appliance" && Number(r.stkWar)>0){ rec.warrantyYears=Number(r.stkWar); const _d=new Date(); _d.setMonth(_d.getMonth()+Math.round(Number(r.stkWar)*12)); rec.warrantyEnd=ymd(_d); }
   if(r.amount!=null && !isNaN(Number(r.amount))) rec.price=Number(r.amount);
+  { const _q=String(r.qty==null?"":r.qty).trim(); if(_q && _q!=="1") rec.qty=_q; }            // 待購的數量帶進庫存（預設的 1 不帶）
   // 先立刻顯示結果（Firebase 要等伺服器回應才算完成，網路慢時會好幾秒沒反應），失敗再改提示
   toastAct("✅ 已完成「"+nm+"」，並加入庫存（"+(KIND_NAME_STK[r.stk]||"庫存")+"）", "不放庫存", function(){
     uref("stock/"+id).remove().then(function(){ toast("已移出庫存",1800); }).catch(function(e){ console.error(e); toast(failMsg("移出", e)); });
@@ -4043,12 +4044,12 @@ function openGoalForm(goal){
   const t0=goalMembers[0]&&goalMembers[0].target!=null?goalMembers[0].target:"";
   const moreOpen=multi||!!g.note||!!g.targetDate;
   const html=
+    '<div class="field" style="display:flex;align-items:center;gap:10px"><label style="margin:0">年度</label><input id="g_year" type="number" value="'+yr+'" style="width:100px"></div>'+
     (isEdit?'':'<div class="g-seg" id="g_seg"><button type="button" data-gmode="num" class="on">一般目標</button><button type="button" data-gmode="list">清單（分階段）</button></div>')+
     '<div class="field"><label>分類</label>'+iconPicker("g_category", CAT_ORDER, CAT_LABEL, CAT_ICON, cat)+'</div>'+
     '<div class="field g-prewrap"><label>目標名稱</label><div class="g-namerow"><input id="g_title" autocomplete="off" value="'+esc(g.title||"")+'" placeholder="例如：減重、運動、血壓">'+
       (isEdit?'':'<button type="button" class="g-prebtn" id="g_prebtn">常用 ▾</button>')+'</div>'+
       (isEdit?'':'<div class="g-premenu" id="g_premenu" style="display:none">'+GOAL_PRESET_BTNS.map(x=>'<button type="button" data-pre="'+x[0]+'">'+x[1]+' '+x[2]+'</button>').join("")+'</div>')+'</div>'+
-    '<div class="field"><label>年度</label><input id="g_year" type="number" value="'+yr+'"></div>'+
     '<div class="two" style="display:none">'+
       '<div class="field" id="g_typebox"><select id="g_type">'+
         '<option value="last"'+(kind==="last"?" selected":"")+'>填現在的數字（體重、存款）</option>'+
