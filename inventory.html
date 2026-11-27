@@ -53,9 +53,10 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 .tile.expired{border-left-color:var(--warn)}
 .tile.soon{border-left-color:var(--amber)}
 .tile .tr1{display:flex;align-items:baseline;gap:6px;min-width:0}
-.tile .tq{flex:0 0 auto;font-size:12px;color:var(--ink2)}
+.tile .tq{flex:0 0 auto;font-size:13px;color:var(--ink2)}
+.tile .cname{font-size:16px;line-height:1.3;white-space:normal;word-break:break-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .tile .tr2{display:flex;align-items:center;gap:4px;min-height:22px}
-.tile .td{flex:1;min-width:0;font-size:12px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .td{flex:1;min-width:0;font-size:13px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tile .td.expired{color:var(--warn)}
 .tile .td.soon{color:var(--amber)}
 .tile .tr2 .usedbtn{padding:2px 9px;font-size:11.5px;margin-left:auto}
@@ -63,7 +64,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 .tile .tn{display:flex;align-items:center;gap:6px;min-width:0}
 .tile .tico{font-size:17px;flex:0 0 auto}
 .tile .cname{font-size:14px;flex:1;min-width:0}
-.tile .tl{font-size:11.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .tl{font-size:12.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tile .tb{display:flex;align-items:center;gap:4px;min-height:26px}
 .tile .tb .tag{padding:2px 8px;font-size:11.5px}
 .tile .tb .usedbtn{padding:3px 9px;font-size:11.5px;margin-left:auto}
@@ -169,7 +170,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-var APP_VER="v2.0", BUILD_ID="1009-68";
+var APP_VER="v2.0", BUILD_ID="1009-69";
 var ADMIN_EMAIL="mp65p@hotmail.com";
 var CAL_URL='https://handyassist-system.github.io/My-Schedule/';
 var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},kitchen:{n:'廚房用品',i:'🍳'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
@@ -348,13 +349,12 @@ function render(){
     if(kw){ var hay=((it.name||'')+' '+(it.loc||'')+' '+(it.model||'')+' '+(it.note||'')+' '+(it.store||'')).toLowerCase(); if(hay.indexOf(kw)<0) return false; }
     return true;
   });
+  var STROKE=(function(){ try{ return new Intl.Collator('zh-Hant-u-co-stroke'); }catch(e){ return new Intl.Collator('zh-Hant'); } })();
   function key(it){ var s=statusOf(it); return s?s.n:99999; }
   var needs=arr.filter(function(it){return it.need;}).sort(function(a,b){return (b.needAt||0)-(a.needAt||0);});
   arr=arr.filter(function(it){return !it.need;});
   var alerts=arr.filter(isAlert).sort(function(a,b){return key(a)-key(b);});
-  var rest=arr.filter(function(it){return !isAlert(it);}).sort(function(a,b){
-    var ka=key(a),kb=key(b); if(ka!==kb) return ka-kb; return String(a.name).localeCompare(String(b.name),'zh-Hant');
-  });
+  var rest=arr.filter(function(it){return !isAlert(it);}).sort(function(a,b){ return STROKE.compare(String(a.name||''),String(b.name||'')); });      // 快到期那區照期限；其他照筆畫，位置固定好找
   var html='';
   if(!items.length){
     html='<div class="empty"><b>📦</b>還沒有物品<span>按右上「＋ 新增」開始記</span></div>';

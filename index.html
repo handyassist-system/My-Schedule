@@ -422,7 +422,7 @@
   .goal-ms{margin-top:12px;display:flex;flex-direction:column;gap:9px}
   .ms-divider{font-size:12px;color:var(--faint);margin:12px 0 6px;text-align:center}
   .ms-row{display:flex;align-items:flex-start;gap:8px;font-size:14px;color:var(--ink);padding:3px 0;line-height:1.5}
-  .ms-row input{width:18px;height:18px;flex:none;margin-top:2px}
+  .ms-row input{width:22px;height:22px;flex:none;margin:0 2px 0 0}
   .ms-body{flex:1;min-width:0;display:flex;flex-direction:column}
   .ms-name{word-break:break-word}
   .ms-date,.msd{white-space:nowrap;font-size:12px;margin-top:1px}
@@ -858,7 +858,7 @@ const CAT_COLOR = { life:"#2CA02C", work:"#1F77B4", health:"#D62728", travel:"#1
 //  APP_VER  = 對客人顯示的版本，販售後正式改版才往上加（v1.1、v1.2…）
 //  BUILD_ID = 每次交付的更新編號，只有管理員看得到，用來確認上傳的是最新版
 const APP_VER = "v1.0";
-const BUILD_ID = "1009-79";
+const BUILD_ID = "1009-80";
 function renderVerTag(){
   try{
     var _vt=document.getElementById("appVerTag"); if(!_vt) return;
@@ -3709,7 +3709,7 @@ function goalCard(g){
     const undone=all.filter(x=>!x.m.done).sort(byDate);
     const done=all.filter(x=>x.m.done).sort(byDate);
     if(g.tick){
-      h+='<div class="goal-ms"><label class="ms-row"><input type="checkbox" data-ms="0"'+((g.milestones||[])[0]&&g.milestones[0].done?" checked":"")+'><span class="ms-body"><span class="ms-name">完成了</span></span></label></div>';
+      h+='<div class="goal-ms"><div class="ms-row"><input type="checkbox" data-ms="0"'+((g.milestones||[])[0]&&g.milestones[0].done?" checked":"")+'><span class="ms-body"><span class="ms-name">完成了</span></span></div></div>';
     } else {
       h+='<div class="goal-prog"><div class="goal-bar"><div class="goal-fill" style="width:'+p.pct+'%;background:'+col+'"></div></div><div class="goal-pct">'+p.pct+'%</div></div>';
       h+='<div class="goal-sub">完成 '+p.done+' / '+p.total+' 項</div>';
@@ -3717,11 +3717,11 @@ function goalCard(g){
       const openIdx=(op!=null && undone.some(x=>x.i===op))?op:(undone.length?undone[0].i:-1);
       const row=x=>{
         const tk=Array.isArray(x.m.tasks)?x.m.tasks:[], isOpen=(x.i===openIdx);
-        let r='<div class="ms-wrap"><div class="ms-line"><label class="ms-row"><input type="checkbox" data-ms="'+x.i+'"'+(x.m.done?" checked":"")+'><span class="ms-body"><span class="ms-name'+(x.m.done?' ms-done':'')+'">'+esc(x.m.text)+'</span>'+(x.m.date?_msDate(x.m.date,x.m.done):'')+'</span></label>';
+        let r='<div class="ms-wrap"><div class="ms-line"><div class="ms-row"><input type="checkbox" data-ms="'+x.i+'"'+(x.m.done?" checked":"")+'><span class="ms-body"><span class="ms-name'+(x.m.done?' ms-done':'')+'">'+esc(x.m.text)+'</span>'+(x.m.date?_msDate(x.m.date,x.m.done):'')+'</span></div>';
         if(!x.m.done) r+='<button type="button" class="ms-caret" data-open="'+x.i+'" aria-label="展開">'+(tk.length?tk.filter(t=>t.done).length+'/'+tk.length+' ':'')+(isOpen?'▾':'▸')+'</button>';
         r+='</div>';
         if(isOpen && !x.m.done){
-          r+='<div class="ms-tasks">'+tk.map((t,ti)=>'<div class="ms-task"><label class="ms-row"><input type="checkbox" data-task="'+x.i+':'+ti+'"'+(t.done?" checked":"")+'><span class="ms-body"><span class="ms-name'+(t.done?' ms-done':'')+'">'+esc(t.text)+'</span></span></label><button type="button" class="ms-tdel" data-deltask="'+x.i+':'+ti+'" aria-label="刪除">✕</button></div>').join("");
+          r+='<div class="ms-tasks">'+tk.map((t,ti)=>'<div class="ms-task"><div class="ms-row"><input type="checkbox" data-task="'+x.i+':'+ti+'"'+(t.done?" checked":"")+'><span class="ms-body"><span class="ms-name'+(t.done?' ms-done':'')+'">'+esc(t.text)+'</span></span></div><button type="button" class="ms-tdel" data-deltask="'+x.i+':'+ti+'" aria-label="刪除">✕</button></div>').join("");
           const ta=window._taskAdd;
           if(ta && ta.id===g.id && ta.idx===x.i) r+='<div class="ms-add" data-taskadd="'+x.i+'"><input autocomplete="off" placeholder="新增任務，按 Enter 加入"><button type="button" class="icon-btn" data-taskok>加</button><button type="button" class="icon-btn" data-taskx aria-label="關閉">✕</button></div>';
           else r+='<button type="button" class="ms-addtask" data-addtask="'+x.i+'">＋ 加任務</button>';
