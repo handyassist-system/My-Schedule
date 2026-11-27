@@ -53,18 +53,19 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 .tile.expired{border-left-color:var(--warn)}
 .tile.soon{border-left-color:var(--amber)}
 .tile .tr1{display:flex;align-items:baseline;gap:6px;min-width:0}
-.tile .tq{flex:0 0 auto;font-size:13px;color:var(--ink2)}
-.tile .cname{font-size:16px;line-height:1.3;white-space:normal;word-break:break-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tile .tq{flex:0 0 auto;font-size:15px;color:var(--ink2)}
+.tile .cname{font-size:18px;line-height:1.3;white-space:normal;word-break:break-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .tile .tr2{display:flex;align-items:center;gap:4px;min-height:22px}
-.tile .td{flex:1;min-width:0;font-size:13px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .td{flex:1;min-width:0;font-size:14.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tile .td.expired{color:var(--warn)}
 .tile .td.soon{color:var(--amber)}
-.tile .tr2 .usedbtn{padding:2px 9px;font-size:11.5px;margin-left:auto}
+.tile .tr2 .usedbtn{padding:3px 10px;font-size:13px;margin-left:auto}
 .tile .tr2 .usedbtn.x{padding:2px 8px;margin-left:0}
 .tile .tn{display:flex;align-items:center;gap:6px;min-width:0}
 .tile .tico{font-size:17px;flex:0 0 auto}
-.tile .cname{font-size:14px;flex:1;min-width:0}
-.tile .tl{font-size:12.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .cname{flex:1;min-width:0}
+.ftseg button{font-size:14px}
+.tile .tl{font-size:14px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tile .tb{display:flex;align-items:center;gap:4px;min-height:26px}
 .tile .tb .tag{padding:2px 8px;font-size:11.5px}
 .tile .tb .usedbtn{padding:3px 9px;font-size:11.5px;margin-left:auto}
@@ -170,7 +171,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-var APP_VER="v2.0", BUILD_ID="1009-69";
+var APP_VER="v2.0", BUILD_ID="1009-71";
 var ADMIN_EMAIL="mp65p@hotmail.com";
 var CAL_URL='https://handyassist-system.github.io/My-Schedule/';
 var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},kitchen:{n:'廚房用品',i:'🍳'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
@@ -366,12 +367,15 @@ function render(){
     if(alerts.length) html+='<div class="sec alert">⚠️ 快到期（'+alerts.length+'）</div><div class="g2">'+alerts.map(function(it){return card(it);}).join('')+'</div>';
     var grouped=(curKind===''||curKind==='food') && !curLoc && !kw;      // 食材／全部：依位置分組，一眼看到「冰箱裡有什麼」
     if(rest.length && grouped){
-      var g={}, order=getLocs(curKind||undefined).filter(function(l){return rest.some(function(it){return it.loc===l;});});
-      rest.forEach(function(it){ var k=it.loc||''; (g[k]=g[k]||[]).push(it); if(k && order.indexOf(k)<0) order.push(k); });
-      if(g['']) order.push('');
+      var g={}, order=[];
+      var foodRest=rest.filter(function(it){return it.kind==='food';}), otherRest=rest.filter(function(it){return it.kind!=='food';});
+      FOOD_TYPES.forEach(function(t){ var a=foodRest.filter(function(it){return foodTypeOf(it)===t[0];}); if(a.length){ g['ft:'+t[0]]=a; order.push('ft:'+t[0]); } });      // 食材：依種類分組，位置顯示在每格小字
+      var locOrder=getLocs(curKind||undefined).filter(function(l){return otherRest.some(function(it){return it.loc===l;});});
+      otherRest.forEach(function(it){ var k=it.loc||''; (g[k]=g[k]||[]).push(it); if(k && locOrder.indexOf(k)<0) locOrder.push(k); });
+      locOrder.forEach(function(k){ order.push(k); }); if(g['']) order.push('');
       order.forEach(function(k){
-        var open=!grpCollapsed[k];
-        html+='<button class="grp" data-grp="'+esc(k)+'"><span class="ar">'+(open?'▼':'▶')+'</span>'+esc(k||'未指定位置')+' <span class="n">'+g[k].length+'</span></button>'+(open?'<div class="g2">'+g[k].map(function(it){return card(it,true);}).join('')+'</div>':'');
+        var open=!grpCollapsed[k], isFt=k.indexOf('ft:')===0, label=isFt?foodTypeName(k.slice(3)):(k||'未指定位置');
+        html+='<button class="grp" data-grp="'+esc(k)+'"><span class="ar">'+(open?'▼':'▶')+'</span>'+esc(label)+' <span class="n">'+g[k].length+'</span></button>'+(open?'<div class="g2">'+g[k].map(function(it){return card(it,!isFt);}).join('')+'</div>':'');
       });
     } else if(rest.length) html+=(alerts.length?'<div class="sec">全部（'+rest.length+'）</div>':'')+'<div class="g2">'+rest.map(function(it){return card(it);}).join('')+'</div>';
   }
@@ -398,6 +402,23 @@ function toggleNeed(id){
   if(it.need){ if(it.needOnly){ removeItem(id); toast('已取消「'+it.name+'」的待買',2200); return; } delete it.need; delete it.needAt; writeItem(it); toast('已取消「'+it.name+'」的待買',2200); }
   else { it.need=true; it.needAt=Date.now(); writeItem(it); toast('🛒 「'+it.name+'」已加入待買',2600); }
 }
+var FOOD_TYPES=[['veg','蔬果'],['meat','肉與海鮮'],['dairy','蛋奶豆製品'],['other','其他']];
+var FT_RULES=[
+  ['dairy',/豆乾|豆腐|豆皮|豆漿|豆花|素雞/],
+  ['veg',/油菜|油麥菜|牛蒡|蜜桃|蜜棗/],
+  ['dairy',/奶油|鮮奶|牛奶/],
+  ['other',/罐頭|乾|醬|粉|麵|米|餅|糕|麵包|吐司|糖|鹽|油|醋|酒|茶|咖啡|飲|汁|汽水|可樂|零食|巧克力|麥片|海苔|脯|丸|餃|火鍋料|泡|蜂蜜|糖漿|堅果/],
+  ['dairy',/奶|乳|優格|優酪|起司|蛋/],
+  ['meat',/肉|雞|鴨|鵝|豬|牛|羊|排骨|火腿|香腸|培根|魚|蝦|蟹|蚵|蛤|蜆|花枝|魷|透抽|鮭|鯖|鱸|鯛|海鮮|干貝|章魚|貝/],
+  ['veg',/菜|蔥|蒜|薑|椒|瓜|茄|蘿蔔|菇|筍|芹|芽|蕉|蘋果|橘|柑|柳丁|葡萄|芭樂|梨|桃|莓|芒果|鳳梨|檸檬|奇異果|木瓜|地瓜|馬鈴薯|洋蔥|青|豆|玉黍|花椰|蓮藕|九層塔|果|蔬|瓠|蕃茄|藕/]
+];
+function guessFoodType(name){          // 名稱判定食材種類：先看加工字眼，認不得就歸「其他」
+  var n=String(name||'').replace(/玉米/g,'玉黍');
+  for(var i=0;i<FT_RULES.length;i++){ if(FT_RULES[i][1].test(n)) return FT_RULES[i][0]; }
+  return 'other';
+}
+function foodTypeOf(it){ return it.ftype||guessFoodType(it.name); }
+function foodTypeName(k){ for(var i=0;i<FOOD_TYPES.length;i++){ if(FOOD_TYPES[i][0]===k) return FOOD_TYPES[i][1]; } return '其他'; }
 function _md(d){ var p=String(d).split('-'); if(p.length<3) return d; var y=+p[0], cy=new Date().getFullYear(); return (y!==cy?y+'/':'')+(+p[1])+'/'+(+p[2]); }
 function dateText(it,s){          // 第二行的日期文字：快到期用白話，還早就直接顯示日期
   var ap=it.kind==='appliance', n=s.n;
@@ -469,12 +490,17 @@ function bindSheet(){
       if(n){ if(getLocs().indexOf(n)<0){ L.push(n); saveLocs(L); } ls.innerHTML=locOptions(n,sheetKind); } else ls.value='';
     }
   };
+  var ft=$('fType'); if(ft){
+    var setFt=function(v,manual){ ft.dataset.v=v; if(manual) ft.dataset.manual='1'; ft.querySelectorAll('[data-ft]').forEach(function(x){ x.classList.toggle('on',x.dataset.ft===v); }); };
+    ft.querySelectorAll('[data-ft]').forEach(function(x){ x.onclick=function(){ setFt(x.dataset.ft,true); }; });
+    var nm=$('fName'); if(nm) nm.addEventListener('input',function(){ if(ft.dataset.manual!=='1') setFt(guessFoodType(nm.value),false); });      // 沒手動選過，就跟著名稱自動判定
+  }
   ['fBuy','fWy'].forEach(function(id){ var e=$(id); if(e){ e.onchange=updateWEnd; e.oninput=updateWEnd; } });
   updateWEnd();
 }
 var _draft={};
 function rebuildFields(){
-  _draft={name:($('fName')||{}).value||'',loc:($('fLoc')||{}).value||'',note:($('fNote')||{}).value||'',qty:($('fQty')||{}).value||''};
+  _draft={name:($('fName')||{}).value||'',loc:($('fLoc')||{}).value||'',note:($('fNote')||{}).value||'',qty:($('fQty')||{}).value||'',ftype:(($('fType')||{}).dataset||{}).manual==='1'?$('fType').dataset.v:''};
   var _it0=editId?items.find(function(x){return x.id===editId;}):null;
   if(_draft.loc && getLocs(sheetKind).indexOf(_draft.loc)<0 && !(_it0&&_it0.loc===_draft.loc)) _draft.loc='';   // 換類別時，不屬於新類別的位置清掉
   var it=editId?items.find(function(x){return x.id===editId;}):null;
@@ -492,6 +518,7 @@ function openForm(it,keep){
     +Object.keys(KIND).map(function(k){return '<button type="button" data-k="'+k+'" class="'+(sheetKind===k?'on':'')+'">'+KIND[k].i+' '+KIND[k].n+'</button>';}).join('')+'</div></div>'
     +'<div class="field"><label>名稱</label><input id="fName" value="'+esc(name||'')+'" placeholder="例：牛奶、冰箱、延長線"></div>'
     +'<div class="field"><label>數量（選填）</label><input id="fQty" value="'+esc(d.qty!==undefined?d.qty:((it&&it.qty)||''))+'" placeholder="例：2 包、6 顆、500g"></div>'
+    +(sheetKind==='food'?'<div class="field"><label>種類</label><div class="seg ftseg" id="fType" data-v="'+(d.ftype||(it&&it.ftype)||guessFoodType(name))+'" data-manual="'+((d.ftype||(it&&it.ftype))?1:0)+'">'+FOOD_TYPES.map(function(t){return '<button type="button" data-ft="'+t[0]+'" class="'+((d.ftype||(it&&it.ftype)||guessFoodType(name))===t[0]?'on':'')+'">'+t[1]+'</button>';}).join('')+'</div></div>':'')
     +'<div class="field"><label>放在哪裡</label><select id="fLoc">'+locOptions(loc||'',sheetKind)+'</select></div>'
     +kindFields(sheetKind,it&&it.kind===sheetKind?it:{})
     +'<div class="field"><label>備註（選填）</label><textarea id="fNote" rows="2" style="resize:none" placeholder="例：序號、維修紀錄">'+esc(note||'')+'</textarea></div>';
@@ -513,6 +540,7 @@ function saveForm(again){
   if(same && !(old && String(old.name||'').trim().toLowerCase()===nk)){ toast('「'+name+'」已經有了，請直接編輯那一筆',2800); return; }
   var it={id:editId||uid(),name:name,kind:sheetKind,loc:loc,note:($('fNote').value||'').trim(),created:(old&&old.created)||Date.now()};
   var _q=($('fQty').value||'').trim(); if(_q) it.qty=_q;
+  if(sheetKind==='food' && $('fType')) it.ftype=$('fType').dataset.v;
   if(old&&old.need){ it.need=true; it.needAt=old.needAt; if(old.needOnly) it.needOnly=true; }          // 編輯不會弄丟「待買」標記
   if(sheetKind==='appliance'){
     it.model=($('fModel').value||'').trim(); it.buyDate=$('fBuy').value||'';
