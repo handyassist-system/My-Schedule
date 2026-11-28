@@ -171,7 +171,7 @@ main{max-width:560px;margin:0 auto;padding:6px 14px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-var APP_VER="v2.0", BUILD_ID="1009-71";
+var APP_VER="v2.0", BUILD_ID="1009-72";
 var ADMIN_EMAIL="mp65p@hotmail.com";
 var CAL_URL='https://handyassist-system.github.io/My-Schedule/';
 var KIND={food:{n:'食材',i:'🥬'},med:{n:'藥品',i:'💊'},daily:{n:'生活用品',i:'🧴'},kitchen:{n:'廚房用品',i:'🍳'},appliance:{n:'家電',i:'🔌'},other:{n:'其他',i:'📦'}};
@@ -365,7 +365,7 @@ function render(){
   } else {
     if(needs.length) html+='<div class="sec">🛒 待買（'+needs.length+'）</div><div class="g2">'+needs.map(function(it){return card(it);}).join('')+'</div>';
     if(alerts.length) html+='<div class="sec alert">⚠️ 快到期（'+alerts.length+'）</div><div class="g2">'+alerts.map(function(it){return card(it);}).join('')+'</div>';
-    var grouped=(curKind===''||curKind==='food') && !curLoc && !kw;      // 食材／全部：依位置分組，一眼看到「冰箱裡有什麼」
+    var grouped=(curKind===''||curKind==='food') && !kw;      // 食材／全部：依位置分組，一眼看到「冰箱裡有什麼」
     if(rest.length && grouped){
       var g={}, order=[];
       var foodRest=rest.filter(function(it){return it.kind==='food';}), otherRest=rest.filter(function(it){return it.kind!=='food';});
@@ -402,12 +402,14 @@ function toggleNeed(id){
   if(it.need){ if(it.needOnly){ removeItem(id); toast('已取消「'+it.name+'」的待買',2200); return; } delete it.need; delete it.needAt; writeItem(it); toast('已取消「'+it.name+'」的待買',2200); }
   else { it.need=true; it.needAt=Date.now(); writeItem(it); toast('🛒 「'+it.name+'」已加入待買',2600); }
 }
-var FOOD_TYPES=[['veg','蔬果'],['meat','肉與海鮮'],['dairy','蛋奶豆製品'],['other','其他']];
+var FOOD_TYPES=[['veg','蔬果'],['meat','肉與海鮮'],['dairy','蛋奶豆製品'],['staple','主食與加工品'],['sauce','醬料調味'],['other','其他']];
 var FT_RULES=[
   ['dairy',/豆乾|豆腐|豆皮|豆漿|豆花|素雞/],
   ['veg',/油菜|油麥菜|牛蒡|蜜桃|蜜棗/],
   ['dairy',/奶油|鮮奶|牛奶/],
-  ['other',/罐頭|乾|醬|粉|麵|米|餅|糕|麵包|吐司|糖|鹽|油|醋|酒|茶|咖啡|飲|汁|汽水|可樂|零食|巧克力|麥片|海苔|脯|丸|餃|火鍋料|泡|蜂蜜|糖漿|堅果/],
+  ['other',/零食|糖果|巧克力|餅乾|堅果|飲料|咖啡|茶|汽水|可樂|酒|汁/],
+  ['sauce',/醬|醋|味噌|鹽|糖|油|胡椒|調味|味精|高湯|咖哩|香料|芝麻|魚露|蜂蜜/],
+  ['staple',/罐頭|乾|粉|麵|米|餅|糕|麵包|吐司|脯|丸|餃|火鍋料|泡|麥片|海苔/],
   ['dairy',/奶|乳|優格|優酪|起司|蛋/],
   ['meat',/肉|雞|鴨|鵝|豬|牛|羊|排骨|火腿|香腸|培根|魚|蝦|蟹|蚵|蛤|蜆|花枝|魷|透抽|鮭|鯖|鱸|鯛|海鮮|干貝|章魚|貝/],
   ['veg',/菜|蔥|蒜|薑|椒|瓜|茄|蘿蔔|菇|筍|芹|芽|蕉|蘋果|橘|柑|柳丁|葡萄|芭樂|梨|桃|莓|芒果|鳳梨|檸檬|奇異果|木瓜|地瓜|馬鈴薯|洋蔥|青|豆|玉黍|花椰|蓮藕|九層塔|果|蔬|瓠|蕃茄|藕/]
